@@ -28,8 +28,7 @@ Route::get('/', function () {return view('admin');});
 //rotas del administrador
 route::get('/', [AdminController::class, 'index'])->name('admin.index')->middleware('auth');
 
-//rotas del coordinador
-// routes/web.php
-Route::post('/coordinadores', [CoordinadorController::class, 'store'])->name('coordinador.store');
-
+// Rutas para coordinadores
 Route::get('/coordinador', [CoordinadorController::class, 'index'])->name('coordinador.index')->middleware('auth');
+Route::post('/coordinadores', [CoordinadorController::class, 'store'])->name('coordinador.store');
+Route::delete('/coordinadores/{usuario}', [CoordinadorController::class, 'destroy'])->name('coordinador.destroy');

@@ -12,7 +12,7 @@
             </div>
             <div class="col-10 col-md-11">  
                 <div class="titulo">
-                    <h1>Sistema de Registro Docentes</h1>
+                    <h1>Sistema de Horarios</h1>
                 </div>
             </div>
         </div>
@@ -25,7 +25,7 @@
             <div class="card border-0 shadow-lg" style="max-width: 400px; margin: 0 auto;">
                 <div class="text-center pt-3">
                     <div class="card-header bg-transparent border-0 pb-0">
-                        <h2 class="text-dark mb-1 font-weight-bold h5">Sistema de Registro Docentes</h2>
+                        <h2 class="text-dark mb-1 font-weight-bold h5">Sistema de Horarios</h2>
                         <h4 class="text-muted h6">Iniciar Sesión</h4>
                     </div>
                 </div>
@@ -75,7 +75,7 @@
                 <!-- Footer -->
                 <div class="card-footer bg-light text-center py-3">
                     <div class="border-top pt-3">
-                        <p class="mt-2 small text-muted mb-0">Copyright © DR 2024</p>
+                        <p class="mt-2 small text-muted mb-0">Copyright © DR-CB-YA 2024</p>
                     </div>
                 </div>
             </div>
@@ -86,7 +86,7 @@
 <footer class="main-footer">
     <div class="footer-content">
         <div class="footer-section">
-            <strong>Copyright &copy; 2025 <a href="#">Diego Rodriguez</a>.</strong> All rights reserved.
+            <strong>Copyright &copy; 2025 <a href="#">DR-CB-YA</a>.</strong> All rights reserved.
         </div>
         <div class="footer-section">
             <span id="fecha-hora"></span>

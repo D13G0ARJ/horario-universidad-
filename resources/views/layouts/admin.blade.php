@@ -376,7 +376,7 @@
                     Anything you want
                 </div>
                 <!-- Default to the left -->
-                <strong>Copyright &copy; 2025 <a href="#">Diego Rodriguez</a>.</strong> All rights reserved.
+                <strong>Copyright &copy; 2025 <a href="#">DR-CB-YA</a>.</strong> All rights reserved.
             </footer>
         </div>
         <!-- ./wrapper -->

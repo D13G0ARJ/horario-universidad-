@@ -43,4 +43,10 @@ class CoordinadorController extends Controller
         // Redireccionar a la lista de coordinadores con un mensaje de éxito
         return redirect()->route('coordinador.index')->with('success', 'Coordinador registrado correctamente.');
     }
+
+    public function destroy(User $usuario)
+    {
+        $usuario->delete();
+        return redirect()->route('coordinador.index')->with('success', 'Coordinador eliminado correctamente.');
+    }
 }
