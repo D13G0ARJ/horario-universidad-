@@ -18,6 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'cedula', // Agregar 'cedula' aquí
         'name',
         'email',
         'password',
@@ -42,4 +43,25 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Indica que 'cedula' es la clave primaria.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'cedula';
+
+    /**
+     * Indica que la clave primaria no es autoincremental.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * El tipo de dato de la clave primaria.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
 }
