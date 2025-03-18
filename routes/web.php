@@ -29,4 +29,7 @@ Route::get('/', function () {return view('admin');});
 route::get('/', [AdminController::class, 'index'])->name('admin.index')->middleware('auth');
 
 //rotas del coordinador
-route::get('/coordinador', [CoordinadorController::class, 'index'])->name('coordinador.index')->middleware('auth');
+// routes/web.php
+Route::post('/coordinadores', [CoordinadorController::class, 'store'])->name('coordinador.store');
+
+Route::get('/coordinador', [CoordinadorController::class, 'index'])->name('coordinador.index')->middleware('auth');

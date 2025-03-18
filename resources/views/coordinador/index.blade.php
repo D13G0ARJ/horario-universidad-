@@ -14,8 +14,13 @@
             <div class="card-header">
                 <h3 class="card-title">Coordinadores Registrados</h3>
                 <div class="card-tools">
-                    <a href="#" class="btn btn-primary">Nuevo usuario </a>
-                </div>
+    <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registroModal">
+        Nuevo usuario
+    </a>
+</div>
+
+            <
+
             </div>
             <div class="card-body col-12" style="width: 100%;">
                 <table class="table table-bordered table-striped table-hover w-100" id="tabla">
@@ -64,6 +69,110 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal de registro -->
+            <!-- Modal -->
+<div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-registro" id="registroModalLabel">Registrar Nuevo Coordinador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Formulario de registro -->
+                <form method="POST" action="{{ route('coordinador.store') }}">
+                    @csrf
+
+                    <!-- Campo de Cédula -->
+                    <div class="form-group mb-3">
+                        <label for="cedula" class="form-label text-secondary small">Cédula</label>
+                        <div class="input-group">
+                            <span class="input-group-text py-2">
+                                <i class="fas fa-id-card small"></i>
+                            </span>
+                            <input id="cedula" type="text" 
+                                class="form-control form-control-md @error('cedula') is-invalid @enderror" 
+                                name="cedula" placeholder="Cédula" value="{{ old('cedula') }}" required autofocus>
+                        </div>
+                        @error('cedula')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Campo de Nombre -->
+                    <div class="form-group mb-3">
+                        <label for="name" class="form-label text-secondary small">Nombre</label>
+                        <div class="input-group">
+                            <span class="input-group-text py-2">
+                                <i class="fas fa-user small"></i>
+                            </span>
+                            <input id="name" type="text" 
+                                class="form-control form-control-md @error('name') is-invalid @enderror" 
+                                name="name" placeholder="Nombre" value="{{ old('name') }}" required>
+                        </div>
+                        @error('name')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Campo de Correo Electrónico -->
+                    <div class="form-group mb-3">
+                        <label for="email" class="form-label text-secondary small">Correo Electrónico</label>
+                        <div class="input-group">
+                            <span class="input-group-text py-2">
+                                <i class="fas fa-envelope small"></i>
+                            </span>
+                            <input id="email" type="email" 
+                                class="form-control form-control-md @error('email') is-invalid @enderror" 
+                                name="email" placeholder="Correo Electrónico" value="{{ old('email') }}" required>
+                        </div>
+                        @error('email')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Campo de Contraseña -->
+                    <div class="form-group mb-3">
+                        <label for="password" class="form-label text-secondary small">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text py-2">
+                                <i class="fas fa-lock small"></i>
+                            </span>
+                            <input id="password" type="password" 
+                                class="form-control form-control-md @error('password') is-invalid @enderror" 
+                                name="password" placeholder="Contraseña" required>
+                        </div>
+                        @error('password')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Campo de Confirmación de Contraseña -->
+                    <div class="form-group mb-3">
+                        <label for="password-confirm" class="form-label text-secondary small">Confirmar Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text py-2">
+                                <i class="fas fa-lock small"></i>
+                            </span>
+                            <input id="password-confirm" type="password" 
+                                class="form-control form-control-md" 
+                                name="password_confirmation" placeholder="Confirmar Contraseña" required>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Registro -->
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary btn-md rounded-pill py-2">
+                            <i class="fas fa-user-plus me-2 small"></i>Registrarse
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
