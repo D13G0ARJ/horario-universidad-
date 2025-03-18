@@ -49,4 +49,23 @@ class CoordinadorController extends Controller
         $usuario->delete();
         return redirect()->route('coordinador.index')->with('success', 'Coordinador eliminado correctamente.');
     }
+
+
+    public function update(Request $request, User $usuario)
+{
+    // Validación
+    $request->validate([
+        'cedula' => 'required|unique:users,cedula,' . $usuario->id,
+        'name' => 'required',
+        'email' => 'required|email|unique:users,email,' . $usuario->id,
+    ]);
+
+    // Actualizar el usuario
+    $usuario->update([
+        'name' => $request->name,
+        'email' => $request->email,
+    ]);
+
+    return redirect()->route('coordinador.index')->with('success', 'Coordinador actualizado.');
+}
 }

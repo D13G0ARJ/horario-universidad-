@@ -31,4 +31,5 @@ route::get('/', [AdminController::class, 'index'])->name('admin.index')->middlew
 // Rutas para coordinadores
 Route::get('/coordinador', [CoordinadorController::class, 'index'])->name('coordinador.index')->middleware('auth');
 Route::post('/coordinadores', [CoordinadorController::class, 'store'])->name('coordinador.store');
+Route::put('/coordinadores/{usuario}', [CoordinadorController::class, 'update'])->name('coordinador.update');
 Route::delete('/coordinadores/{usuario}', [CoordinadorController::class, 'destroy'])->name('coordinador.destroy');
