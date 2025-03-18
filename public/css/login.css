@@ -1,0 +1,149 @@
+/* Estilos generales */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/unefa.jpg') center/cover no-repeat;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Estilos del header */
+header {
+    background-color: #007bff; /* Azul claro */
+    color: #fff;
+    width: 100%;
+    padding: 0px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+
+input{
+    height: auto;
+}
+.container-fluid {
+    padding: 10;
+}
+
+.row {
+    margin: 0;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.titulo h1 {
+    font-size: 35px;
+    text-align: center;
+    font-weight: bold;
+    margin: 0;
+}
+
+/* Estilos de la tarjeta de login */
+.card {
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border: none;
+    margin-top: 50px; /* Ajusta este valor según la altura de tu header */
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: none;
+}
+
+.card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Estilos para los inputs */
+.form-control {
+    border-radius: 10px;
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.input-group-text {
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 5px 0 0 5px;
+}
+
+/* Estilos para el botón de login */
+.btn-primary {
+    background-color: #2c3e50;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 18px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #1a252f;
+}
+
+/* Estilos para el logo */
+.logo img {
+    width: 80px;
+    height: auto;
+}
+
+/* Estilos para el footer */
+.footer-text {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+/* Estilos para el footer */
+.main-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    z-index: 1000;
+    font-size: 14px;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#fecha-hora {
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.main-footer a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.main-footer a:hover {
+    text-decoration: underline;
+}
