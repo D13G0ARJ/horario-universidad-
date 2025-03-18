@@ -53,15 +53,13 @@ class CoordinadorController extends Controller
 
     public function update(Request $request, User $usuario)
 {
-    // Validación
     $request->validate([
-        'cedula' => 'required|unique:users,cedula,' . $usuario->id,
-        'name' => 'required',
-        'email' => 'required|email|unique:users,email,' . $usuario->id,
+        'cedula' => 'required|unique:users,cedula,' . $usuario->cedula . ',cedula', // Usar 'cedula' como clave
+        'email' => 'required|email|unique:users,email,' . $usuario->cedula . ',cedula',
     ]);
 
-    // Actualizar el usuario
     $usuario->update([
+        'cedula' => $request->cedula,
         'name' => $request->name,
         'email' => $request->email,
     ]);

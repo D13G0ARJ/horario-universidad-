@@ -254,16 +254,16 @@
     </script>
 
 
-<!-- Modal para Editar -->
-<div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Editar Coordinador</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="POST" action="{{ route('coordinador.update', 'id') }}" id="formEditar">
+    <!-- Modal para Editar -->
+    <div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Coordinador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{{ route('coordinador.update', $usuario->cedula) }}" id="formEditar">
                     @csrf
                     @method('PUT')
 
@@ -274,8 +274,7 @@
                             class="form-control"
                             name="cedula"
                             id="cedula_editar"
-                            readonly <!-- Bloquea la edición -->
-                            required>
+                            readonly required> <!-- Bloquea la edición -->
                         @error('cedula')
                         <small class="text-danger">{{ $message }}</small>
                         @enderror
@@ -311,34 +310,33 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                     </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const editarModal = document.getElementById('editarModal');
-        editarModal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            
-            // Obtener datos del botón
-            const id = button.getAttribute('data-id');
-            const cedula = button.getAttribute('data-cedula');
-            const name = button.getAttribute('data-name');
-            const email = button.getAttribute('data-email');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const editarModal = document.getElementById('editarModal');
+            editarModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
 
-            // Actualizar el formulario
-            const form = document.getElementById('formEditar');
-            form.action = `/coordinadores/${id}`; // Actualizar la URL de la acción
-            
-            // Llenar los campos
-            document.getElementById('cedula_editar').value = cedula;
-            document.getElementById('name_editar').value = name;
-            document.getElementById('email_editar').value = email;
+                // Obtener datos del botón
+                const cedula = button.getAttribute('data-cedula');
+                const name = button.getAttribute('data-name');
+                const email = button.getAttribute('data-email');
+
+                // Actualizar el formulario
+                const form = document.getElementById('formEditar');
+                form.action = `/coordinadores/${cedula}`; // Actualizar la URL de la acción
+
+                // Llenar los campos
+                document.getElementById('cedula_editar').value = cedula;
+                document.getElementById('name_editar').value = name;
+                document.getElementById('email_editar').value = email;
+            });
         });
-    });
-</script>
+    </script>
 
     @endsection
