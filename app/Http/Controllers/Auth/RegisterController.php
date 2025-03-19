@@ -28,7 +28,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/admin'; // Redirigir a la ruta /admin después de registrarse
 
     /**
      * Create a new controller instance.
@@ -53,6 +53,10 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:255'], // Validar nombre
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'], // Validar correo
             'password' => ['required', 'string', 'min:8', 'confirmed'], // Validar contraseña
+            'security_question_1' => ['required', 'string', 'max:255'], // Validar primera pregunta
+            'security_answer_1' => ['required', 'string', 'max:255'],   // Validar primera respuesta
+            'security_question_2' => ['required', 'string', 'max:255'], // Validar segunda pregunta
+            'security_answer_2' => ['required', 'string', 'max:255'],   // Validar segunda respuesta
         ]);
     }
 
@@ -69,6 +73,10 @@ class RegisterController extends Controller
             'name' => $data['name'], // Guardar nombre
             'email' => $data['email'], // Guardar correo
             'password' => Hash::make($data['password']), // Guardar contraseña
+            'security_question_1' => $data['security_question_1'], // Guardar primera pregunta
+            'security_answer_1' => Hash::make($data['security_answer_1']), // Hashear y guardar primera respuesta
+            'security_question_2' => $data['security_question_2'], // Guardar segunda pregunta
+            'security_answer_2' => Hash::make($data['security_answer_2']), // Hashear y guardar segunda respuesta
         ]);
     }
 }

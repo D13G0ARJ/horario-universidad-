@@ -15,12 +15,6 @@ class CoordinadorController extends Controller
         return view('coordinador.index', compact('usuarios')); // Pasar los usuarios a la vista
     }
 
-    // Método para mostrar el formulario de registro (opcional, si no usas modal)
-    public function create()
-    {
-        return view('coordinador.create');
-    }
-
     // Método para procesar el registro de un nuevo coordinador
     public function store(Request $request)
     {
@@ -30,6 +24,10 @@ class CoordinadorController extends Controller
             'name' => 'required', // El nombre es obligatorio
             'email' => 'required|email|unique:users', // El email debe ser único y válido
             'password' => 'required|confirmed', // La contraseña es obligatoria y debe coincidir con la confirmación
+            'security_question_1' => 'required|string', // Primera pregunta de seguridad
+            'security_answer_1' => 'required|string', // Respuesta a la primera pregunta
+            'security_question_2' => 'required|string', // Segunda pregunta de seguridad
+            'security_answer_2' => 'required|string', // Respuesta a la segunda pregunta
         ]);
 
         // Crear el usuario
@@ -38,32 +36,39 @@ class CoordinadorController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password), // Hashear la contraseña
+            'security_question_1' => $request->security_question_1,
+            'security_answer_1' => $request->security_answer_1,
+            'security_question_2' => $request->security_question_2,
+            'security_answer_2' => $request->security_answer_2,
         ]);
 
         // Redireccionar a la lista de coordinadores con un mensaje de éxito
         return redirect()->route('coordinador.index')->with('success', 'Coordinador registrado correctamente.');
     }
 
+    // Método para eliminar un coordinador
     public function destroy(User $usuario)
     {
         $usuario->delete();
         return redirect()->route('coordinador.index')->with('success', 'Coordinador eliminado correctamente.');
     }
 
-
+    // Método para actualizar un coordinador
     public function update(Request $request, User $usuario)
-{
-    $request->validate([
-        'cedula' => 'required|unique:users,cedula,' . $usuario->cedula . ',cedula', // Usar 'cedula' como clave
-        'email' => 'required|email|unique:users,email,' . $usuario->cedula . ',cedula',
-    ]);
+    {
+        // Validación de datos
+        $request->validate([
+            'cedula' => 'required|unique:users,cedula,' . $usuario->cedula . ',cedula', // Usar 'cedula' como clave
+            'email' => 'required|email|unique:users,email,' . $usuario->cedula . ',cedula',
+        ]);
 
-    $usuario->update([
-        'cedula' => $request->cedula,
-        'name' => $request->name,
-        'email' => $request->email,
-    ]);
+        // Actualizar los datos del usuario
+        $usuario->update([
+            'cedula' => $request->cedula,
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
 
-    return redirect()->route('coordinador.index')->with('success', 'Coordinador actualizado.');
-}
+        return redirect()->route('coordinador.index')->with('success', 'Coordinador actualizado.');
+    }
 }
