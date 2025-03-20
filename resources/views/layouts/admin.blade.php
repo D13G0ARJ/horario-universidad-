@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <!-- FontAwesome -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -64,7 +64,7 @@
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
                 </li>
-                
+
                 <h1>UNEFA</h1>
 
             </ul>
@@ -106,11 +106,14 @@
                     </a>
                     <div class="dropdown-menu dropdown-menu-right">
                         <span class="dropdown-header">Cuenta</span>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-user mr-2"></i> Ver Perfil
+                        <!-- Dropdown con el botón de "Ver Perfil" -->
+                        <a href="#" class="dropdown-item"
+                            data-bs-toggle="modal"
+                            data-bs-target="#perfilModal">
+                            <i class="fas fa-user-circle mr-2"></i> Ver Perfil
                         </a>
                         <a href="#" class="dropdown-item">
-                            <i class="fas fa-lock mr-2"></i> Cambiar Contraseña
+                            <i class="fas fa-lock mr-2"></i> Configurar preguntas de seguridad
                         </a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{{ route('logout') }}"
@@ -141,7 +144,11 @@
                         <img src="{{ asset('images/acoount.jpg') }}" class="img-circle elevation-2" alt="User Image">
                     </div>
                     <div class="info">
-                        <a href="#" class="d-block">{{ auth()->user()->name }}</a>
+                        <a href="#" class="d-block"
+                            data-bs-toggle="modal"
+                            data-bs-target="#perfilModal">
+                            {{ auth()->user()->name }}
+                        </a>
                     </div>
                 </div>
 
@@ -156,11 +163,11 @@
                             </a>
                         </li>
 
-                        
+
                         <a href="{{url( '/coordinador')}}" class="nav-link" ">
                                         <i class=" far fa-circle nav-icon"></i>
-                                        <p>Coordinadores </p>
-                                    </a>
+                            <p>Coordinadores </p>
+                        </a>
                         <!-- Gestión de Docentes -->
                         <li class="nav-item has-treeview">
                             <a href="#" class="nav-link">
@@ -212,13 +219,13 @@
                         </li>
 
 
-                        
+
                         <!-- Gestión de Seguridad -->
                         <li class="nav-item has-treeview">
                             <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-chalkboard-teacher"></i>
                                 <p>
-                                Monitoreo de Actualizaciones
+                                    Monitoreo de Actualizaciones
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
@@ -238,10 +245,10 @@
                                 <!-- ... más subitems ... -->
                             </ul>
                         </li>
-                        
 
-                        
-                        {{-- 
+
+
+                        {{--
                         <!-- Gestión de Docentes -->
                         <li class="nav-item has-treeview">
                             <a href="#" class="nav-link">
@@ -254,62 +261,62 @@
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
                                     <a href="{{url( '/#')}}" class="nav-link" ">
-                                        <i class=" far fa-circle nav-icon"></i>
-                                        <p>Consultar Datos Personales </p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Modificar Datos Personales
-                                        </p>
-                                    </a>
-                                </li>
-                                <!-- ... más subitems ... -->
-                            </ul>
+                        <i class=" far fa-circle nav-icon"></i>
+                        <p>Consultar Datos Personales </p>
+                        </a>
                         </li>
-
-
-                        <!-- Gestión de Docentes -->
-                        <li class="nav-item has-treeview">
+                        <li class="nav-item">
                             <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-chalkboard-teacher"></i>
-                                <p>
-                                Documentos
-                                    <i class="right fas fa-angle-left"></i>
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Modificar Datos Personales
                                 </p>
                             </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="{{url( '/#')}}" class="nav-link" ">
-                                        <i class=" far fa-circle nav-icon"></i>
-                                        <p>Documentos personales </p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Documentos laborales</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Documentos Financieros</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Documentos de evaluacion</p>
-                                    </a>
-                                </li>
-                                <!-- ... más subitems ... -->
-                            </ul>
                         </li>
-                        --}}
+                        <!-- ... más subitems ... -->
+                    </ul>
+                    </li>
 
-                        <!-- ... (agregar demás items del menú de forma similar) ... -->
+
+                    <!-- Gestión de Docentes -->
+                    <li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-chalkboard-teacher"></i>
+                            <p>
+                                Documentos
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{url( '/#')}}" class="nav-link" ">
+                                        <i class=" far fa-circle nav-icon"></i>
+                                    <p>Documentos personales </p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Documentos laborales</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Documentos Financieros</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Documentos de evaluacion</p>
+                                </a>
+                            </li>
+                            <!-- ... más subitems ... -->
+                        </ul>
+                    </li>
+                    --}}
+
+                    <!-- ... (agregar demás items del menú de forma similar) ... -->
 
                     </ul>
                 </nav>
@@ -379,6 +386,40 @@
                 <strong>Copyright &copy; 2025 <a href="#">DR-CB-YA</a>.</strong> All rights reserved.
             </footer>
         </div>
+
+
+
+
+
+        <!-- Modal del Perfil del Usuario -->
+        <div class="modal fade" id="perfilModal" tabindex="-1" aria-labelledby="perfilModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Mi Perfil</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Datos del usuario logueado -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Cédula:</label>
+                            <p class="form-control-static">{{ Auth::user()->cedula }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre:</label>
+                            <p class="form-control-static">{{ Auth::user()->name }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email:</label>
+                            <p class="form-control-static">{{ Auth::user()->email }}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- ./wrapper -->
 
         <!-- REQUIRED SCRIPTS -->
@@ -390,9 +431,9 @@
         <!-- AdminLTE App -->
         <script src="dist/js/adminlte.min.js"></script>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 
 
 
