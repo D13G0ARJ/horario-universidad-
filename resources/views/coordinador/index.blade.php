@@ -60,14 +60,19 @@
                                     <td style="text-align: center;">
                                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                             <!-- Botón para Mostrar -->
+     <!-- Botón para Mostrar -->
                                             <button class="btn btn-info btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#mostrarModal"
-                                                data-id="{{ $usuario->id }}"
-                                                data-name="{{ $usuario->name }}"
-                                                data-cedula="{{ $usuario->cedula }}"
-                                                data-email="{{ $usuario->email }}">
-                                                <i class="fas fa-eye"></i>
+data-bs-toggle="modal"
+data-bs-target="#mostrarModal"
+data-id="{{ $usuario->id }}"
+data-name="{{ $usuario->name }}"
+data-cedula="{{ $usuario->cedula }}"
+data-email="{{ $usuario->email }}"
+data-security-question-1="{{ $usuario->security_question_1 }}"
+data-security-answer-1="{{ $usuario->security_answer_1 }}"
+data-security-question-2="{{ $usuario->security_question_2 }}"
+data-security-answer-2="{{ $usuario->security_answer_2 }}">
+<i class="fas fa-eye"></i>
                                             </button>
 
                                             <!-- Botón para Editar -->
@@ -79,14 +84,9 @@
                                                 data-cedula="{{ $usuario->cedula }}"
                                                 data-email="{{ $usuario->email }}">
                                                 <i class="fas fa-pencil-alt"></i>
-                                            </button>
-
-                                            <!-- Botón para Eliminar (ejemplo) -->
-                                            <form action="{{ route('coordinador.destroy', $usuario->cedula) }}" method="POST">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm">
-                                                    <i class="fas fa-trash"></i>
+                                                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmarEliminarModal"
+                                                data-action="{{ route('coordinador.destroy', $usuario->cedula) }}">
+                                                <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
                                         </div>
@@ -103,152 +103,228 @@
 
     <!-- Modal de registro -->
     <!-- Modal -->
-    <div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-registro" id="registroModalLabel">Registrar Nuevo Coordinador</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Formulario de registro -->
-                    <form method="POST" action="{{ route('coordinador.store') }}">
-                        @csrf
+<!-- Modal de registro -->
+<div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-registro" id="registroModalLabel">Registrar Nuevo Coordinador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Formulario de registro -->
+                <form method="POST" action="{{ route('coordinador.store') }}">
+                    @csrf
 
-                        <!-- Campo de Cédula -->
-                        <div class="form-group mb-3">
-                            <label for="cedula" class="form-label text-secondary small">Cédula</label>
-                            <div class="input-group">
-                                <span class="input-group-text py-2">
-                                    <i class="fas fa-id-card small"></i>
-                                </span>
-                                <input id="cedula" type="text"
-                                    class="form-control form-control-md @error('cedula') is-invalid @enderror"
-                                    name="cedula" placeholder="Cédula" value="{{ old('cedula') }}" required autofocus>
-                            </div>
-                            @error('cedula')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
+                    <!-- Campo de Cédula -->
+                    <div class="form-group mb-3">
+                        <label for="cedula" class="form-label text-secondary small">Cédula</label>
+                        <div class="input-group">
+                            <span class="input-group-text py-2">
+                                <i class="fas fa-id-card small"></i>
+                            </span>
+                            <input id="cedula" type="text"
+                                class="form-control form-control-md @error('cedula') is-invalid @enderror"
+                                name="cedula" placeholder="Cédula" value="{{ old('cedula') }}" required autofocus>
                         </div>
+                        @error('cedula')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                        <!-- Campo de Nombre -->
-                        <div class="form-group mb-3">
-                            <label for="name" class="form-label text-secondary small">Nombre</label>
-                            <div class="input-group">
-                                <span class="input-group-text py-2">
-                                    <i class="fas fa-user small"></i>
-                                </span>
-                                <input id="name" type="text"
-                                    class="form-control form-control-md @error('name') is-invalid @enderror"
-                                    name="name" placeholder="Nombre" value="{{ old('name') }}" required>
-                            </div>
-                            @error('name')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
+                    <!-- Campo de Nombre -->
+                    <div class="form-group mb-3">
+                        <label for="name" class="form-label text-secondary small">Nombre</label>
+                        <div class="input-group">
+                            <span class="input-group-text py-2">
+                                <i class="fas fa-user small"></i>
+                            </span>
+                            <input id="name" type="text"
+                                class="form-control form-control-md @error('name') is-invalid @enderror"
+                                name="name" placeholder="Nombre" value="{{ old('name') }}" required>
                         </div>
+                        @error('name')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                        <!-- Campo de Correo Electrónico -->
-                        <div class="form-group mb-3">
-                            <label for="email" class="form-label text-secondary small">Correo Electrónico</label>
-                            <div class="input-group">
-                                <span class="input-group-text py-2">
-                                    <i class="fas fa-envelope small"></i>
-                                </span>
-                                <input id="email" type="email"
-                                    class="form-control form-control-md @error('email') is-invalid @enderror"
-                                    name="email" placeholder="Correo Electrónico" value="{{ old('email') }}" required>
-                            </div>
-                            @error('email')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
+                    <!-- Campo de Correo Electrónico -->
+                    <div class="form-group mb-3">
+                        <label for="email" class="form-label text-secondary small">Correo Electrónico</label>
+                        <div class="input-group">
+                            <span class="input-group-text py-2">
+                                <i class="fas fa-envelope small"></i>
+                            </span>
+                            <input id="email" type="email"
+                                class="form-control form-control-md @error('email') is-invalid @enderror"
+                                name="email" placeholder="Correo Electrónico" value="{{ old('email') }}" required>
                         </div>
+                        @error('email')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                        <!-- Campo de Contraseña -->
-                        <div class="form-group mb-3">
-                            <label for="password" class="form-label text-secondary small">Contraseña</label>
-                            <div class="input-group">
-                                <span class="input-group-text py-2">
-                                    <i class="fas fa-lock small"></i>
-                                </span>
-                                <input id="password" type="password"
-                                    class="form-control form-control-md @error('password') is-invalid @enderror"
-                                    name="password" placeholder="Contraseña" required>
-                            </div>
-                            @error('password')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
+                    <!-- Campo de Contraseña -->
+                    <div class="form-group mb-3">
+                        <label for="password" class="form-label text-secondary small">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text py-2">
+                                <i class="fas fa-lock small"></i>
+                            </span>
+                            <input id="password" type="password"
+                                class="form-control form-control-md @error('password') is-invalid @enderror"
+                                name="password" placeholder="Contraseña" required>
                         </div>
+                        @error('password')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                        <!-- Campo de Confirmación de Contraseña -->
-                        <div class="form-group mb-3">
-                            <label for="password-confirm" class="form-label text-secondary small">Confirmar Contraseña</label>
-                            <div class="input-group">
-                                <span class="input-group-text py-2">
-                                    <i class="fas fa-lock small"></i>
-                                </span>
-                                <input id="password-confirm" type="password"
-                                    class="form-control form-control-md"
-                                    name="password_confirmation" placeholder="Confirmar Contraseña" required>
-                            </div>
+                    <!-- Campo de Confirmación de Contraseña -->
+                    <div class="form-group mb-3">
+                        <label for="password-confirm" class="form-label text-secondary small">Confirmar Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text py-2">
+                                <i class="fas fa-lock small"></i>
+                            </span>
+                            <input id="password-confirm" type="password"
+                                class="form-control form-control-md"
+                                name="password_confirmation" placeholder="Confirmar Contraseña" required>
                         </div>
+                    </div>
 
-                        <!-- Botón de Registro -->
-                        <div class="d-grid gap-2 mt-3">
-                            <button type="submit" class="btn btn-primary btn-md rounded-pill py-2">
-                                <i class="fas fa-user-plus me-2 small"></i>Registrarse
-                            </button>
-                        </div>
-                    </form>
-                </div>
+<!-- Pregunta de Seguridad 1 -->
+<div class="form-group mb-3">
+    <label for="security_question_1" class="form-label text-secondary small">Primera Pregunta de Seguridad</label>
+    <select id="security_question_1" name="security_question_1"
+        class="form-select @error('security_question_1') is-invalid @enderror" required>
+        <option value="" disabled selected>Seleccione una pregunta</option>
+        <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
+        <option value="¿Cuál es tu comida favorita?">¿Cuál es tu comida favorita?</option>
+        <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+    </select>
+    @error('security_question_1')
+    <div class="text-danger small mt-1">{{ $message }}</div>
+    @enderror
+</div>
+
+<!-- Respuesta de Seguridad 1 -->
+<div class="form-group mb-3">
+    <label for="security_answer_1" class="form-label text-secondary small">Respuesta</label>
+    <input id="security_answer_1" type="text"
+        class="form-control @error('security_answer_1') is-invalid @enderror"
+        name="security_answer_1" placeholder="Respuesta" required>
+    @error('security_answer_1')
+    <div class="text-danger small mt-1">{{ $message }}</div>
+    @enderror
+</div>
+
+<!-- Pregunta de Seguridad 2 -->
+<div class="form-group mb-3">
+    <label for="security_question_2" class="form-label text-secondary small">Segunda Pregunta de Seguridad</label>
+    <select id="security_question_2" name="security_question_2"
+        class="form-select @error('security_question_2') is-invalid @enderror" required>
+        <option value="" disabled selected>Seleccione una pregunta</option>
+        <option value="¿Cuál es el nombre de tu escuela primaria?">¿Cuál es el nombre de tu escuela primaria?</option>
+        <option value="¿Cuál es tu película favorita?">¿Cuál es tu película favorita?</option>
+        <option value="¿Cuál es el nombre de tu mejor amigo/a de la infancia?">¿Cuál es el nombre de tu mejor amigo/a de la infancia?</option>
+    </select>
+    @error('security_question_2')
+    <div class="text-danger small mt-1">{{ $message }}</div>
+    @enderror
+</div>
+
+<!-- Respuesta de Seguridad 2 -->
+<div class="form-group mb-3">
+    <label for="security_answer_2" class="form-label text-secondary small">Respuesta</label>
+    <input id="security_answer_2" type="text"
+        class="form-control @error('security_answer_2') is-invalid @enderror"
+        name="security_answer_2" placeholder="Respuesta" required>
+    @error('security_answer_2')
+    <div class="text-danger small mt-1">{{ $message }}</div>
+    @enderror
+</div>
+                    <!-- Botón de Registro -->
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary btn-md rounded-pill py-2">
+                            <i class="fas fa-user-plus me-2 small"></i>Registrar
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
 
-
-    <!-- Modal para Mostrar -->
-    <div class="modal fade" id="mostrarModal" tabindex="-1" aria-labelledby="mostrarModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalles del Coordinador</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Modal para Mostrar -->
+<div class="modal fade" id="mostrarModal" tabindex="-1" aria-labelledby="mostrarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles del Coordinador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nombre:</label>
+                    <p id="modalNombre"></p>
                 </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Nombre:</label>
-                        <p id="modalNombre"></p>
-                    </div>
-                    <div class="form-group">
-                        <label>Cédula:</label>
-                        <p id="modalCedula"></p>
-                    </div>
-                    <div class="form-group">
-                        <label>Email:</label>
-                        <p id="modalEmail"></p>
-                    </div>
+                <div class="form-group">
+                    <label>Cédula:</label>
+                    <p id="modalCedula"></p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <p id="modalEmail"></p>
                 </div>
+                <div class="form-group">
+                    <label>Primera Pregunta de Seguridad:</label>
+                    <p id="modalPregunta1"></p>
+                </div>
+                <div class="form-group">
+                    <label>Respuesta a la Primera Pregunta:</label>
+                    <p id="modalRespuesta1"></p>
+                </div>
+                <div class="form-group">
+                    <label>Segunda Pregunta de Seguridad:</label>
+                    <p id="modalPregunta2"></p>
+                </div>
+                <div class="form-group">
+                    <label>Respuesta a la Segunda Pregunta:</label>
+                    <p id="modalRespuesta2"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
-
+</div>
     <!-- Script para llenar el modal -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const mostrarModal = document.getElementById('mostrarModal');
             mostrarModal.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget;
+
+                // Obtener datos del botón
                 const nombre = button.getAttribute('data-name');
                 const cedula = button.getAttribute('data-cedula');
                 const email = button.getAttribute('data-email');
+                const pregunta1 = button.getAttribute('data-security-question-1');
+                const respuesta1 = button.getAttribute('data-security-answer-1');
+                const pregunta2 = button.getAttribute('data-security-question-2');
+                const respuesta2 = button.getAttribute('data-security-answer-2');
 
                 // Actualizar los campos del modal
                 mostrarModal.querySelector('#modalNombre').textContent = nombre;
                 mostrarModal.querySelector('#modalCedula').textContent = cedula;
                 mostrarModal.querySelector('#modalEmail').textContent = email;
+                mostrarModal.querySelector('#modalPregunta1').textContent = pregunta1;
+                mostrarModal.querySelector('#modalRespuesta1').textContent = respuesta1;
+                mostrarModal.querySelector('#modalPregunta2').textContent = pregunta2;
+                mostrarModal.querySelector('#modalRespuesta2').textContent = respuesta2;
             });
         });
     </script>
@@ -316,6 +392,8 @@
         </div>
     </div>
 
+
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const editarModal = document.getElementById('editarModal');
@@ -339,4 +417,44 @@
         });
     </script>
 
+    <!-- Botón para Eliminar -->
+
+
+<!-- Modal de Confirmación para Eliminar -->
+<div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" aria-hidden="true">
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="confirmarEliminarModalLabel">Confirmar Eliminación</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <p>¿Estás seguro de que deseas eliminar este coordinador?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+            <form id="formEliminar" method="POST" style="display: inline;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmarEliminarModal = document.getElementById('confirmarEliminarModal');
+    const formEliminar = document.getElementById('formEliminar');
+
+    confirmarEliminarModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const action = button.getAttribute('data-action'); // Obtener la URL de acción del botón
+
+        // Actualizar la acción del formulario
+        formEliminar.action = action;
+    });
+});
+</script>
     @endsection
