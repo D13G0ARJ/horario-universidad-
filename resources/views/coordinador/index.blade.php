@@ -60,19 +60,19 @@
                                     <td style="text-align: center;">
                                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                             <!-- Botón para Mostrar -->
-     <!-- Botón para Mostrar -->
+                                            <!-- Botón para Mostrar -->
                                             <button class="btn btn-info btn-sm"
-data-bs-toggle="modal"
-data-bs-target="#mostrarModal"
-data-id="{{ $usuario->id }}"
-data-name="{{ $usuario->name }}"
-data-cedula="{{ $usuario->cedula }}"
-data-email="{{ $usuario->email }}"
-data-security-question-1="{{ $usuario->security_question_1 }}"
-data-security-answer-1="{{ $usuario->security_answer_1 }}"
-data-security-question-2="{{ $usuario->security_question_2 }}"
-data-security-answer-2="{{ $usuario->security_answer_2 }}">
-<i class="fas fa-eye"></i>
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#mostrarModal"
+                                                data-id="{{ $usuario->id }}"
+                                                data-name="{{ $usuario->name }}"
+                                                data-cedula="{{ $usuario->cedula }}"
+                                                data-email="{{ $usuario->email }}"
+                                                data-security-question-1="{{ $usuario->security_question_1 }}"
+                                                data-security-answer-1="{{ $usuario->security_answer_1 }}"
+                                                data-security-question-2="{{ $usuario->security_question_2 }}"
+                                                data-security-answer-2="{{ $usuario->security_answer_2 }}">
+                                                <i class="fas fa-eye"></i>
                                             </button>
 
                                             <!-- Botón para Editar -->
@@ -85,10 +85,10 @@ data-security-answer-2="{{ $usuario->security_answer_2 }}">
                                                 data-email="{{ $usuario->email }}">
                                                 <i class="fas fa-pencil-alt"></i>
                                                 <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmarEliminarModal"
-                                                data-action="{{ route('coordinador.destroy', $usuario->cedula) }}">
-                                                <i class="fas fa-trash"></i>
+                                                    data-action="{{ route('coordinador.destroy', $usuario->cedula) }}">
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
-                                            </form>
+                                                </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -102,17 +102,15 @@ data-security-answer-2="{{ $usuario->security_answer_2 }}">
 
 
     <!-- Modal de registro -->
-    <!-- Modal -->
-<!-- Modal de registro -->
+<!-- Modal de Registro de Usuarios -->
 <div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-registro" id="registroModalLabel">Registrar Nuevo Coordinador</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Registrar Nuevo Coordinador</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Formulario de registro -->
                 <form method="POST" action="{{ route('coordinador.store') }}">
                     @csrf
 
@@ -193,57 +191,6 @@ data-security-answer-2="{{ $usuario->security_answer_2 }}">
                         </div>
                     </div>
 
-<!-- Pregunta de Seguridad 1 -->
-<div class="form-group mb-3">
-    <label for="security_question_1" class="form-label text-secondary small">Primera Pregunta de Seguridad</label>
-    <select id="security_question_1" name="security_question_1"
-        class="form-select @error('security_question_1') is-invalid @enderror" required>
-        <option value="" disabled selected>Seleccione una pregunta</option>
-        <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
-        <option value="¿Cuál es tu comida favorita?">¿Cuál es tu comida favorita?</option>
-        <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
-    </select>
-    @error('security_question_1')
-    <div class="text-danger small mt-1">{{ $message }}</div>
-    @enderror
-</div>
-
-<!-- Respuesta de Seguridad 1 -->
-<div class="form-group mb-3">
-    <label for="security_answer_1" class="form-label text-secondary small">Respuesta</label>
-    <input id="security_answer_1" type="text"
-        class="form-control @error('security_answer_1') is-invalid @enderror"
-        name="security_answer_1" placeholder="Respuesta" required>
-    @error('security_answer_1')
-    <div class="text-danger small mt-1">{{ $message }}</div>
-    @enderror
-</div>
-
-<!-- Pregunta de Seguridad 2 -->
-<div class="form-group mb-3">
-    <label for="security_question_2" class="form-label text-secondary small">Segunda Pregunta de Seguridad</label>
-    <select id="security_question_2" name="security_question_2"
-        class="form-select @error('security_question_2') is-invalid @enderror" required>
-        <option value="" disabled selected>Seleccione una pregunta</option>
-        <option value="¿Cuál es el nombre de tu escuela primaria?">¿Cuál es el nombre de tu escuela primaria?</option>
-        <option value="¿Cuál es tu película favorita?">¿Cuál es tu película favorita?</option>
-        <option value="¿Cuál es el nombre de tu mejor amigo/a de la infancia?">¿Cuál es el nombre de tu mejor amigo/a de la infancia?</option>
-    </select>
-    @error('security_question_2')
-    <div class="text-danger small mt-1">{{ $message }}</div>
-    @enderror
-</div>
-
-<!-- Respuesta de Seguridad 2 -->
-<div class="form-group mb-3">
-    <label for="security_answer_2" class="form-label text-secondary small">Respuesta</label>
-    <input id="security_answer_2" type="text"
-        class="form-control @error('security_answer_2') is-invalid @enderror"
-        name="security_answer_2" placeholder="Respuesta" required>
-    @error('security_answer_2')
-    <div class="text-danger small mt-1">{{ $message }}</div>
-    @enderror
-</div>
                     <!-- Botón de Registro -->
                     <div class="d-grid gap-2 mt-3">
                         <button type="submit" class="btn btn-primary btn-md rounded-pill py-2">
@@ -257,50 +204,127 @@ data-security-answer-2="{{ $usuario->security_answer_2 }}">
 </div>
 
 
-<!-- Modal para Mostrar -->
-<div class="modal fade" id="mostrarModal" tabindex="-1" aria-labelledby="mostrarModalLabel" aria-hidden="true">
+<!-- Modal de Configurar Preguntas de Seguridad -->
+<div class="modal fade" id="preguntasSeguridadModal" tabindex="-1" aria-labelledby="preguntasSeguridadModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Detalles del Coordinador</h5>
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Configurar Preguntas de Seguridad</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Nombre:</label>
-                    <p id="modalNombre"></p>
-                </div>
-                <div class="form-group">
-                    <label>Cédula:</label>
-                    <p id="modalCedula"></p>
-                </div>
-                <div class="form-group">
-                    <label>Email:</label>
-                    <p id="modalEmail"></p>
-                </div>
-                <div class="form-group">
-                    <label>Primera Pregunta de Seguridad:</label>
-                    <p id="modalPregunta1"></p>
-                </div>
-                <div class="form-group">
-                    <label>Respuesta a la Primera Pregunta:</label>
-                    <p id="modalRespuesta1"></p>
-                </div>
-                <div class="form-group">
-                    <label>Segunda Pregunta de Seguridad:</label>
-                    <p id="modalPregunta2"></p>
-                </div>
-                <div class="form-group">
-                    <label>Respuesta a la Segunda Pregunta:</label>
-                    <p id="modalRespuesta2"></p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <form method="POST" action="{{ route('coordinador.store') }}">
+                    @csrf
+
+                    <!-- Pregunta de Seguridad 1 -->
+                    <div class="form-group mb-3">
+                        <label for="security_question_1" class="form-label text-secondary small">Primera Pregunta de Seguridad</label>
+                        <select id="security_question_1" name="security_question_1"
+                            class="form-select @error('security_question_1') is-invalid @enderror" required>
+                            <option value="" disabled selected>Seleccione una pregunta</option>
+                            <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
+                            <option value="¿Cuál es tu comida favorita?">¿Cuál es tu comida favorita?</option>
+                            <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+                        </select>
+                        @error('security_question_1')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Respuesta de Seguridad 1 -->
+                    <div class="form-group mb-3">
+                        <label for="security_answer_1" class="form-label text-secondary small">Respuesta</label>
+                        <input id="security_answer_1" type="text"
+                            class="form-control @error('security_answer_1') is-invalid @enderror"
+                            name="security_answer_1" placeholder="Respuesta" required>
+                        @error('security_answer_1')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Pregunta de Seguridad 2 -->
+                    <div class="form-group mb-3">
+                        <label for="security_question_2" class="form-label text-secondary small">Segunda Pregunta de Seguridad</label>
+                        <select id="security_question_2" name="security_question_2"
+                            class="form-select @error('security_question_2') is-invalid @enderror" required>
+                            <option value="" disabled selected>Seleccione una pregunta</option>
+                            <option value="¿Cuál es el nombre de tu escuela primaria?">¿Cuál es el nombre de tu escuela primaria?</option>
+                            <option value="¿Cuál es tu película favorita?">¿Cuál es tu película favorita?</option>
+                            <option value="¿Cuál es el nombre de tu mejor amigo/a de la infancia?">¿Cuál es el nombre de tu mejor amigo/a de la infancia?</option>
+                        </select>
+                        @error('security_question_2')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Respuesta de Seguridad 2 -->
+                    <div class="form-group mb-3">
+                        <label for="security_answer_2" class="form-label text-secondary small">Respuesta</label>
+                        <input id="security_answer_2" type="text"
+                            class="form-control @error('security_answer_2') is-invalid @enderror"
+                            name="security_answer_2" placeholder="Respuesta" required>
+                        @error('security_answer_2')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Botón de Guardar -->
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="submit" class="btn btn-warning btn-md rounded-pill py-2">
+                            <i class="fas fa-save me-2 small"></i>Guardar Preguntas
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+
+
+    <!-- Modal para Mostrar -->
+    <div class="modal fade" id="mostrarModal" tabindex="-1" aria-labelledby="mostrarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles del Coordinador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Nombre:</label>
+                        <p id="modalNombre"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Cédula:</label>
+                        <p id="modalCedula"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <p id="modalEmail"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Primera Pregunta de Seguridad:</label>
+                        <p id="modalPregunta1"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Respuesta a la Primera Pregunta:</label>
+                        <p id="modalRespuesta1"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Segunda Pregunta de Seguridad:</label>
+                        <p id="modalPregunta2"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Respuesta a la Segunda Pregunta:</label>
+                        <p id="modalRespuesta2"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Script para llenar el modal -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -340,52 +364,52 @@ data-security-answer-2="{{ $usuario->security_answer_2 }}">
                 </div>
                 <div class="modal-body">
                     <form method="POST" action="{{ route('coordinador.update', $usuario->cedula) }}" id="formEditar">
-                    @csrf
-                    @method('PUT')
+                        @csrf
+                        @method('PUT')
 
-                    <!-- Cédula (solo lectura) -->
-                    <div class="form-group mb-3">
-                        <label for="cedula_editar" class="form-label">Cédula</label>
-                        <input type="text"
-                            class="form-control"
-                            name="cedula"
-                            id="cedula_editar"
-                            readonly required> <!-- Bloquea la edición -->
-                        @error('cedula')
-                        <small class="text-danger">{{ $message }}</small>
-                        @enderror
-                    </div>
+                        <!-- Cédula (solo lectura) -->
+                        <div class="form-group mb-3">
+                            <label for="cedula_editar" class="form-label">Cédula</label>
+                            <input type="text"
+                                class="form-control"
+                                name="cedula"
+                                id="cedula_editar"
+                                readonly required> <!-- Bloquea la edición -->
+                            @error('cedula')
+                            <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
 
-                    <!-- Nombre -->
-                    <div class="form-group mb-3">
-                        <label for="name_editar" class="form-label">Nombre</label>
-                        <input type="text"
-                            class="form-control"
-                            name="name"
-                            id="name_editar"
-                            required>
-                        @error('name')
-                        <small class="text-danger">{{ $message }}</small>
-                        @enderror
-                    </div>
+                        <!-- Nombre -->
+                        <div class="form-group mb-3">
+                            <label for="name_editar" class="form-label">Nombre</label>
+                            <input type="text"
+                                class="form-control"
+                                name="name"
+                                id="name_editar"
+                                required>
+                            @error('name')
+                            <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
 
-                    <!-- Correo -->
-                    <div class="form-group mb-3">
-                        <label for="email_editar" class="form-label">Email</label>
-                        <input type="email"
-                            class="form-control"
-                            name="email"
-                            id="email_editar"
-                            required>
-                        @error('email')
-                        <small class="text-danger">{{ $message }}</small>
-                        @enderror
-                    </div>
+                        <!-- Correo -->
+                        <div class="form-group mb-3">
+                            <label for="email_editar" class="form-label">Email</label>
+                            <input type="email"
+                                class="form-control"
+                                name="email"
+                                id="email_editar"
+                                required>
+                            @error('email')
+                            <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                    </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -420,41 +444,41 @@ data-security-answer-2="{{ $usuario->security_answer_2 }}">
     <!-- Botón para Eliminar -->
 
 
-<!-- Modal de Confirmación para Eliminar -->
-<div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" aria-hidden="true">
-<div class="modal-dialog">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="confirmarEliminarModalLabel">Confirmar Eliminación</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <p>¿Estás seguro de que deseas eliminar este coordinador?</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
-            <form id="formEliminar" method="POST" style="display: inline;">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger">Sí, eliminar</button>
-            </form>
+    <!-- Modal de Confirmación para Eliminar -->
+    <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmarEliminarModalLabel">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar este coordinador?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                    <form id="formEliminar" method="POST" style="display: inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-</div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const confirmarEliminarModal = document.getElementById('confirmarEliminarModal');
-    const formEliminar = document.getElementById('formEliminar');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmarEliminarModal = document.getElementById('confirmarEliminarModal');
+            const formEliminar = document.getElementById('formEliminar');
 
-    confirmarEliminarModal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        const action = button.getAttribute('data-action'); // Obtener la URL de acción del botón
+            confirmarEliminarModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const action = button.getAttribute('data-action'); // Obtener la URL de acción del botón
 
-        // Actualizar la acción del formulario
-        formEliminar.action = action;
-    });
-});
-</script>
+                // Actualizar la acción del formulario
+                formEliminar.action = action;
+            });
+        });
+    </script>
     @endsection

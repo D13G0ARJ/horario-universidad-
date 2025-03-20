@@ -112,7 +112,9 @@
                             data-bs-target="#perfilModal">
                             <i class="fas fa-user-circle mr-2"></i> Ver Perfil
                         </a>
-                        <a href="#" class="dropdown-item">
+                        <a href="#" class="dropdown-item"
+                            data-bs-toggle="modal"
+                            data-bs-target="#preguntasSeguridadModal">
                             <i class="fas fa-lock mr-2"></i> Configurar preguntas de seguridad
                         </a>
                         <div class="dropdown-divider"></div>
