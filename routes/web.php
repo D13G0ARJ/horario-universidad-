@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CoordinadorController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\RegisterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,3 +62,10 @@ Route::prefix('password')->group(function () {
     Route::get('/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('/update', [ForgotPasswordController::class, 'updatePassword'])->name('password.update');
 });
+
+use App\Http\Controllers\Auth\SecurityQuestionController;
+
+// Ruta para actualizar las preguntas de seguridad
+Route::post('/security-questions', [SecurityQuestionController::class, 'update'])->name('security-questions.update');
+
+Route::post('register', [RegisterController::class, 'register'])->name('register');

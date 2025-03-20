@@ -213,7 +213,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="{{ route('coordinador.store') }}">
+                <form method="POST" action="{{ route('security-questions.update') }}">
                     @csrf
 
                     <!-- Pregunta de Seguridad 1 -->
