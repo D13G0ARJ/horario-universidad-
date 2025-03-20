@@ -54,13 +54,10 @@ Route::prefix('password')->group(function () {
             'question2' => session('question2'),
         ]);
     })->name('password.securityQuestions');
-Route::post('/password/verify-answers', [ForgotPasswordController::class, 'verifyAnswers'])->name('password.verifyAnswers');
+
+    Route::post('/verify-answers', [ForgotPasswordController::class, 'verifyAnswers'])->name('password.verifyAnswers');
+
     // Restablecer contraseña
-    Route::get('/reset/{token}', function ($token) {
-        return view('auth.passwords.reset-password', [
-            'token' => $token,
-            'username' => session('username'), // Pasar la cédula del usuario desde la sesión
-        ]);
-    })->name('password.reset');
+    Route::get('/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('/update', [ForgotPasswordController::class, 'updatePassword'])->name('password.update');
 });

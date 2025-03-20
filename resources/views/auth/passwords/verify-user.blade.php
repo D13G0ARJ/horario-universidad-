@@ -1,40 +1,41 @@
-{{-- filepath: [verify-user.blade.php](http://_vscodecontentref_/0) --}}
+{{-- filepath: c:\Users\Alexa\OneDrive\Escritorio\horario-universidad-\resources\views\auth\passwords\verify-user.blade.php --}}
 @extends('layouts.login')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-lg">
-                <div class="card-header text-center bg-transparent border-0">
-                    <h4 class="text-dark mb-1 font-weight-bold">Verificar Usuario</h4>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ route('password.verifyUser') }}">
-                        @csrf
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="card border-0 shadow-lg" style="width: 100%; max-width: 400px;">
+        <div class="card-header text-center bg-transparent border-0">
+            <h4 class="text-dark mb-1 font-weight-bold">Verificar Usuario</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ route('password.verifyUser') }}">
+                @csrf
 
-                        <!-- Campo de Usuario -->
-                        <div class="form-group mb-3">
-                            <label for="username" class="form-label text-secondary small">Ingrese su Cédula</label>
-                            <input id="username" type="text"
-                                class="form-control @error('username') is-invalid @enderror"
-                                name="username" placeholder="Cédula" value="{{ old('username') }}" required autofocus>
-                            @error('username')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-                        </div>
-
-                        <!-- Botón de Verificar -->
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-md rounded-pill py-2">
-                                Verificar Usuario
-                            </button>
-                        </div>
-                    </form>
+                <!-- Campo de Usuario -->
+                <div class="form-group mb-3">
+                    <label for="username" class="form-label text-secondary small">Ingrese su Cédula</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-id-card small"></i>
+                        </span>
+                        <input id="username" type="text"
+                            class="form-control @error('username') is-invalid @enderror"
+                            name="username" placeholder="Cédula" value="{{ old('username') }}" required autofocus>
+                    </div>
+                    @error('username')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
                 </div>
-            </div>
+
+                <!-- Botón de Verificar -->
+                <div class="form-group mb-3">
+                    <button type="submit" class="btn btn-primary btn-md w-100 rounded-pill py-2">
+                        Verificar Usuario
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

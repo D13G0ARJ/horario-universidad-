@@ -32,13 +32,15 @@ class ForgotPasswordController extends Controller
         $user = User::where('cedula', $request->username)->first(); // Buscar por 'cedula'
 
         if ($user) {
-            // Redirigir a la vista de preguntas de seguridad con un mensaje de éxito
-            return redirect()->route('password.securityQuestions')->with([
-                'success' => 'Verificado con éxito.',
+            // Almacenar datos en la sesión
+            session([
                 'username' => $user->cedula,
                 'question1' => $user->security_question_1,
                 'question2' => $user->security_question_2,
             ]);
+
+            // Redirigir a la vista de preguntas de seguridad con un mensaje de éxito
+            return redirect()->route('password.securityQuestions')->with('success', 'Verificado con éxito.');
         }
 
         // Si no se encuentra el usuario, regresar con un mensaje de error
@@ -63,12 +65,26 @@ class ForgotPasswordController extends Controller
             $user->security_answer_1 === $request->security_answer_1 &&
             $user->security_answer_2 === $request->security_answer_2
         ) {
-            // Redirigir al formulario de restablecimiento de contraseña
+            // Generar un token y redirigir al formulario de restablecimiento de contraseña
             return redirect()->route('password.reset', ['token' => Str::random(60)]);
         }
 
         // Si las respuestas son incorrectas, regresar con un error
-        return back()->withErrors(['security_answer_1' => 'Respuestas incorrectas']);
+        return back()->withErrors([
+            'security_answer_1' => 'Las respuestas de seguridad no coinciden.',
+            'security_answer_2' => 'Las respuestas de seguridad no coinciden.',
+        ]);
+    }
+
+    /**
+     * Muestra el formulario de restablecimiento de contraseña.
+     */
+    public function showResetForm(Request $request, $token)
+    {
+        return view('auth.passwords.reset-password', [
+            'token' => $token,
+            'username' => session('username'), // Obtener el username desde la sesión
+        ]);
     }
 
     /**
