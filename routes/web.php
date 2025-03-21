@@ -67,5 +67,3 @@ use App\Http\Controllers\Auth\SecurityQuestionController;
 
 // Ruta para actualizar las preguntas de seguridad
 Route::post('/security-questions', [SecurityQuestionController::class, 'update'])->name('security-questions.update');
-
-Route::post('register', [RegisterController::class, 'register'])->name('register');

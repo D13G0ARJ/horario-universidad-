@@ -19,7 +19,7 @@
                     </a>
                 </div>
 
-                <
+                
 
                     </div>
                     <div class="card-body col-12" style="width: 100%;">
@@ -204,81 +204,7 @@
 </div>
 
 
-<!-- Modal de Configurar Preguntas de Seguridad -->
-<div class="modal fade" id="preguntasSeguridadModal" tabindex="-1" aria-labelledby="preguntasSeguridadModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title">Configurar Preguntas de Seguridad</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="POST" action="{{ route('security-questions.update') }}">
-                    @csrf
 
-                    <!-- Pregunta de Seguridad 1 -->
-                    <div class="form-group mb-3">
-                        <label for="security_question_1" class="form-label text-secondary small">Primera Pregunta de Seguridad</label>
-                        <select id="security_question_1" name="security_question_1"
-                            class="form-select @error('security_question_1') is-invalid @enderror" required>
-                            <option value="" disabled selected>Seleccione una pregunta</option>
-                            <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
-                            <option value="¿Cuál es tu comida favorita?">¿Cuál es tu comida favorita?</option>
-                            <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
-                        </select>
-                        @error('security_question_1')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Respuesta de Seguridad 1 -->
-                    <div class="form-group mb-3">
-                        <label for="security_answer_1" class="form-label text-secondary small">Respuesta</label>
-                        <input id="security_answer_1" type="text"
-                            class="form-control @error('security_answer_1') is-invalid @enderror"
-                            name="security_answer_1" placeholder="Respuesta" required>
-                        @error('security_answer_1')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Pregunta de Seguridad 2 -->
-                    <div class="form-group mb-3">
-                        <label for="security_question_2" class="form-label text-secondary small">Segunda Pregunta de Seguridad</label>
-                        <select id="security_question_2" name="security_question_2"
-                            class="form-select @error('security_question_2') is-invalid @enderror" required>
-                            <option value="" disabled selected>Seleccione una pregunta</option>
-                            <option value="¿Cuál es el nombre de tu escuela primaria?">¿Cuál es el nombre de tu escuela primaria?</option>
-                            <option value="¿Cuál es tu película favorita?">¿Cuál es tu película favorita?</option>
-                            <option value="¿Cuál es el nombre de tu mejor amigo/a de la infancia?">¿Cuál es el nombre de tu mejor amigo/a de la infancia?</option>
-                        </select>
-                        @error('security_question_2')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Respuesta de Seguridad 2 -->
-                    <div class="form-group mb-3">
-                        <label for="security_answer_2" class="form-label text-secondary small">Respuesta</label>
-                        <input id="security_answer_2" type="text"
-                            class="form-control @error('security_answer_2') is-invalid @enderror"
-                            name="security_answer_2" placeholder="Respuesta" required>
-                        @error('security_answer_2')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Botón de Guardar -->
-                    <div class="d-grid gap-2 mt-3">
-                        <button type="submit" class="btn btn-warning btn-md rounded-pill py-2">
-                            <i class="fas fa-save me-2 small"></i>Guardar Preguntas
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 
     <!-- Modal para Mostrar -->
@@ -302,22 +228,7 @@
                         <label>Email:</label>
                         <p id="modalEmail"></p>
                     </div>
-                    <div class="form-group">
-                        <label>Primera Pregunta de Seguridad:</label>
-                        <p id="modalPregunta1"></p>
-                    </div>
-                    <div class="form-group">
-                        <label>Respuesta a la Primera Pregunta:</label>
-                        <p id="modalRespuesta1"></p>
-                    </div>
-                    <div class="form-group">
-                        <label>Segunda Pregunta de Seguridad:</label>
-                        <p id="modalPregunta2"></p>
-                    </div>
-                    <div class="form-group">
-                        <label>Respuesta a la Segunda Pregunta:</label>
-                        <p id="modalRespuesta2"></p>
-                    </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
