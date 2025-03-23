@@ -37,7 +37,7 @@ Route::get('/', [AdminController::class, 'index'])->name('admin.index')->middlew
 Route::prefix('coordinador')->middleware('auth')->group(function () {
     Route::get('/', [CoordinadorController::class, 'index'])->name('coordinador.index');
     Route::post('/', [CoordinadorController::class, 'store'])->name('coordinador.store');
-    Route::put('/{usuario}', [CoordinadorController::class, 'update'])->name('coordinador.update');
+    Route::post('/coordinador/{cedula}', [CoordinadorController::class, 'update'])->name('coordinador.update');
     Route::delete('/{usuario}', [CoordinadorController::class, 'destroy'])->name('coordinador.destroy');
 });
 

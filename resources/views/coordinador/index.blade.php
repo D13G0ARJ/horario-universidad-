@@ -276,7 +276,7 @@
                 <div class="modal-body">
                     <form method="POST" action="{{ route('coordinador.update', $usuario->cedula) }}" id="formEditar">
                         @csrf
-                        @method('PUT')
+                        
 
                         <!-- Cédula (solo lectura) -->
                         <div class="form-group mb-3">
@@ -330,26 +330,26 @@
 
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const editarModal = document.getElementById('editarModal');
-            editarModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
+document.addEventListener('DOMContentLoaded', function() {
+    const editarModal = document.getElementById('editarModal');
+    editarModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
 
-                // Obtener datos del botón
-                const cedula = button.getAttribute('data-cedula');
-                const name = button.getAttribute('data-name');
-                const email = button.getAttribute('data-email');
+        // Obtener datos del botón
+        const cedula = button.getAttribute('data-cedula');
+        const name = button.getAttribute('data-name');
+        const email = button.getAttribute('data-email');
 
-                // Actualizar el formulario
-                const form = document.getElementById('formEditar');
-                form.action = `/coordinadores/${cedula}`; // Actualizar la URL de la acción
+        // Actualizar el formulario
+        const form = document.getElementById('formEditar');
+        form.action = `/coordinador/${cedula}`; // Actualizar la URL de la acción
 
-                // Llenar los campos
-                document.getElementById('cedula_editar').value = cedula;
-                document.getElementById('name_editar').value = name;
-                document.getElementById('email_editar').value = email;
-            });
-        });
+        // Llenar los campos
+        document.getElementById('cedula_editar').value = cedula;
+        document.getElementById('name_editar').value = name;
+        document.getElementById('email_editar').value = email;
+    });
+});
     </script>
 
     <!-- Botón para Eliminar -->
