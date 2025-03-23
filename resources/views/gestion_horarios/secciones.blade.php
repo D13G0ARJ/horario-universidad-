@@ -34,7 +34,7 @@
             <table id="secciones-table" class="table table-hover" style="width:100%">
                 <thead class="table-dark">
                     <tr>
-                        <th>ID</th>
+
                         <th>Nombre</th>
                         <th>Aula</th>
                         <th>Acciones</th>
@@ -43,7 +43,7 @@
                 <tbody>
                     @foreach ($secciones as $seccion)
                     <tr>
-                        <td>{{ $seccion->id }}</td>
+
                         <td>{{ $seccion->nombre }}</td>
                         <td>{{ $seccion->aula->nombre }}</td>
                         <td>
@@ -183,43 +183,47 @@
 @endsection
 
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
 
 <script>
-    $(document).ready(function() {
-        // Inicializar DataTable
-        $('#secciones-table').DataTable({
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-            },
-            order: [[0, 'desc']]
-        });
 
-        // Código para editar
-        $('.btn-editar').click(function() {
-            const seccionId = $(this).data('id');
-            $.get(`/secciones/${seccionId}/edit`, function(data) {
+
+    // Delegación de eventos para editar
+    $(document).on('click', '.btn-editar', function() {
+        const seccionId = $(this).data('id');
+        
+        $.ajax({
+            url: `/secciones/${seccionId}/edit`,
+            method: 'GET',
+            success: function(data) {
                 $('#edit_nombre').val(data.seccion.nombre);
                 $('#edit_aula_id').val(data.seccion.aula_id);
                 $('#editarSeccionForm').attr('action', `/secciones/${seccionId}`);
                 $('#editarSeccionModal').modal('show');
-            });
-        });
-
-        // Envío del formulario de edición
-        $('#editarSeccionForm').submit(function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: $(this).attr('action'),
-                method: 'POST',
-                data: $(this).serialize(),
-                success: function() {
-                    location.reload();
-                }
-            });
+            },
+            error: function(xhr) {
+                alert('Error al cargar datos');
+            }
         });
     });
+
+    // Envío del formulario de edición
+    $('#editarSeccionForm').submit(function(e) {
+        e.preventDefault();
+        
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                $('#editarSeccionModal').modal('hide');
+                location.reload();
+            },
+            error: function(xhr) {
+                alert('Error: ' + xhr.responseJSON.error);
+            }
+        });
+    });
+
 </script>
 @endpush
