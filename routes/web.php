@@ -64,6 +64,11 @@ Route::prefix('password')->group(function () {
 });
 
 use App\Http\Controllers\Auth\SecurityQuestionController;
+use App\Http\Controllers\SeccionController;
 
 // Ruta para actualizar las preguntas de seguridad
 Route::post('/security-questions', [SecurityQuestionController::class, 'update'])->name('security-questions.update');
+
+
+Route::resource('secciones', SeccionController::class);
+
