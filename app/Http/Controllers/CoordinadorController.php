@@ -55,7 +55,7 @@ class CoordinadorController extends Controller
 {
     $request->validate([
         'cedula' => 'required|unique:users,cedula,' . $usuario->cedula . ',cedula', // Usar 'cedula' como clave
-        'email' => 'required|email|unique:users,email,' . $usuario->cedula . ',cedula',
+        //'email' => 'required|email|unique:users,email,' . $usuario->cedula . ',cedula',
     ]);
 
     $usuario->update([
