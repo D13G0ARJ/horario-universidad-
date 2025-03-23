@@ -6,6 +6,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CoordinadorController;
 use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\AsignaturaController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\RegisterController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -47,3 +50,30 @@ Route::get('/asignatura', [AsignaturaController::class, 'index'])->name('asignat
 Route::post('/asignaturas', [AsignaturaController::class, 'store'])->name('asignatura.store');
 Route::put('/asignaturas/{asignatura}', [AsignaturaController::class, 'update'])->name('asignatura.update');
 Route::delete('/asignaturas/{asignatura}', [AsignaturaController::class, 'destroy'])->name('asignatura.destroy');
+
+// Rutas para recuperación de contraseña
+Route::prefix('password')->group(function () {
+    // Verificar usuario
+    Route::get('/verify-user', [ForgotPasswordController::class, 'showVerifyUserForm'])->name('password.verifyUserForm');
+    Route::post('/verify-user', [ForgotPasswordController::class, 'verifyUser'])->name('password.verifyUser');
+
+    // Preguntas de seguridad
+    Route::get('/security-questions', function () {
+        return view('auth.passwords.security-questions', [
+            'username' => session('username'),
+            'question1' => session('question1'),
+            'question2' => session('question2'),
+        ]);
+    })->name('password.securityQuestions');
+
+    Route::post('/verify-answers', [ForgotPasswordController::class, 'verifyAnswers'])->name('password.verifyAnswers');
+
+    // Restablecer contraseña
+    Route::get('/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/update', [ForgotPasswordController::class, 'updatePassword'])->name('password.update');
+});
+
+use App\Http\Controllers\Auth\SecurityQuestionController;
+
+// Ruta para actualizar las preguntas de seguridad
+Route::post('/security-questions', [SecurityQuestionController::class, 'update'])->name('security-questions.update');
