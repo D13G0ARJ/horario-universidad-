@@ -25,5 +25,9 @@ class DatabaseSeeder extends Seeder
             'code' => '2614', // Cambia este valor por el código de la carrera deseada
             'name' => 'ING. Sistemas', // Cambia este valor por el nombre de la carrera deseada
         ]);
+        //ejecutar todos los seeder
+        $this->call([
+            AulasTableSeeder::class,
+        ]);
     }
 }
