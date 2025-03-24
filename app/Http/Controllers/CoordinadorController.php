@@ -24,10 +24,6 @@ class CoordinadorController extends Controller
             'name' => 'required', // El nombre es obligatorio
             'email' => 'required|email|unique:users', // El email debe ser único y válido
             'password' => 'required|confirmed', // La contraseña es obligatoria y debe coincidir con la confirmación
-            'security_question_1' => 'required|string', // Primera pregunta de seguridad
-            'security_answer_1' => 'required|string', // Respuesta a la primera pregunta
-            'security_question_2' => 'required|string', // Segunda pregunta de seguridad
-            'security_answer_2' => 'required|string', // Respuesta a la segunda pregunta
         ]);
 
         // Crear el usuario
@@ -36,10 +32,6 @@ class CoordinadorController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password), // Hashear la contraseña
-            'security_question_1' => $request->security_question_1,
-            'security_answer_1' => $request->security_answer_1,
-            'security_question_2' => $request->security_question_2,
-            'security_answer_2' => $request->security_answer_2,
         ]);
 
         // Redireccionar a la lista de coordinadores con un mensaje de éxito
@@ -70,5 +62,29 @@ class CoordinadorController extends Controller
         ]);
 
         return redirect()->route('coordinador.index')->with('success', 'Coordinador actualizado.');
+    }
+
+    // Método para actualizar las preguntas de seguridad del usuario autenticado
+    public function updateSecurityQuestions(Request $request)
+    {
+        // Validar los datos
+        $request->validate([
+            'security_question_1' => 'required|string',
+            'security_answer_1' => 'required|string',
+            'security_question_2' => 'required|string',
+            'security_answer_2' => 'required|string',
+        ]);
+
+        // Actualizar las preguntas de seguridad del usuario autenticado
+        $user = auth()->user();
+        $user->update([
+            'security_question_1' => $request->security_question_1,
+            'security_answer_1' => $request->security_answer_1,
+            'security_question_2' => $request->security_question_2,
+            'security_answer_2' => $request->security_answer_2,
+        ]);
+
+        // Redireccionar con un mensaje de éxito
+        return redirect()->back()->with('success', 'Preguntas de seguridad actualizadas correctamente.');
     }
 }

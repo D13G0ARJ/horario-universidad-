@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CoordinadorController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\RegisterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,7 +37,7 @@ Route::get('/', [AdminController::class, 'index'])->name('admin.index')->middlew
 Route::prefix('coordinador')->middleware('auth')->group(function () {
     Route::get('/', [CoordinadorController::class, 'index'])->name('coordinador.index');
     Route::post('/', [CoordinadorController::class, 'store'])->name('coordinador.store');
-    Route::put('/{usuario}', [CoordinadorController::class, 'update'])->name('coordinador.update');
+    Route::post('/coordinador/{cedula}', [CoordinadorController::class, 'update'])->name('coordinador.update');
     Route::delete('/{usuario}', [CoordinadorController::class, 'destroy'])->name('coordinador.destroy');
 });
 
@@ -61,3 +62,13 @@ Route::prefix('password')->group(function () {
     Route::get('/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('/update', [ForgotPasswordController::class, 'updatePassword'])->name('password.update');
 });
+
+use App\Http\Controllers\Auth\SecurityQuestionController;
+use App\Http\Controllers\SeccionController;
+
+// Ruta para actualizar las preguntas de seguridad
+Route::post('/security-questions', [SecurityQuestionController::class, 'update'])->name('security-questions.update');
+
+
+Route::resource('secciones', SeccionController::class);
+
