@@ -182,7 +182,7 @@
             mostrarModal.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget;
                 const code = button.getAttribute('data-code');
-                const nombre = button.getAttribute('data-name');
+                const name= button.getAttribute('data-name');
 
                 // Actualizar los campos del modal
                 mostrarModal.querySelector('#modalCode').textContent = code;

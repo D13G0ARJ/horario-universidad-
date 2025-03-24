@@ -6,12 +6,25 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CoordinadorController;
 use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\AsignaturaController;
+use App\Http\Controllers\SeccionController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\RegisterController;
 
 
 //Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+// Deshabilitar ciertas rutas de autenticación predeterminadas
+Auth::routes([
+    'register' => false,
+    'reset' => false,
+    'verify' => false,
+    'confirm' => false,
+]);
+
+// Redirigir a la página de inicio de sesión si no se encuentra una ruta
+Route::fallback(function () {
+    return redirect('/login');
+});
 
 //rotas del administrador
 route::get('/', [AdminController::class, 'index'])->name('admin.index')->middleware('auth');
@@ -33,6 +46,8 @@ Route::get('/asignatura', [AsignaturaController::class, 'index'])->name('asignat
 Route::post('/asignaturas', [AsignaturaController::class, 'store'])->name('asignatura.store');
 Route::put('/asignaturas/{asignatura}', [AsignaturaController::class, 'update'])->name('asignatura.update');
 Route::delete('/asignaturas/{asignatura}', [AsignaturaController::class, 'destroy'])->name('asignatura.destroy');
+
+Route::resource('secciones', SeccionController::class);
 
 // Rutas para recuperación de contraseña
 Route::prefix('password')->group(function () {
