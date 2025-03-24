@@ -7,11 +7,10 @@ use App\Http\Controllers\CoordinadorController;
 use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\AsignaturaController;
 use App\Http\Controllers\SeccionController;
+use App\Http\Controllers\DocenteController;
+use App\Http\Controllers\PeriodoController; // Importar el controlador de Periodo
 use App\Http\Controllers\Auth\ForgotPasswordController;
-use App\Http\Controllers\Auth\RegisterController;
-
-
-//Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+use App\Http\Controllers\Auth\SecurityQuestionController;
 
 // Deshabilitar ciertas rutas de autenticación predeterminadas
 Auth::routes([
@@ -26,8 +25,8 @@ Route::fallback(function () {
     return redirect('/login');
 });
 
-//rotas del administrador
-route::get('/', [AdminController::class, 'index'])->name('admin.index')->middleware('auth');
+// Rutas del administrador
+Route::get('/', [AdminController::class, 'index'])->name('admin.index')->middleware('auth');
 
 // Rutas para coordinadores
 Route::get('/coordinador', [CoordinadorController::class, 'index'])->name('coordinador.index')->middleware('auth');
@@ -37,7 +36,7 @@ Route::delete('/coordinadores/{usuario}', [CoordinadorController::class, 'destro
 
 // Rutas para carreras
 Route::get('/carrera', [CarreraController::class, 'index'])->name('carrera.index')->middleware('auth');
-Route::post('/carreras', [CarreraController::class,'store'])->name('carrera.store');
+Route::post('/carreras', [CarreraController::class, 'store'])->name('carrera.store');
 Route::put('/carreras/{carrera}', [CarreraController::class, 'update'])->name('carrera.update');
 Route::delete('/carreras/{carrera}', [CarreraController::class, 'destroy'])->name('carrera.destroy');
 
@@ -47,6 +46,19 @@ Route::post('/asignaturas', [AsignaturaController::class, 'store'])->name('asign
 Route::put('/asignaturas/{asignatura}', [AsignaturaController::class, 'update'])->name('asignatura.update');
 Route::delete('/asignaturas/{asignatura}', [AsignaturaController::class, 'destroy'])->name('asignatura.destroy');
 
+// Rutas para docentes
+Route::get('/docente', [DocenteController::class, 'index'])->name('docente.index')->middleware('auth');
+Route::post('/docentes', [DocenteController::class, 'store'])->name('docente.store');
+Route::put('/docentes/{docente}', [DocenteController::class, 'update'])->name('docente.update');
+Route::delete('/docentes/{docente}', [DocenteController::class, 'destroy'])->name('docente.destroy');
+
+// Rutas para períodos
+Route::get('/periodo', [PeriodoController::class, 'index'])->name('periodo.index')->middleware('auth');
+Route::post('/periodos', [PeriodoController::class, 'store'])->name('periodo.store');
+Route::put('/periodos/{periodo}', [PeriodoController::class, 'update'])->name('periodo.update');
+Route::delete('/periodos/{periodo}', [PeriodoController::class, 'destroy'])->name('periodo.destroy');
+
+// Rutas para secciones
 Route::resource('secciones', SeccionController::class);
 
 // Rutas para recuperación de contraseña
@@ -70,8 +82,6 @@ Route::prefix('password')->group(function () {
     Route::get('/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('/update', [ForgotPasswordController::class, 'updatePassword'])->name('password.update');
 });
-
-use App\Http\Controllers\Auth\SecurityQuestionController;
 
 // Ruta para actualizar las preguntas de seguridad
 Route::post('/security-questions', [SecurityQuestionController::class, 'update'])->name('security-questions.update');
