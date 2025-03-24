@@ -8,18 +8,23 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
-        DB::table('users')->insert([
-            'cedula' => '123456789', // Cambia este valor por la cédula deseada
-            'name' => 'Juan Pérez', // Cambia este valor por el nombre deseado
-            'email' => 'juan@example.com', // Cambia este valor por el email deseado
-            'password' => Hash::make('12345678'), // Cambia este valor por la contraseña deseada
+        // Evitar duplicados usando firstOrCreate
+        DB::table('users')->updateOrInsert(
+            ['cedula' => '12345678'], // Clave única
+            [
+                'name' => 'Juan Pérez',
+                'email' => 'juan@example.com',
+                'password' => Hash::make('12345678'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        // Ejecutar otros seeders
+        $this->call([
+            AulasTableSeeder::class,
         ]);
     }
 }
