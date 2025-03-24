@@ -4,42 +4,35 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CoordinadorController;
+use App\Http\Controllers\CarreraController;
+use App\Http\Controllers\AsignaturaController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\RegisterController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Aquí se registran las rutas web de la aplicación. Estas rutas son cargadas
-| por el RouteServiceProvider y todas estarán dentro del grupo "web".
-|
-*/
 
-// Deshabilitar ciertas rutas de autenticación predeterminadas
-Auth::routes([
-    'register' => false,
-    'reset' => false,
-    'verify' => false,
-    'confirm' => false,
-]);
+//Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-// Redirigir a la página de inicio de sesión si no se encuentra una ruta
-Route::fallback(function () {
-    return redirect('/login');
-});
 
-// Ruta principal (administrador)
-Route::get('/', [AdminController::class, 'index'])->name('admin.index')->middleware('auth');
+//rotas del administrador
+route::get('/', [AdminController::class, 'index'])->name('admin.index')->middleware('auth');
 
-// Rutas para el módulo de coordinadores
-Route::prefix('coordinador')->middleware('auth')->group(function () {
-    Route::get('/', [CoordinadorController::class, 'index'])->name('coordinador.index');
-    Route::post('/', [CoordinadorController::class, 'store'])->name('coordinador.store');
-    Route::post('/coordinador/{cedula}', [CoordinadorController::class, 'update'])->name('coordinador.update');
-    Route::delete('/{usuario}', [CoordinadorController::class, 'destroy'])->name('coordinador.destroy');
-});
+// Rutas para coordinadores
+Route::get('/coordinador', [CoordinadorController::class, 'index'])->name('coordinador.index')->middleware('auth');
+Route::post('/coordinadores', [CoordinadorController::class, 'store'])->name('coordinador.store');
+Route::put('/coordinadores/{usuario}', [CoordinadorController::class, 'update'])->name('coordinador.update');
+Route::delete('/coordinadores/{usuario}', [CoordinadorController::class, 'destroy'])->name('coordinador.destroy');
+
+// Rutas para carreras
+Route::get('/carrera', [CarreraController::class, 'index'])->name('carrera.index')->middleware('auth');
+Route::post('/carreras', [CarreraController::class,'store'])->name('carrera.store');
+Route::put('/carreras/{carrera}', [CarreraController::class, 'update'])->name('carrera.update');
+Route::delete('/carreras/{carrera}', [CarreraController::class, 'destroy'])->name('carrera.destroy');
+
+// Rutas para asignaturas
+Route::get('/asignatura', [AsignaturaController::class, 'index'])->name('asignatura.index')->middleware('auth');
+Route::post('/asignaturas', [AsignaturaController::class, 'store'])->name('asignatura.store');
+Route::put('/asignaturas/{asignatura}', [AsignaturaController::class, 'update'])->name('asignatura.update');
+Route::delete('/asignaturas/{asignatura}', [AsignaturaController::class, 'destroy'])->name('asignatura.destroy');
 
 // Rutas para recuperación de contraseña
 Route::prefix('password')->group(function () {
@@ -64,11 +57,6 @@ Route::prefix('password')->group(function () {
 });
 
 use App\Http\Controllers\Auth\SecurityQuestionController;
-use App\Http\Controllers\SeccionController;
 
 // Ruta para actualizar las preguntas de seguridad
 Route::post('/security-questions', [SecurityQuestionController::class, 'update'])->name('security-questions.update');
-
-
-Route::resource('secciones', SeccionController::class);
-
