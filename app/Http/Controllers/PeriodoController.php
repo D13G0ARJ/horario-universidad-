@@ -4,21 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Periodo;
+use App\Models\Bitacora;
+use Illuminate\Support\Facades\Auth;
 
 class PeriodoController extends Controller
 {
-    /**
-     * Muestra la lista de períodos académicos.
-     */
     public function index()
     {
         $periodos = Periodo::all();
         return view('periodo.index', compact('periodos'));
     }
 
-    /**
-     * Almacena un nuevo período académico.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -27,18 +23,16 @@ class PeriodoController extends Controller
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
         ]);
 
-        Periodo::create([
-            'nombre' => $request->nombre,
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin' => $request->fecha_fin,
+        $periodo = Periodo::create($request->all());
+
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,  // Usar cedula en lugar de user_id
+            'accion' => 'Creación de período: ' . $periodo->nombre
         ]);
 
         return redirect()->route('periodo.index')->with('success', 'Período registrado correctamente.');
     }
 
-    /**
-     * Actualiza un período académico existente.
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -48,21 +42,25 @@ class PeriodoController extends Controller
         ]);
 
         $periodo = Periodo::findOrFail($id);
-        $periodo->update([
-            'nombre' => $request->nombre,
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin' => $request->fecha_fin,
+        $periodo->update($request->all());
+
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,  // Usar cedula aquí
+            'accion' => 'Actualización de período: ' . $periodo->nombre
         ]);
 
         return redirect()->route('periodo.index')->with('success', 'Período actualizado correctamente.');
     }
 
-    /**
-     * Elimina un período académico.
-     */
     public function destroy($id)
     {
         $periodo = Periodo::findOrFail($id);
+        
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,  // Y aquí
+            'accion' => 'Eliminación de período: ' . $periodo->nombre
+        ]);
+
         $periodo->delete();
 
         return redirect()->route('periodo.index')->with('success', 'Período eliminado correctamente.');

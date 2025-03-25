@@ -196,7 +196,7 @@
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="{{url( '/#')}}" class="nav-link" ">
+                                    <a href="{{url( '/bitacora')}}" class="nav-link" ">
                                         <i class=" far fa-circle nav-icon"></i>
                                         <p>Bitacora </p>
                                     </a>
@@ -204,7 +204,7 @@
                                 <li class="nav-item">
                                     <a href="#" class="nav-link">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Generar Reportes de Bitacora</p>
+                                        <p>Respaldo</p>
                                     </a>
                                 </li>
                                 <!-- ... más subitems ... -->
