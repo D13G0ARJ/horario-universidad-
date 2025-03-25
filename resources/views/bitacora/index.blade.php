@@ -31,7 +31,7 @@
                             <td style="text-align: center">
                                 {{ $registro->created_at->format('d/m/Y') }}
                             </td>
-                            <td style="text-align: center">{{ $registro->user->name }}</td>
+                            <td style="text-align: center">{{ $registro->user->cedula }}</td>
                             <td>{{ $registro->accion }}</td>
                             <td style="text-align: center">
                                 {{ $registro->created_at->format('H:i:s') }}
