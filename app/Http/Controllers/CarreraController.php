@@ -3,58 +3,73 @@
 namespace App\Http\Controllers;
 
 use App\Models\Carrera;
+use App\Models\Bitacora;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CarreraController extends Controller
 {
     public function index()
     {
-        $carreras = Carrera::all(); // Obtener todas las carreras
-        return view('carrera.index', compact('carreras')); // Pasar las carreras a la vista
+        $carreras = Carrera::all();
+        return view('carrera.index', compact('carreras'));
     }
 
-    // Método para mostrar el formulario de registro (opcional, si no usas modal)
     public function create()
     {
         return view('carrera.create');
     }
 
-    // Método para procesar el registro de una nueva asignatura
     public function store(Request $request)
     {
-        // Validación de datos
         $request->validate([
-            'code' => 'required|unique:carreras', // El código debe ser única en la tabla carreras
-            'name' => 'required', // El nombre es obligatorio
+            'code' => 'required|unique:carreras',
+            'name' => 'required',
         ]);
 
-        // Crear el usuario
-        Carrera::create([
+        $carrera = Carrera::create([
             'code' => $request->code,
             'name' => $request->name,
         ]);
 
-        // Redireccionar a la lista de carreras con un mensaje de éxito
+        // Registro en bitácora
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Carrera creada: ' . $carrera->name . ' (Código: ' . $carrera->code . ')'
+        ]);
+
         return redirect()->route('carrera.index')->with('success', 'Carrera registrada correctamente.');
     }
 
     public function destroy(Carrera $carrera)
     {
+        // Registro en bitácora ANTES de eliminar
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Carrera eliminada: ' . $carrera->name . ' (Código: ' . $carrera->code . ')'
+        ]);
+
         $carrera->delete();
         return redirect()->route('carrera.index')->with('success', 'Carrera eliminada correctamente.');
     }
 
     public function update(Request $request, Carrera $carrera)
-{
-    $request->validate([
-        'code' => 'required|unique:carreras,code,' . $carrera->code . ',code', // Usar 'code' como clave
-    ]);
+    {
+        $request->validate([
+            'code' => 'required|unique:carreras,code,' . $carrera->code . ',code',
+        ]);
 
-    $carrera->update([
-        'code' => $request->code,
-        'name' => $request->name,
-    ]);
+        $carrera->update([
+            'code' => $request->code,
+            'name' => $request->name,
+        ]);
 
-    return redirect()->route('carrera.index')->with('success', 'Carrera actualizada.');
-}
+        // Registro en bitácora
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Carrera actualizada: ' . $carrera->name . ' (Nuevo código: ' . $carrera->code . ')'
+        ]);
+
+        return redirect()->route('carrera.index')->with('success', 'Carrera actualizada.');
+    }
 }

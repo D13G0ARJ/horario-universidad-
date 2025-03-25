@@ -3,58 +3,77 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asignatura;
+use App\Models\Bitacora;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class AsignaturaController extends Controller
 {
     public function index()
     {
-        $asignaturas = Asignatura::all(); // Obtener todas las asignaturas
-        return view('asignatura.index', compact('asignaturas')); // Pasar las asignaturas a la vista
+        $asignaturas = Asignatura::all();
+        return view('asignatura.index', compact('asignaturas'));
     }
 
-    // Método para mostrar el formulario de registro (opcional, si no usas modal)
     public function create()
     {
         return view('asignatura.create');
     }
 
-    // Método para procesar el registro de una nueva asignatura
     public function store(Request $request)
     {
-        // Validación de datos
         $request->validate([
-            'code' => 'required|unique:asignaturas', // El código debe ser única en la tabla asignaturas
-            'name' => 'required', // El nombre es obligatorio
+            'code' => 'required|unique:asignaturas',
+            'name' => 'required',
         ]);
 
-        // Crear el usuario
-        Asignatura::create([
+        $asignatura = Asignatura::create([
             'code' => $request->code,
             'name' => $request->name,
         ]);
 
-        // Redireccionar a la lista de asignaturas con un mensaje de éxito
-        return redirect()->route('asignatura.index')->with('success', 'Asignatura registrado correctamente.');
+        // Registro en bitácora
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Asignatura creada: ' . $asignatura->name . ' (Código: ' . $asignatura->code . ')'
+        ]);
+
+        return redirect()->route('asignatura.index')->with('success', 'Asignatura registrada correctamente.');
     }
 
     public function destroy(Asignatura $asignatura)
     {
+        // Registro en bitácora antes de eliminar
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Asignatura eliminada: ' . $asignatura->name . ' (Código: ' . $asignatura->code . ')'
+        ]);
+
         $asignatura->delete();
         return redirect()->route('asignatura.index')->with('success', 'Asignatura eliminada correctamente.');
     }
 
     public function update(Request $request, Asignatura $asignatura)
-{
-    $request->validate([
-        'code' => 'required|unique:asignaturas,code,' . $asignatura->code . ',code', // Usar 'code' como clave
-    ]);
+    {
+        $request->validate([
+            'code' => 'required|unique:asignaturas,code,' . $asignatura->code . ',code',
+        ]);
 
-    $asignatura->update([
-        'code' => $request->code,
-        'name' => $request->name,
-    ]);
+        $viejo_codigo = $asignatura->code; // Guardar código anterior
+        
+        $asignatura->update([
+            'code' => $request->code,
+            'name' => $request->name,
+        ]);
 
-    return redirect()->route('asignatura.index')->with('success', 'Asignatura actualizada.');
-}
+        // Registro en bitácora
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Asignatura actualizada: ' . $asignatura->name 
+                        . ' | Código anterior: ' . $viejo_codigo 
+                        . ' | Nuevo código: ' . $asignatura->code
+        ]);
+
+        return redirect()->route('asignatura.index')->with('success', 'Asignatura actualizada.');
+    }
 }

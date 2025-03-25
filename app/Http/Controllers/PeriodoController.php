@@ -27,7 +27,7 @@ class PeriodoController extends Controller
 
         Bitacora::create([
             'cedula' => Auth::user()->cedula,  // Usar cedula en lugar de user_id
-            'accion' => 'Creación de período: ' . $periodo->nombre
+            'accion' => 'Período Creado: ' . $periodo->nombre
         ]);
 
         return redirect()->route('periodo.index')->with('success', 'Período registrado correctamente.');
@@ -46,7 +46,7 @@ class PeriodoController extends Controller
 
         Bitacora::create([
             'cedula' => Auth::user()->cedula,  // Usar cedula aquí
-            'accion' => 'Actualización de período: ' . $periodo->nombre
+            'accion' => 'Periodo Actualizado: ' . $periodo->nombre
         ]);
 
         return redirect()->route('periodo.index')->with('success', 'Período actualizado correctamente.');
@@ -58,7 +58,7 @@ class PeriodoController extends Controller
         
         Bitacora::create([
             'cedula' => Auth::user()->cedula,  // Y aquí
-            'accion' => 'Eliminación de período: ' . $periodo->nombre
+            'accion' => 'Período eliminado: ' . $periodo->nombre
         ]);
 
         $periodo->delete();
