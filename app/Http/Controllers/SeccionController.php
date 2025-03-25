@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Seccion;
 use App\Models\Aula;
+use App\Models\Bitacora;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class SeccionController extends Controller
@@ -11,7 +13,7 @@ class SeccionController extends Controller
     public function index()
     {
         $secciones = Seccion::with('aula')->get();
-        $aulas = Aula::all(); // Obtener aulas para el dropdown del modal
+        $aulas = Aula::all();
         return view('gestion_horarios.secciones', compact('secciones', 'aulas'));
     }
 
@@ -22,28 +24,39 @@ class SeccionController extends Controller
             'aula_id' => 'required|exists:aulas,id',
         ]);
 
-        Seccion::create($request->all());
+        $seccion = Seccion::create($request->all());
+        $seccion->load('aula'); // Cargar relación para obtener datos del aula
+
+        // Registro en bitácora
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Sección creada: ' . $seccion->nombre . ' (Aula: ' . $seccion->aula->nombre . ')'
+        ]);
 
         return redirect()->route('secciones.index')
             ->with('success', 'Sección creada exitosamente.');
     }
 
-    // Eliminamos el método create() ya que no usaremos una vista separada
-
-    // Mantén otros métodos si son necesarios (edit, update, destroy)
     public function destroy($id)
-{
-    try {
-        $seccion = Seccion::findOrFail($id);
-        $seccion->delete();
-        return redirect()->route('secciones.index')->with('success', 'Sección eliminada exitosamente.');
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'Error al eliminar la sección: ' . $e->getMessage());
+    {
+        try {
+            $seccion = Seccion::findOrFail($id);
+            $seccion->load('aula');
+            
+            // Registro en bitácora antes de eliminar
+            Bitacora::create([
+                'cedula' => Auth::user()->cedula,
+                'accion' => 'Sección eliminada: ' . $seccion->nombre . ' (Aula: ' . $seccion->aula->nombre . ')'
+            ]);
+
+            $seccion->delete();
+            return redirect()->route('secciones.index')->with('success', 'Sección eliminada exitosamente.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar la sección: ' . $e->getMessage());
+        }
     }
-}
 
-
-public function edit($id)
+    public function edit($id)
     {
         $seccion = Seccion::findOrFail($id);
         $aulas = Aula::all();
@@ -62,8 +75,14 @@ public function edit($id)
 
         $seccion = Seccion::findOrFail($id);
         $seccion->update($request->all());
+        $seccion->load('aula');
+
+        // Registro en bitácora
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Sección actualizada: ' . $seccion->nombre . ' (Aula: ' . $seccion->aula->nombre . ')'
+        ]);
 
         return response()->json(['success' => 'Sección actualizada exitosamente.']);
     }
-
 }

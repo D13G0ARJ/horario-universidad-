@@ -18,6 +18,13 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('30541863'), // Cambia este valor por la contraseña deseada
         ]);
 
+        DB::table('users')->insert([
+            'cedula' => '12345678', // Cambia este valor por la cédula deseada
+            'name' => 'admin', // Cambia este valor por el nombre deseado
+            'email' => 'admin@admin.com', // Cambia este valor por el email deseado
+            'password' => Hash::make('12345678'), // Cambia este valor por la contraseña deseada
+        ]);
+
         // Insertar una asignatura
         DB::table('asignaturas')->insert([
             'code' => 'SYC-32714', // Cambia este valor por el código de la asignatura deseada
@@ -28,6 +35,11 @@ class DatabaseSeeder extends Seeder
         DB::table('carreras')->insert([
             'code' => '2614', // Cambia este valor por el código de la carrera deseada
             'name' => 'ING. Sistemas', // Cambia este valor por el nombre de la carrera deseada
+        ]);
+
+        // Llamar al seeder de aulas
+        $this->call([
+            AulasTableSeeder::class,
         ]);
 
         // Insertar un docente

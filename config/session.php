@@ -31,7 +31,7 @@ return [
     |
     */
 
-    'lifetime' => env('SESSION_LIFETIME', 120),
+    'lifetime' => env('SESSION_LIFETIME', 3),
 
     'expire_on_close' => false,
 
@@ -210,5 +210,6 @@ return [
     */
 
     'partitioned' => false,
+
 
 ];

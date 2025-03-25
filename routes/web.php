@@ -9,6 +9,7 @@ use App\Http\Controllers\AsignaturaController;
 use App\Http\Controllers\SeccionController;
 use App\Http\Controllers\DocenteController;
 use App\Http\Controllers\PeriodoController; // Importar el controlador de Periodo
+use App\Http\Controllers\BitacoraController; // Importar el controlador de Bitacora
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\SecurityQuestionController;
 
@@ -85,3 +86,8 @@ Route::prefix('password')->group(function () {
 
 // Ruta para actualizar las preguntas de seguridad
 Route::post('/security-questions', [SecurityQuestionController::class, 'update'])->name('security-questions.update');
+
+
+//rutas dentro de bitacora
+route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index')->middleware('auth');
+

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,41 +14,49 @@
     <link href="{{ asset('css/login.css') }}" rel="stylesheet">
 </head>
 <header>
-    <div class="container-fluid">
-        <div class="row align-items-center">
-            <div class="col-2 col-md-1">
+<div class="container-fluid">
+        <div class="row align-items-center g-0">
+            <div class="col-auto">
                 <div class="logo">
-                    <img src="{{ asset('images/logo.jpg') }}" alt="UNEFA" width="80" height="120" class="img-fluid">
+                    <img src="{{ asset('images/logo.jpg') }}" alt="UNEFA" class="img-fluid">
                 </div>
             </div>
-            <div class="col-10 col-md-11">
+            <div class="col">
                 <div class="titulo">
                     <h1>Sistema de Horarios</h1>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-12 text-end"> <!-- Alineación a la derecha -->
-                <div class="fecha-hora">
+        
+        <!-- Fila de fecha/hora (mantener igual) -->
+        <div class="row py-1">
+            <div class="col-12 text-end">
+                <div class="fecha-hora small">
                     <span id="fecha-hora"></span>
                 </div>
             </div>
         </div>
     </div>
 </header>
+
 <body>
     @yield('content')
+
+
+
+
+    <!-- Footer -->
+<footer class="main-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <strong>Copyright © 2025 DR-CB-YA</strong>
+        </div>
+    </div>
+</footer>
 
     <!-- Bootstrap JS y dependencias -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    <footer class="main-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <strong>Copyright &copy; 2025 <a href="#">DR-CB-YA</a>.</strong> All rights reserved.
-            </div>
-        </div>
-    </footer>
 
     <script>
         function actualizarFechaHora() {
