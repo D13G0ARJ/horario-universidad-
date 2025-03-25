@@ -10,6 +10,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
+        // Insertar un usuario
         DB::table('users')->insert([
             'cedula' => '30541863', // Cambia este valor por la cédula deseada
             'name' => 'Cristhian Blanco', // Cambia este valor por el nombre deseado
@@ -17,17 +18,35 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('30541863'), // Cambia este valor por la contraseña deseada
         ]);
 
+        // Insertar una asignatura
         DB::table('asignaturas')->insert([
             'code' => 'SYC-32714', // Cambia este valor por el código de la asignatura deseada
             'name' => 'Implantación de sistemas', // Cambia este valor por el nombre de la asignatura deseada
         ]);
+
+        // Insertar una carrera
         DB::table('carreras')->insert([
             'code' => '2614', // Cambia este valor por el código de la carrera deseada
             'name' => 'ING. Sistemas', // Cambia este valor por el nombre de la carrera deseada
         ]);
-        //ejecutar todos los seeder
+
+        // Llamar al seeder de aulas
         $this->call([
             AulasTableSeeder::class,
+        ]);
+
+        // Insertar un docente
+        DB::table('docentes')->insert([
+            'name' => 'Gabriela Rivas', // Nombre del docente
+            'email' => 'gabriela.rivas@gmail.com', // Email del docente
+            'phone' => '04143111397', // Teléfono del docente
+        ]);
+
+        // Insertar un período académico
+        DB::table('periodos')->insert([
+            'nombre' => '1-2025', // Nombre del período
+            'fecha_inicio' => '2025-03-01', // Fecha de inicio del período
+            'fecha_fin' => '2025-07-31', // Fecha de fin del período
         ]);
     }
 }
