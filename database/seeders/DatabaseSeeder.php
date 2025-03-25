@@ -12,10 +12,10 @@ class DatabaseSeeder extends Seeder
     {
         // Insertar un usuario
         DB::table('users')->insert([
-            'cedula' => '30541863', // Cambia este valor por la cédula deseada
+            'cedula' => '123456789', // Cambia este valor por la cédula deseada
             'name' => 'Cristhian Blanco', // Cambia este valor por el nombre deseado
             'email' => 'cristhianb397@gmail.com', // Cambia este valor por el email deseado
-            'password' => Hash::make('30541863'), // Cambia este valor por la contraseña deseada
+            'password' => Hash::make('12345678'), // Cambia este valor por la contraseña deseada
         ]);
 
         DB::table('users')->insert([
