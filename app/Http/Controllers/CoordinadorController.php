@@ -73,7 +73,7 @@ class CoordinadorController extends Controller
         // Registrar en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Coordinador actualizado: ' . $usuario->name . ' (Nueva cédula: ' . $usuario->cedula . ')'
+            'accion' => 'Coordinador actualizado: ' . $usuario->name .  ')'
         ]);
 
         return redirect()->route('coordinador.index')->with('success', 'Coordinador actualizado.');
