@@ -1,3 +1,4 @@
+{{-- filepath: c:\Users\Alexa\OneDrive\Escritorio\horario-universidad-\resources\views\bitacora\index.blade.php --}}
 @extends ('layouts.admin')
 
 @section('content')
@@ -39,51 +40,52 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
 
-                <script>
-    $(function () {
+@push('scripts')
+<script>
+    $(document).ready(function() {
         $("#tabla-bitacora").DataTable({
-            "pageLength": 10,
-            "order": [[0, 'desc']], // Ordenar por primera columna de forma descendente
-            "language": {
-                "emptyTable": "No hay registros",
-                "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                "infoEmpty": "Mostrando 0 a 0 de 0 registros",
-                "infoFiltered": "(Filtrado de _MAX_ registros totales)",
-                "search": "Buscador:",
-                "paginate": {
-                    "first": "Primero",
-                    "last": "Último",
-                    "next": "Siguiente",
-                    "previous": "Anterior"
+            pageLength: 10,
+            order: [[0, 'desc']], // Ordenar por la primera columna de forma descendente
+            language: {
+                emptyTable: "No hay registros",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                infoFiltered: "(Filtrado de _MAX_ registros totales)",
+                search: "Buscador:",
+                paginate: {
+                    first: "Primero",
+                    last: "Último",
+                    next: "Siguiente",
+                    previous: "Anterior"
                 }
             },
-            "responsive": true, 
-            "lengthChange": true, 
-            "autoWidth": false,
-            "dom": 'Bfrtip',
-            "buttons": [
+            responsive: true,
+            lengthChange: true,
+            autoWidth: false,
+            dom: 'Bfrtip',
+            buttons: [
                 {
                     extend: 'collection',
                     text: 'Reportes',
                     buttons: [
-                        'copy', 
-                        'excel', 
-                        'pdf', 
+                        'copy',
+                        'excel',
+                        'pdf',
                         'print'
                     ]
                 },
                 'colvis'
             ],
-            "columnDefs": [
-                { "orderable": false, "targets": [2,3] } // Deshabilitar ordenación para Actor y Acción
+            columnDefs: [
+                { orderable: false, targets: [2, 3] } // Deshabilitar ordenación para Actor y Acción
             ]
         }).buttons().container().appendTo('#tabla-bitacora_wrapper .col-md-6:eq(0)');
     });
 </script>
-
-            </div>
-        </div>
-    </div>
-</div>
+@endpush
 @endsection
