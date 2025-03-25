@@ -67,7 +67,7 @@ class CarreraController extends Controller
         // Registro en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Carrera actualizada: ' . $carrera->name . ' (Nuevo código: ' . $carrera->code . ')'
+            'accion' => 'Carrera actualizada: ' . $carrera->name .  ')'
         ]);
 
         return redirect()->route('carrera.index')->with('success', 'Carrera actualizada.');

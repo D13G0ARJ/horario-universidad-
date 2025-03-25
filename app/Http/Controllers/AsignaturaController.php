@@ -70,8 +70,6 @@ class AsignaturaController extends Controller
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Asignatura actualizada: ' . $asignatura->name 
-                        . ' | Código anterior: ' . $viejo_codigo 
-                        . ' | Nuevo código: ' . $asignatura->code
         ]);
 
         return redirect()->route('asignatura.index')->with('success', 'Asignatura actualizada.');
