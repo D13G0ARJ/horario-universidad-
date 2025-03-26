@@ -53,33 +53,42 @@
                                 <tbody class="table-group-divider">
                                     @foreach ($secciones as $seccion)
                                     <tr>
-                                        <td></td>
-                                        <td>{{ $seccion->nombre }}</td>
-                                        <td>{{ $seccion->aula->nombre }}</td>
-                                        <td style="text-align: center;">
-                                            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                                                <!-- Botón Editar -->
-                                                <button class="btn btn-success btn-sm btn-editar" 
-                                                    data-id="{{ $seccion->id }}"
-                                                    title="Editar">
-                                                    <i class="fas fa-pencil-alt"></i>
-                                                </button>
+        <td></td>
+        <td>{{ $seccion->nombre }}</td>
+        <td>{{ $seccion->aula->nombre }}</td>
+        <td style="text-align: center;">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <!-- Botón para Mostrar -->
+                <button class="btn btn-info btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#mostrarSeccionModal"
+                    data-nombre="{{ $seccion->nombre }}"
+                    data-aula="{{ $seccion->aula->nombre }}">
+                    <i class="fas fa-eye"></i>
+                </button>
 
-                                                <!-- Botón Eliminar -->
-                                                <form action="{{ route('secciones.destroy', $seccion->id) }}" method="POST">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" 
-                                                        class="btn btn-danger btn-sm" 
-                                                        title="Eliminar"
-                                                        onclick="return confirm('¿Estás seguro?')">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
+                <!-- Botón Editar -->
+                <button class="btn btn-success btn-sm btn-editar" 
+                    data-id="{{ $seccion->id }}"
+                    title="Editar">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+
+                <!-- Botón Eliminar -->
+                <form action="{{ route('secciones.destroy', $seccion->id) }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" 
+                        class="btn btn-danger btn-sm" 
+                        title="Eliminar"
+                        onclick="return confirm('¿Estás seguro?')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </td>
+    </tr>
+    @endforeach
                                 </tbody>
                             </table>
                         </div>
@@ -151,6 +160,31 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+     <!-- Modal para Mostrar Sección -->
+     <div class="modal fade" id="mostrarSeccionModal" tabindex="-1" aria-labelledby="mostrarSeccionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles de la Sección</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Nombre:</label>
+                        <p id="modalSeccionNombre"></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Aula:</label>
+                        <p id="modalSeccionAula"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -259,6 +293,18 @@
                 }
             });
         }
+
+// Script para el modal de mostrar
+$('#mostrarSeccionModal').on('show.bs.modal', function(event) {
+    const button = $(event.relatedTarget);
+    const nombre = button.data('nombre');
+    const aula = button.data('aula');
+    
+    $(this).find('#modalSeccionNombre').text(nombre);
+    $(this).find('#modalSeccionAula').text(aula);
+});
+
+
 
 
         // Manejo de edición
