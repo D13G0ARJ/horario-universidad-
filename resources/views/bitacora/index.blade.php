@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="row">
-    <h1>Registros de Bitácora</h1>
+    <h3>Registros de Bitácora</h3>
 </div>
 <br>
 
@@ -29,11 +29,11 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card card-outline card-primary">
-            <div class="card-header">
+            <!--<div class="card-header">
                 <h3 class="card-title">Actividades del Sistema</h3>
             </div>
             <div class="card-body">
-                <!-- Filtros de fecha -->
+                Filtros de fechafrt\ -->
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label for="fecha-inicio" class="form-label">Fecha de Inicio:</label>
@@ -65,7 +65,7 @@
                         @foreach($bitacoras as $registro)
                         <tr>
                             <td style="text-align: center">{{ $loop->iteration }}</td>
-                            <td style="text-align: center">{{ $registro->created_at->format('Y-m-d') }}</td>
+                            <td style="text-align: center">{{ $registro->created_at->format('d-m-Y') }}</td>
                             <td style="text-align: center">{{ $registro->user->cedula }}</td>
                             <td>{{ $registro->accion }}</td>
                             <td style="text-align: center">{{ $registro->created_at->format('H:i:s') }}</td>
@@ -82,7 +82,7 @@
 <script>
     $(document).ready(function() {
         const table = $("#tabla-bitacora").DataTable({
-            pageLength: 10,
+            pageLength: 5,
             order: [[1, 'desc']],
             language: {
                 emptyTable: "No hay registros",

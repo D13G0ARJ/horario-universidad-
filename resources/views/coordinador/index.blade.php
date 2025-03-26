@@ -18,87 +18,70 @@
                         Nuevo usuario
                     </a>
                 </div>
+            </div>
+            <div class="card-body col-12" style="width: 100%;">
+                <table class="table table-bordered table-striped table-hover w-100" id="tabla">
+                    <thead>
+                        <tr>
+                            <th><center>Nro</center></th>
+                            <th><center>Cédula</center></th>
+                            <th><center>Nombre</center></th>
+                            <th><center>Email</center></th>
+                            <th><center>Acciones</center></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($usuarios as $usuario)
+                        <tr>
+                            <td></td> <!-- Dejamos vacío para DataTables -->
+                            <td>{{ $usuario->cedula }}</td>
+                            <td>{{ $usuario->name }}</td>
+                            <td>{{ $usuario->email }}</td>
+                            <td style="text-align: center;">
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <!-- Botón para Mostrar -->
+                                    <button class="btn btn-info btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#mostrarModal"
+                                        data-id="{{ $usuario->id }}"
+                                        data-name="{{ $usuario->name }}"
+                                        data-cedula="{{ $usuario->cedula }}"
+                                        data-email="{{ $usuario->email }}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
 
-                
+                                    <!-- Botón para Editar -->
+                                    <button class="btn btn-success btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editarModal"
+                                        data-id="{{ $usuario->id }}"
+                                        data-name="{{ $usuario->name }}"
+                                        data-cedula="{{ $usuario->cedula }}"
+                                        data-email="{{ $usuario->email }}">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
 
-                    </div>
-                    <div class="card-body col-12" style="width: 100%;">
-                        <table class="table table-bordered table-striped table-hover w-100" id="tabla">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <center>Nro</center>
-                                    </th>
-                                    <th>
-                                        <center>Cédula</center>
-                                    </th>
-                                    <th>
-                                        <center>Nombre</center>
-                                    </th>
-                                    <th>
-                                        <center>Email</center>
-                                    </th>
-                                    <th>
-                                        <center>Acciones</center>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php
-                                $contador = 0;
-                                @endphp
-
-                                @foreach ($usuarios as $usuario)
-                                @php
-                                $contador++;
-                                @endphp
-                                <tr>
-                                    <td>{{ $contador }}</td>
-                                    <td>{{ $usuario->cedula }}</td>
-                                    <td>{{ $usuario->name }}</td>
-                                    <td>{{ $usuario->email }}</td>
-                                    <td style="text-align: center;">
-                                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                            <!-- Botón para Mostrar -->
-                                            <!-- Botón para Mostrar -->
-                                            <button class="btn btn-info btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#mostrarModal"
-                                                data-id="{{ $usuario->id }}"
-                                                data-name="{{ $usuario->name }}"
-                                                data-cedula="{{ $usuario->cedula }}"
-                                                data-email="{{ $usuario->email }}"
-                                                data-security-question-1="{{ $usuario->security_question_1 }}"
-                                                data-security-answer-1="{{ $usuario->security_answer_1 }}"
-                                                data-security-question-2="{{ $usuario->security_question_2 }}"
-                                                data-security-answer-2="{{ $usuario->security_answer_2 }}">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-
-                                            <!-- Botón para Editar -->
-                                            <button class="btn btn-success btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#editarModal"
-                                                data-id="{{ $usuario->id }}"
-                                                data-name="{{ $usuario->name }}"
-                                                data-cedula="{{ $usuario->cedula }}"
-                                                data-email="{{ $usuario->email }}">
-                                                <i class="fas fa-pencil-alt"></i>
-                                                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmarEliminarModal"
-                                                    data-action="{{ route('coordinador.destroy', $usuario->cedula) }}">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                                </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                                    <!-- Botón Eliminar -->
+                                    <form action="{{ route('coordinador.destroy', $usuario->cedula) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="btn btn-danger btn-sm" 
+                                                onclick="return confirm('¿Estás seguro?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+</div>
+
 
 
     <!-- Modal de registro -->
@@ -392,4 +375,31 @@
             });
         });
     </script>
-    @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#tabla').DataTable({
+            responsive: true,
+            autoWidth: false,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+            },
+            columnDefs: [
+                { 
+                    targets: 0,
+                    render: function(data, type, row, meta) {
+                        return meta.row + 1;
+                    },
+                    orderable: false,
+                    searchable: false
+                },
+                { targets: 4, orderable: false, searchable: false }
+            ],
+            order: [[1, 'asc']]
+        });
+    });
+</script>
+@endpush
+
+@endsection

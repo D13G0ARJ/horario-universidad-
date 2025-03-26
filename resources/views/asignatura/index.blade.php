@@ -261,4 +261,52 @@
         });
     </script>
 
+
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#tabla').DataTable({
+            responsive: true,
+            autoWidth: false,
+            dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            columnDefs: [
+                { 
+                    targets: 0,
+                    render: function(data, type, row, meta) {
+                        return meta.row + 1;
+                    },
+                    className: 'text-center',
+                    orderable: false
+                },
+                { targets: [1,2], className: 'text-center' },
+                { 
+                    targets: 3, 
+                    orderable: false, 
+                    searchable: false, 
+                    className: 'text-center',
+                    width: '120px'
+                }
+            ],
+            initComplete: function() {
+                $('.dataTables_filter input')
+                    .addClass('form-control form-control-sm  text-black')
+                    .attr('placeholder', 'Buscar...');
+                
+                $('.dataTables_length select')
+                    .addClass('form-select form-select-sm  text-black');
+                
+                $('.dataTables_paginate').addClass('mt-3');
+            }
+        });
+    });
+</script>
+
+
+@endpush
 @endsection
