@@ -8,10 +8,11 @@ use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\AsignaturaController;
 use App\Http\Controllers\SeccionController;
 use App\Http\Controllers\DocenteController;
-use App\Http\Controllers\PeriodoController; // Importar el controlador de Periodo
-use App\Http\Controllers\BitacoraController; // Importar el controlador de Bitacora
+use App\Http\Controllers\PeriodoController;
+use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\SecurityQuestionController;
+use App\Http\Controllers\RespaldoController;
 
 // Deshabilitar ciertas rutas de autenticación predeterminadas
 Auth::routes([
@@ -87,7 +88,20 @@ Route::prefix('password')->group(function () {
 // Ruta para actualizar las preguntas de seguridad
 Route::post('/security-questions', [SecurityQuestionController::class, 'update'])->name('security-questions.update');
 
+// Rutas para bitácora
+Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index')->middleware('auth');
 
-//rutas dentro de bitacora
-route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index')->middleware('auth');
+// Rutas para respaldos
+Route::prefix('respaldo')->middleware(['auth'])->group(function () {
+    // Ruta para mostrar la vista de respaldos
+    Route::get('/', [RespaldoController::class, 'index'])->name('respaldo.index');
 
+    // Ruta para generar un respaldo
+    Route::post('/store', [RespaldoController::class, 'store'])->name('respaldo.store');
+
+    // Ruta para restaurar un respaldo específico
+    Route::post('/restore/{id}', [RespaldoController::class, 'restore'])->name('respaldo.restore');
+
+    // Ruta para eliminar un respaldo específico
+    Route::delete('/delete/{id}', [RespaldoController::class, 'destroy'])->name('respaldo.destroy');
+});
