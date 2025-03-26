@@ -1,78 +1,94 @@
+{{-- filepath: c:\Users\Alexa\OneDrive\Escritorio\horario-universidad-\resources\views\bitacora\index.blade.php --}}
 @extends('layouts.admin')
 
 @section('content')
-<div class="row">
-    <h3>Registros de Bitácora</h3>
-</div>
-<br>
+<div class="container-fluid">
+    <!-- Título principal -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="text-primary">
+                <i class="fas fa-clipboard-list mr-2"></i>Registros de Bitácora
+            </h3>
+        </div>
+    </div>
 
-<!-- Modal para mensaje de no resultados -->
-<div class="modal fade" id="modalNoResultados" tabindex="-1" role="dialog" aria-labelledby="modalNoResultadosLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title" id="modalNoResultadosLabel">Sin resultados</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                No se encontraron registros para el rango de fechas seleccionado.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cerrar-modal">Cerrar</button>
+    <!-- Modal para mensaje de no resultados -->
+    <div class="modal fade" id="modalNoResultados" tabindex="-1" role="dialog" aria-labelledby="modalNoResultadosLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="modalNoResultadosLabel">
+                        <i class="fas fa-exclamation-circle mr-2"></i>Sin resultados
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    No se encontraron registros para el rango de fechas seleccionado.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card card-outline card-primary">
-            <!--<div class="card-header">
-                <h3 class="card-title">Actividades del Sistema</h3>
-            </div>
-            <div class="card-body">
-                Filtros de fechafrt\ -->
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label for="fecha-inicio" class="form-label">Fecha de Inicio:</label>
-                        <input type="date" id="fecha-inicio" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label for="fecha-fin" class="form-label">Fecha de Fin:</label>
-                        <input type="date" id="fecha-fin" class="form-control">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button id="filtrar-fechas" class="btn btn-primary w-100">Filtrar</button>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button id="reset-filtros" class="btn btn-outline-secondary w-100">Limpiar</button>
-                    </div>
+    <!-- Filtros de búsqueda -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label for="fecha-inicio" class="form-label">Fecha de Inicio:</label>
+            <input type="date" id="fecha-inicio" class="form-control">
+        </div>
+        <div class="col-md-4">
+            <label for="fecha-fin" class="form-label">Fecha de Fin:</label>
+            <input type="date" id="fecha-fin" class="form-control">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button id="filtrar-fechas" class="btn btn-primary w-100">
+                <i class="fas fa-filter mr-2"></i>Filtrar
+            </button>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button id="reset-filtros" class="btn btn-outline-secondary w-100">
+                <i class="fas fa-undo mr-2"></i>Limpiar
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla de registros -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-database mr-2"></i>Actividades del Sistema
+                    </h4>
                 </div>
-
-                <table id="tabla-bitacora" class="table table-bordered table-hover">
-                    <thead class='thead-dark'>
-                        <tr>
-                            <th style="text-align: center">N°</th>
-                            <th style="text-align: center">Fecha</th>
-                            <th style="text-align: center">Actor</th>
-                            <th style="text-align: center">Acción</th>
-                            <th style="text-align: center">Hora</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($bitacoras as $registro)
-                        <tr>
-                            <td style="text-align: center">{{ $loop->iteration }}</td>
-                            <td style="text-align: center">{{ $registro->created_at->format('d-m-Y') }}</td>
-                            <td style="text-align: center">{{ $registro->user->cedula }}</td>
-                            <td>{{ $registro->accion }}</td>
-                            <td style="text-align: center">{{ $registro->created_at->format('H:i:s') }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                <div class="card-body">
+                    <table id="tabla-bitacora" class="table table-bordered table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th style="text-align: center">N°</th>
+                                <th style="text-align: center">Fecha</th>
+                                <th style="text-align: center">Actor</th>
+                                <th style="text-align: center">Acción</th>
+                                <th style="text-align: center">Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($bitacoras as $registro)
+                            <tr>
+                                <td style="text-align: center">{{ $loop->iteration }}</td>
+                                <td style="text-align: center">{{ $registro->created_at->format('d-m-Y') }}</td>
+                                <td style="text-align: center">{{ $registro->user->cedula }}</td>
+                                <td>{{ $registro->accion }}</td>
+                                <td style="text-align: center">{{ $registro->created_at->format('H:i:s') }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -81,6 +97,7 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        // Inicializar DataTables
         const table = $("#tabla-bitacora").DataTable({
             pageLength: 5,
             order: [[1, 'desc']],
@@ -103,12 +120,24 @@
             buttons: [
                 {
                     extend: 'collection',
-                    text: 'Reportes',
+                    text: 'Exportar',
                     buttons: [
-                        'copy',
-                        'excel',
-                        'pdf',
-                        'print'
+                        {
+                            extend: 'copy',
+                            text: 'Copiar'
+                        },
+                        {
+                            extend: 'excel',
+                            text: 'Exportar a Excel'
+                        },
+                        {
+                            extend: 'pdf',
+                            text: 'Exportar a PDF'
+                        },
+                        {
+                            extend: 'print',
+                            text: 'Imprimir'
+                        }
                     ]
                 },
                 'colvis'
