@@ -5,6 +5,7 @@ use App\Models\Respaldo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class RespaldoController extends Controller
 {
@@ -16,38 +17,65 @@ class RespaldoController extends Controller
     }
 
     // Generar un respaldo
-    public function store()
-    {
-        // Simulación de generación de respaldo
-        $fileName = 'respaldo_' . now()->format('Y_m_d_H_i_s') . '.sql';
-        $filePath = 'respaldos/' . $fileName;
+    // Generar un respaldo (actualizado para SQL real)
+public function store()
+{
+    $fileName = 'respaldo_' . now()->format('Y_m_d_H_i_s') . '.sql';
+    $filePath = 'respaldos/' . $fileName;
 
-        // Guardar el archivo de respaldo (simulado)
-        Storage::put($filePath, '-- Contenido del respaldo simulado --');
-
-        // Guardar el respaldo en la base de datos
-        Respaldo::create([
-            'user_id' => Auth::id(),
-            'file_path' => $filePath,
-        ]);
-
-        return redirect()->route('respaldo.index')->with('success', 'Respaldo generado correctamente.');
+    // Generar dump de la base de datos
+    $tables = DB::select('SHOW TABLES');
+    $sql = '';
+    
+    foreach ($tables as $table) {
+        $tableName = reset($table);
+        $tableData = DB::table($tableName)->get();
+        
+        $sql .= "\n\n-- Datos para tabla: $tableName\n";
+        foreach ($tableData as $row) {
+            $columns = implode(', ', array_keys((array)$row));
+            $values = implode(', ', array_map(function($value) {
+                return "'" . addslashes($value) . "'";
+            }, (array)$row));
+            
+            $sql .= "INSERT INTO $tableName ($columns) VALUES ($values);\n";
+        }
     }
+
+    Storage::put($filePath, $sql);
+
+    Respaldo::create([
+        'user_id' => Auth::id(),
+        'file_path' => $filePath,
+    ]);
+
+    return redirect()->route('respaldo.index')->with('success', 'Respaldo generado correctamente.');
+}
 
     // Restaurar un respaldo
-    public function restore($id)
-    {
-        $respaldo = Respaldo::findOrFail($id);
-
-        // Simulación de restauración
-        $filePath = $respaldo->file_path;
-        if (Storage::exists($filePath)) {
-            // Aquí puedes usar un comando para restaurar el respaldo real
+    // Restaurar un respaldo
+public function restore($id)
+{
+    $respaldo = Respaldo::findOrFail($id);
+    
+    // Verificar existencia del archivo
+    if (Storage::exists($respaldo->file_path)) {
+        try {
+            // Obtener el contenido del archivo SQL
+            $sql = Storage::get($respaldo->file_path);
+            
+            // Ejecutar las consultas SQL directamente
+            DB::unprepared($sql);
+            
             return redirect()->route('respaldo.index')->with('success', 'Base de datos restaurada correctamente.');
+            
+        } catch (\Exception $e) {
+            return redirect()->route('respaldo.index')->with('error', 'Error al restaurar: ' . $e->getMessage());
         }
-
-        return redirect()->route('respaldo.index')->with('error', 'El archivo de respaldo no existe.');
     }
+    
+    return redirect()->route('respaldo.index')->with('error', 'El archivo de respaldo no existe.');
+}
 
     // Eliminar un respaldo
     public function destroy($id)

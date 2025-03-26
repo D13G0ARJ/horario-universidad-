@@ -13,7 +13,7 @@
 
     <div class="row">
         <!-- Sección de Generar Respaldo -->
-        <div class="col-md-6 mb-4">
+        <div class="col-md-4 mb-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h4 class="card-title mb-0">
@@ -35,7 +35,7 @@
         </div>
 
         <!-- Sección de Restauración -->
-        <div class="col-md-6 mb-4">
+        <div class="col-md-8 mb-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-success text-white">
                     <h4 class="card-title mb-0">
@@ -84,11 +84,34 @@
 </div>
 
 @push('scripts')
+
+
 <script>
     $(document).ready(function() {
-        const table = $("#tabla-respaldos").DataTable({
-            pageLength: 5,
-            order: [[1, 'desc']],
+        // Configuración de SweetAlert para mensajes de éxito
+        <?php if(\Illuminate\Support\Facades\Session::has('success')): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito!',
+                text: '<?php echo session('success'); ?>',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        <?php endif; ?>
+
+        // Configuración para mensajes de error
+        <?php if(\Illuminate\Support\Facades\Session::has('error')): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                html: '<?php echo session('error'); ?>',
+                showConfirmButton: true
+            });
+    <?php endif; ?>
+
+    const table = $("#tabla-respaldos").DataTable({
+        pageLength: 5,
+        order: [[1, 'desc']],
             language: {
                 emptyTable: "No hay registros",
                 info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
