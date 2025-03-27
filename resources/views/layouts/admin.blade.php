@@ -74,12 +74,7 @@
             position: fixed;
         }
 
-        /* Ajustar navbar */
-        .main-header {
-            position: fixed;
-            width: 100%;
-            z-index: 1030;
-        }
+
 
         /* Asegurar contenido principal */
         .content {
