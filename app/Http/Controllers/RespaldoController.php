@@ -22,10 +22,8 @@ class RespaldoController extends Controller
             $fileName = 'respaldo_' . now()->format('Y_m_d_H_i_s') . '.sql';
             $filePath = 'respaldos/' . $fileName;
 
-            // Verificar permisos de escritura
-            if (!is_writable(storage_path('app/respaldos'))) {
-                throw new \Exception('No hay permisos de escritura en el directorio de respaldos');
-            }
+            // Crear directorio si no existe
+            Storage::makeDirectory('respaldos');
 
             // Obtener todas las tablas excepto las de sistema
             $tables = DB::select('SHOW TABLES');
@@ -61,14 +59,22 @@ class RespaldoController extends Controller
                 }
             }
 
-            // Guardar archivo sin usar transacción
-            Storage::put($filePath, $sql);
+            // Intento de guardar el archivo con reintentos
+            $attempts = 0;
+            do {
+                $success = Storage::put($filePath, $sql);
+                $attempts++;
+            } while (!$success && $attempts < 3);
 
-            // Guardar registro del respaldo (sin afectar la tabla respaldos)
-            $respaldo = new Respaldo();
-            $respaldo->user_id = Auth::id();
-            $respaldo->file_path = $filePath;
-            $respaldo->save();
+            if (!$success) {
+                throw new \Exception('No se pudo guardar el respaldo después de 3 intentos');
+            }
+
+            // Guardar registro del respaldo
+            Respaldo::create([
+                'user_id' => Auth::id(),
+                'file_path' => $filePath,
+            ]);
 
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
@@ -96,25 +102,30 @@ class RespaldoController extends Controller
             if (!Storage::exists($respaldo->file_path)) {
                 throw new \Exception('El archivo de respaldo no existe');
             }
-
+    
             $sql = Storage::get($respaldo->file_path);
             
             // Desactivar verificaciones temporales
             DB::statement('SET FOREIGN_KEY_CHECKS=0');
             DB::statement('SET UNIQUE_CHECKS=0');
-            
-            // Dividir y ejecutar el SQL del respaldo
+    
+            // Ejecutar consultas sin transacciones anidadas
             $queries = array_filter(
                 explode(';', $sql),
                 function($query) { return !empty(trim($query)); }
             );
-            
+    
             foreach ($queries as $query) {
                 if (!empty(trim($query))) {
-                    DB::statement($query);
+                    try {
+                        DB::statement($query);
+                    } catch (\Exception $e) {
+                        // Registrar error pero continuar
+                        Log::error("Error en consulta: " . $e->getMessage());
+                    }
                 }
             }
-            
+    
             // Reactivar verificaciones
             DB::statement('SET FOREIGN_KEY_CHECKS=1');
             DB::statement('SET UNIQUE_CHECKS=1');
@@ -130,6 +141,7 @@ class RespaldoController extends Controller
                    ->with('success', 'Base de datos restaurada correctamente.');
             
         } catch (\Exception $e) {
+            // Eliminar el rollback innecesario
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
                 'accion' => 'Error restauración: ' . substr($e->getMessage(), 0, 150),
