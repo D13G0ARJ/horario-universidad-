@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="utf-8">
@@ -170,10 +170,10 @@
             <!-- User Panel -->
             <div class="user-panel d-flex align-items-center px-3 py-3">
                 <div class="image flex-shrink-0">
-                    <div class="d-flex align-items-center justify-content-center rounded-circle elevation-2"
-                        style="width: 40px; height: 40px; background-color: rgba(255,255,255,0.1)">
-                        <i class="fas fa-user-circle text-white" style="font-size: 1.8em"></i>
-                    </div>
+                    <div class="d-flex align-items-center justify-content-start rounded-circle elevation-2"
+    style="width: 20px; height: 20px; background-color: rgba(255,255,255,0.1); margin-left: -12px;">
+    <i class="fas fa-user-circle text-white" style="font-size: 1.8em;"></i>
+</div>
                 </div>
                 <div class="info flex-grow-1 ms-2">
                     <a href="#" class="d-block text-truncate" data-bs-toggle="modal" data-bs-target="#perfilModal">
@@ -506,24 +506,28 @@
     <!-- Scripts -->
     <!-- jQuery -->
     <!-- jQuery -->
+    <!-- jQuery (debe ir primero) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
     <!-- Bootstrap 5 -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 
-    <!-- DataTables -->
+    <!-- DataTables Core -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- DataTables Extensions -->
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+
+    <!-- PDF Export Libraries (orden crítico) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
     <!-- AdminLTE -->
     <script src="{{ asset('dist/js/adminlte.min.js') }}"></script>
@@ -531,28 +535,14 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Scripts personalizados -->
+    <!-- Scripts personalizados base -->
     <script>
-        // Script para preguntas de seguridad
+        // Funciones base que podrían necesitar todas las vistas
         document.addEventListener('DOMContentLoaded', function() {
-            // Tu código existente...
-        });
-
-        // DataTable initialization
-        $(document).ready(function() {
-            $('#secciones-table').DataTable({
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                },
-                order: [
-                    [0, 'desc']
-                ]
-            });
+            // Manejo básico de modales si es necesario
         });
     </script>
 
-    @stack('scripts')
-
+    @stack('scripts') <!-- Para que las vistas añadan sus scripts específicos -->
 </body>
-
 </html>
