@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Respaldo;
+use App\Models\Bitacora;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -9,85 +10,99 @@ use Illuminate\Support\Facades\DB;
 
 class RespaldoController extends Controller
 {
-    // Mostrar la vista de respaldos
     public function index()
     {
-        $respaldos = Respaldo::with('usuario')->get(); // Obtener todos los respaldos con el usuario asociado
+        $respaldos = Respaldo::with('usuario')->get();
+        
+
+
         return view('respaldo.index', compact('respaldos'));
     }
 
-    // Generar un respaldo
-    // Generar un respaldo (actualizado para SQL real)
-public function store()
-{
-    $fileName = 'respaldo_' . now()->format('Y_m_d_H_i_s') . '.sql';
-    $filePath = 'respaldos/' . $fileName;
+    public function store()
+    {
+        $fileName = 'respaldo_' . now()->format('Y_m_d_H_i_s') . '.sql';
+        $filePath = 'respaldos/' . $fileName;
 
-    // Generar dump de la base de datos
-    $tables = DB::select('SHOW TABLES');
-    $sql = '';
-    
-    foreach ($tables as $table) {
-        $tableName = reset($table);
-        $tableData = DB::table($tableName)->get();
+        // Generar dump de la base de datos
+        $tables = DB::select('SHOW TABLES');
+        $sql = '';
         
-        $sql .= "\n\n-- Datos para tabla: $tableName\n";
-        foreach ($tableData as $row) {
-            $columns = implode(', ', array_keys((array)$row));
-            $values = implode(', ', array_map(function($value) {
-                return "'" . addslashes($value) . "'";
-            }, (array)$row));
+        foreach ($tables as $table) {
+            $tableName = reset($table);
+            $tableData = DB::table($tableName)->get();
             
-            $sql .= "INSERT INTO $tableName ($columns) VALUES ($values);\n";
+            $sql .= "\n\n-- Datos para tabla: $tableName\n";
+            foreach ($tableData as $row) {
+                $columns = implode(', ', array_keys((array)$row));
+                $values = implode(', ', array_map(function($value) {
+                    return "'" . addslashes($value) . "'";
+                }, (array)$row));
+                
+                $sql .= "INSERT INTO $tableName ($columns) VALUES ($values);\n";
+            }
         }
+
+        Storage::put($filePath, $sql);
+
+        $respaldo = Respaldo::create([
+            'user_id' => Auth::id(),
+            'file_path' => $filePath,
+        ]);
+
+        // Registro en bitácora
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Respaldo creado: ' . $fileName
+        ]);
+
+        return redirect()->route('respaldo.index')->with('success', 'Respaldo generado correctamente.');
     }
 
-    Storage::put($filePath, $sql);
-
-    Respaldo::create([
-        'user_id' => Auth::id(),
-        'file_path' => $filePath,
-    ]);
-
-    return redirect()->route('respaldo.index')->with('success', 'Respaldo generado correctamente.');
-}
-
-    // Restaurar un respaldo
-    // Restaurar un respaldo
-public function restore($id)
-{
-    $respaldo = Respaldo::findOrFail($id);
-    
-    // Verificar existencia del archivo
-    if (Storage::exists($respaldo->file_path)) {
+    public function restore($id)
+    {
+        $respaldo = Respaldo::findOrFail($id);
+        
         try {
-            // Obtener el contenido del archivo SQL
-            $sql = Storage::get($respaldo->file_path);
-            
-            // Ejecutar las consultas SQL directamente
-            DB::unprepared($sql);
-            
-            return redirect()->route('respaldo.index')->with('success', 'Base de datos restaurada correctamente.');
+            if (Storage::exists($respaldo->file_path)) {
+                $sql = Storage::get($respaldo->file_path);
+                DB::unprepared($sql);
+                
+                // Registro en bitácora
+                Bitacora::create([
+                    'cedula' => Auth::user()->cedula,
+                    'accion' => 'Restauración de respaldo ID: ' . $id
+                ]);
+                
+                return redirect()->route('respaldo.index')->with('success', 'Base de datos restaurada correctamente.');
+            }
             
         } catch (\Exception $e) {
+            Bitacora::create([
+                'cedula' => Auth::user()->cedula,
+                'accion' => 'Error en restauración: ' . $e->getMessage()
+            ]);
+            
             return redirect()->route('respaldo.index')->with('error', 'Error al restaurar: ' . $e->getMessage());
         }
-    }
-    
-    return redirect()->route('respaldo.index')->with('error', 'El archivo de respaldo no existe.');
-}
 
-    // Eliminar un respaldo
+        return redirect()->route('respaldo.index')->with('error', 'El archivo de respaldo no existe.');
+    }
+
     public function destroy($id)
     {
         $respaldo = Respaldo::findOrFail($id);
 
-        // Eliminar el archivo de respaldo del almacenamiento
+        // Registro en bitácora ANTES de eliminar
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Eliminación de respaldo: ' . $respaldo->file_path
+        ]);
+
         if (Storage::exists($respaldo->file_path)) {
             Storage::delete($respaldo->file_path);
         }
 
-        // Eliminar el registro de la base de datos
         $respaldo->delete();
 
         return redirect()->route('respaldo.index')->with('success', 'Respaldo eliminado correctamente.');
