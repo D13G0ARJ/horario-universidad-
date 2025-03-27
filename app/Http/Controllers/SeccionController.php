@@ -14,7 +14,7 @@ class SeccionController extends Controller
     {
         $secciones = Seccion::with('aula')->get();
         $aulas = Aula::all();
-        return view('gestion_horarios.secciones', compact('secciones', 'aulas'));
+        return view('secciones.index', compact('secciones', 'aulas'));
     }
 
     public function store(Request $request)
