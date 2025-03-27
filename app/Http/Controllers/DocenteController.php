@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Docente;
 use App\Models\Asignatura;
+use App\Models\Bitacora;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DocenteController extends Controller
 {
@@ -13,10 +15,10 @@ class DocenteController extends Controller
      */
     public function index()
     {
-        // Obtener todos los docentes con sus asignaturas relacionadas
         $docentes = Docente::with('asignaturas')->get();
-        // Obtener todas las asignaturas para los formularios
         $asignaturas = Asignatura::all();
+
+
 
         return view('docente.index', compact('docentes', 'asignaturas'));
     }
@@ -26,21 +28,24 @@ class DocenteController extends Controller
      */
     public function store(Request $request)
     {
-        // Validar los datos del formulario
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:docentes,email',
             'phone' => 'required|string|max:15',
-            'asignaturas' => 'array', // Validar que sea un array
+            'asignaturas' => 'array',
         ]);
 
-        // Crear el docente con los datos básicos
         $docente = Docente::create($request->only('name', 'email', 'phone'));
 
-        // Asociar las asignaturas seleccionadas al docente
         if ($request->has('asignaturas')) {
             $docente->asignaturas()->sync($request->asignaturas);
         }
+
+        // Registro en bitácora
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Nuevo docente creado: ' . $docente->name . ' (ID: ' . $docente->id . ')'
+        ]);
 
         return redirect()->route('docente.index')->with('success', 'Docente registrado correctamente.');
     }
@@ -50,27 +55,29 @@ class DocenteController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Validar los datos del formulario
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:docentes,email,' . $id,
             'phone' => 'required|string|max:15',
-            'asignaturas' => 'array', // Validar que sea un array
+            'asignaturas' => 'array',
         ]);
 
-        // Buscar el docente por su ID
         $docente = Docente::findOrFail($id);
+        $oldName = $docente->name; // Guardar nombre anterior para bitácora
 
-        // Actualizar los datos básicos del docente
         $docente->update($request->only('name', 'email', 'phone'));
 
-        // Actualizar las asignaturas asociadas al docente
         if ($request->has('asignaturas')) {
             $docente->asignaturas()->sync($request->asignaturas);
         } else {
-            // Si no se seleccionaron asignaturas, eliminar todas las relaciones
             $docente->asignaturas()->detach();
         }
+
+        // Registro en bitácora
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Docente actualizado: ' . $oldName . ' → ' . $docente->name . ' (ID: ' . $docente->id . ')'
+        ]);
 
         return redirect()->route('docente.index')->with('success', 'Docente actualizado correctamente.');
     }
@@ -80,13 +87,15 @@ class DocenteController extends Controller
      */
     public function destroy($id)
     {
-        // Buscar el docente por su ID
         $docente = Docente::findOrFail($id);
 
-        // Eliminar las relaciones con las asignaturas
-        $docente->asignaturas()->detach();
+        // Registro en bitácora ANTES de eliminar
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Docente eliminado: ' . $docente->name . ' (ID: ' . $docente->id . ')'
+        ]);
 
-        // Eliminar el docente
+        $docente->asignaturas()->detach();
         $docente->delete();
 
         return redirect()->route('docente.index')->with('success', 'Docente eliminado correctamente.');

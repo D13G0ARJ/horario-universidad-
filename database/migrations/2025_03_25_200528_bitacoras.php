@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('bitacoras', function (Blueprint $table) {
             $table->id();
             $table->string('cedula');  // Columna para la clave foránea
-            $table->string('accion');
-            $table->timestamps();
+            $table->text('accion');
+            $table->timestamps(); 
 
             // Definición correcta de la clave foránea
             $table->foreign('cedula')
