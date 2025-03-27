@@ -84,11 +84,9 @@
 </div>
 
 @push('scripts')
-
-
 <script>
     $(document).ready(function() {
-        // Configuración de SweetAlert para mensajes de éxito
+        // Configuración de SweetAlert
         <?php if(\Illuminate\Support\Facades\Session::has('success')): ?>
             Swal.fire({
                 icon: 'success',
@@ -99,7 +97,6 @@
             });
         <?php endif; ?>
 
-        // Configuración para mensajes de error
         <?php if(\Illuminate\Support\Facades\Session::has('error')): ?>
             Swal.fire({
                 icon: 'error',
@@ -107,11 +104,48 @@
                 html: '<?php echo session('error'); ?>',
                 showConfirmButton: true
             });
-    <?php endif; ?>
+        <?php endif; ?>
 
-    const table = $("#tabla-respaldos").DataTable({
-        pageLength: 5,
-        order: [[1, 'desc']],
+        // Configuración del PDF con membrete
+        const pdfConfig = {
+            customize: function(doc) {
+                doc.pageMargins = [40, 80, 40, 60];
+                doc.content.splice(0, 0, {
+                    text: 'UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA\nDE LA FUERZA ARMADA NACIONAL\nEXTENSIÓN LOS TEQUES\nSISTEMA DE GESTIÓN DE HORARIOS - RESPALDOS',
+                    alignment: 'center',
+                    fontSize: 10,
+                    bold: true,
+                    margin: [0, 0, 0, 10]
+                });
+
+                doc.content[1].text = 'REPORTE DE RESPALDOS';
+                doc.content[1].alignment = 'center';
+                doc.content[1].fontSize = 12;
+                doc.content[1].margin = [0, 0, 0, 10];
+
+                doc['footer'] = function(currentPage, pageCount) {
+                    return {
+                        text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
+                        alignment: 'center',
+                        fontSize: 8,
+                        margin: [40, 10, 40, 20]
+                    };
+                };
+
+                // Ajustar anchos de columnas (todas excepto acciones)
+                const columnCount = $("#tabla-respaldos thead tr th").length - 1;
+                doc.content[2].table.widths = Array(columnCount).fill('auto');
+                doc.content[2].table.headerRows = 1;
+                doc.styles.tableHeader.fillColor = '#343a40';
+                doc.styles.tableHeader.color = '#ffffff';
+                doc.content[2].layout = 'lightHorizontalLines';
+            }
+        };
+
+        // Configuración de DataTables
+        const table = $("#tabla-respaldos").DataTable({
+            pageLength: 5,
+            order: [[1, 'desc']],
             language: {
                 emptyTable: "No hay registros",
                 info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
@@ -130,19 +164,75 @@
             dom: 'Bfrtip',
             buttons: [
                 {
-                    extend: 'collection',
-                    text: 'Reportes',
-                    buttons: [
-                        'copy',
-                        'excel',
-                        'pdf',
-                        'print'
-                    ]
+                    extend: 'print',
+                    text: '<i class="fas fa-print mr-2"></i>Imprimir',
+                    title: '',
+                    autoPrint: true,
+                    exportOptions: {
+                        columns: [0, 1, 2, 3] // Incluye N°, Nombre, Fecha y Archivo (excluye Acciones)
+                    },
+                    customize: function(win) {
+                        $(win.document.body)
+                            .css('font-size', '10pt')
+                            .prepend(
+                                '<div style="text-align: center; margin-bottom: 20px;">' +
+                                '<img src="{{ asset('images/logo.jpg') }}" style="height: 80px; margin-bottom: 10px;"/>' +
+                                '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
+                                '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
+                                '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
+                                '<h4 style="margin: 5px 0; font-size: 12pt;">SISTEMA DE GESTIÓN DE HORARIOS - RESPALDOS</h4>' +
+                                '<h2 style="margin: 15px 0; font-size: 16pt;">REPORTE DE RESPALDOS</h2>' +
+                                '</div>'
+                            );
+
+                        $(win.document.body).find('table')
+                            .addClass('compact')
+                            .css('font-size', 'inherit');
+
+                        $(win.document.body).append(
+                            '<div style="text-align: center; margin-top: 20px; font-size: 8pt;">' +
+                            '<p>Generado el: ' + new Date().toLocaleDateString('es-VE') + '</p>' +
+                            '</div>'
+                        );
+                    },
+                    className: 'btn btn-primary'
                 },
-                'colvis'
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
+                    customize: pdfConfig.customize,
+                    orientation: 'portrait',
+                    pageSize: 'A4',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3] // Incluye N°, Nombre, Fecha y Archivo (excluye Acciones)
+                    },
+                    className: 'btn btn-danger mr-2'
+                },
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel mr-2"></i>Excel',
+                    title: 'Respaldos Registrados',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3] // Incluye N°, Nombre, Fecha y Archivo (excluye Acciones)
+                    },
+                    className: 'btn btn-success mr-2'
+                }
             ],
             columnDefs: [
-                { orderable: false, targets: [3, 4] }
+                {
+                    orderable: false,
+                    targets: [4] // Columna de Acciones no ordenable
+                },
+                {
+                    targets: -1, // Columna de Acciones (última columna)
+                    visible: true,
+                    exportable: false, // No se exporta
+                    printable: false // No se imprime
+                },
+                {
+                    targets: 3, // Columna de Archivo
+                    className: 'text-center'
+                }
             ]
         });
     });

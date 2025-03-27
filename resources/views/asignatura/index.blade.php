@@ -1,313 +1,345 @@
 @extends('layouts.admin')
 
 @section('content')
+<div class="container-fluid">
+    <!-- Título principal -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="text-primary">
+                <i class="fas fa-book mr-2"></i>Listado de Asignaturas
+            </h3>
+        </div>
+    </div>
 
-<div class="row">
-    <h1>Listado de Asignaturas</h1>
+    <!-- Tabla de asignaturas -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-list-alt mr-2"></i>Asignaturas Registradas
+                    </h4>
+                    <a href="#" class="btn btn-light ms-auto text-dark"
+                    data-bs-toggle="modal" data-bs-target="#registroModal">
+                     <i class="fas fa-plus mr-1"></i>Nueva Asignatura
+                 </a>
+                </div>
+                <div class="card-body">
+                    <table id="tabla-asignaturas" class="table table-bordered table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th style="text-align: center">N°</th>
+                                <th style="text-align: center">Código</th>
+                                <th style="text-align: center">Nombre</th>
+                                <th style="text-align: center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $contador = 0; @endphp
+                            @foreach($asignaturas as $asignatura)
+                            @php $contador++; @endphp
+                            <tr>
+                                <td style="text-align: center">{{ $contador }}</td>
+                                <td style="text-align: center">{{ $asignatura->code }}</td>
+                                <td>{{ $asignatura->name }}</td>
+                                <td style="text-align: center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <!-- Botón para Mostrar -->
+                                        <button class="btn btn-info btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#mostrarModal"
+                                            data-id="{{ $asignatura->id }}"
+                                            data-name="{{ $asignatura->name }}"
+                                            data-code="{{ $asignatura->code }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+
+                                        <!-- Botón para Editar -->
+                                        <button class="btn btn-success btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editarModal"
+                                            data-id="{{ $asignatura->id }}"
+                                            data-name="{{ $asignatura->name }}"
+                                            data-code="{{ $asignatura->code }}">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
+
+                                        <!-- Botón para Eliminar -->
+                                        <form action="{{ route('asignatura.destroy', $asignatura->code) }}" method="POST">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<hr>
-
-<div class="row">
-    <div class="col-md-12">
-        <div class="card card-outline card-primary">
-            <div class="card-header">
-                <h3 class="card-title">Asignaturas Registradas</h3>
-                <div class="card-tools">
-                    <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registroModal">
-                        Nueva asignatura
-                    </a>
-                </div>
-
+<!-- Modal de registro -->
+<div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="registroModalLabel">
+                    <i class="fas fa-plus-circle mr-2"></i>Registrar Nueva Asignatura
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ route('asignatura.store') }}">
+                    @csrf
+                    <div class="form-group mb-3">
+                        <label for="code" class="form-label">Código</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                            <input id="code" type="text" class="form-control @error('code') is-invalid @enderror"
+                                name="code" placeholder="Código" value="{{ old('code') }}" required autofocus>
+                        </div>
+                        @error('code')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
-                    <div class="card-body col-12" style="width: 100%;">
-                        <table class="table table-bordered table-striped table-hover w-100" id="tabla">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <center>Nro</center>
-                                    </th>
-                                    <th>
-                                        <center>Código</center>
-                                    </th>
-                                    <th>
-                                        <center>Nombre</center>
-                                    </th>
-                                    <th>
-                                        <center>Acciones</center>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php
-                                $contador = 0;
-                                @endphp
 
-                                @foreach ($asignaturas as $asignatura)
-                                @php
-                                $contador++;
-                                @endphp
-                                <tr>
-                                    <td>{{ $contador }}</td>
-                                    <td>{{ $asignatura->code }}</td>
-                                    <td>{{ $asignatura->name }}</td>
-                                    <td style="text-align: center;">
-                                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                            <!-- Botón para Mostrar -->
-                                            <button class="btn btn-info btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#mostrarModal"
-                                                data-id="{{ $asignatura->id }}"
-                                                data-name="{{ $asignatura->name }}"
-                                                data-code="{{ $asignatura->code }}">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-
-                                            <!-- Botón para Editar -->
-                                            <button class="btn btn-success btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#editarModal"
-                                                data-id="{{ $asignatura->id }}"
-                                                data-name="{{ $asignatura->name }}"
-                                                data-code="{{ $asignatura->code }}">
-                                                <i class="fas fa-pencil-alt"></i>
-                                            </button>
-
-                                            <!-- Botón para Eliminar (ejemplo) -->
-                                            <form action="{{ route('asignatura.destroy', $asignatura->code) }}" method="POST">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div class="form-group mb-3">
+                        <label for="name" class="form-label">Nombre</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-book"></i></span>
+                            <input id="name" type="text" class="form-control @error('name') is-invalid @enderror"
+                                name="name" placeholder="Nombre" value="{{ old('name') }}" required>
+                        </div>
+                        @error('name')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-2"></i>Registrar Asignatura
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal de registro -->
-    <!-- Modal -->
-    <div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-registro" id="registroModalLabel">Registrar Nueva Asignatura</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Modal para Mostrar -->
+<div class="modal fade" id="mostrarModal" tabindex="-1" aria-labelledby="mostrarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle mr-2"></i>Detalles de la Asignatura
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="fw-bold">Código:</label>
+                    <p id="modalCode" class="form-control-plaintext"></p>
                 </div>
-                <div class="modal-body">
-                    <!-- Formulario de registro -->
-                    <form method="POST" action="{{ route('asignatura.store') }}">
-                        @csrf
-
-                        <!-- Campo de Cédula -->
-                        <div class="form-group mb-3">
-                            <label for="cedula" class="form-label text-secondary small">Cédula</label>
-                            <div class="input-group">
-                                <span class="input-group-text py-2">
-                                    <i class="fas fa-id-card small"></i>
-                                </span>
-                                <input id="code" type="text"
-                                    class="form-control form-control-md @error('code') is-invalid @enderror"
-                                    name="code" placeholder="Código" value="{{ old('code') }}" required autofocus>
-                            </div>
-                            @error('code')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- Campo de Nombre -->
-                        <div class="form-group mb-3">
-                            <label for="name" class="form-label text-secondary small">Nombre</label>
-                            <div class="input-group">
-                                <span class="input-group-text py-2">
-                                    <i class="fas fa-user small"></i>
-                                </span>
-                                <input id="name" type="text"
-                                    class="form-control form-control-md @error('name') is-invalid @enderror"
-                                    name="name" placeholder="Nombre" value="{{ old('name') }}" required>
-                            </div>
-                            @error('name')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- Botón de Registro -->
-                        <div class="d-grid gap-2 mt-3">
-                            <button type="submit" class="btn btn-primary btn-md rounded-pill py-2">
-                                <i class="fas fa-user-plus me-2 small"></i>Registrar asignatura
-                            </button>
-                        </div>
-                    </form>
+                <div class="form-group mb-3">
+                    <label class="fw-bold">Nombre:</label>
+                    <p id="modalName" class="form-control-plaintext"></p>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i>Cerrar
+                </button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal para Mostrar -->
-    <div class="modal fade" id="mostrarModal" tabindex="-1" aria-labelledby="mostrarModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalles de la asignatura</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Código:</label>
-                        <p id="modalCode"></p>
-                    </div>
-                    <div class="form-group">
-                        <label>Nombre:</label>
-                        <p id="modalName"></p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
+<!-- Modal para Editar -->
+<div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit mr-2"></i>Editar Asignatura
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-        </div>
-    </div>
-
-    <!-- Script para llenar el modal -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const mostrarModal = document.getElementById('mostrarModal');
-            mostrarModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const code = button.getAttribute('data-code');
-                const nombre = button.getAttribute('data-name');
-
-                // Actualizar los campos del modal
-                mostrarModal.querySelector('#modalCode').textContent = code;
-                mostrarModal.querySelector('#modalName').textContent = nombre;
-            });
-        });
-    </script>
-
-    <!-- Modal para Editar -->
-    <div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Asignatura</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form method="POST" action="{{ route('asignatura.update', $asignatura->code) }}" id="formEditar">
+            <div class="modal-body">
+                <form method="POST" action="" id="formEditar">
                     @csrf
                     @method('PUT')
 
-                    <!-- Código (solo lectura) -->
                     <div class="form-group mb-3">
                         <label for="code_editar" class="form-label">Código</label>
-                        <input type="text"
-                            class="form-control"
-                            name="code"
-                            id="code_editar"
-                            readonly required> <!-- Bloquea la edición -->
-                        @error('code')
-                        <small class="text-danger">{{ $message }}</small>
-                        @enderror
+                        <input type="text" class="form-control" name="code" id="code_editar" readonly required>
                     </div>
 
-                    <!-- Nombre -->
                     <div class="form-group mb-3">
                         <label for="name_editar" class="form-label">Nombre</label>
-                        <input type="text"
-                            class="form-control"
-                            name="name"
-                            id="name_editar"
-                            required>
-                        @error('name')
-                        <small class="text-danger">{{ $message }}</small>
-                        @enderror
+                        <input type="text" class="form-control" name="name" id="name_editar" required>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-2"></i>Guardar Cambios
+                        </button>
                     </div>
-                    </form>
-                </div>
+                </form>
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const editarModal = document.getElementById('editarModal');
-            editarModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-
-                // Obtener datos del botón
-                const code = button.getAttribute('data-code');
-                const name = button.getAttribute('data-name');
-
-                // Actualizar el formulario
-                const form = document.getElementById('formEditar');
-                form.action = `/asignaturas/${code}`; // Actualizar la URL de la acción
-
-                // Llenar los campos
-                document.getElementById('code_editar').value = code;
-                document.getElementById('name_editar').value = name;
-            });
-        });
-    </script>
-
-
+</div>
 
 @push('scripts')
 <script>
     $(document).ready(function() {
-        $('#tabla').DataTable({
-            pageLength: 5,
-            responsive: true,
-            autoWidth: false,
-            dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                 "<'row'<'col-sm-12'tr>>" +
-                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        // Configuración del PDF (sin imagen)
+        const pdfConfig = {
+            customize: function(doc) {
+                doc.pageMargins = [40, 80, 40, 60];
+                doc.content.splice(0, 0, {
+                    text: 'UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA\nDE LA FUERZA ARMADA NACIONAL\nEXTENSIÓN LOS TEQUES\nSISTEMA DE GESTIÓN DE HORARIOS - ASIGNATURAS',
+                    alignment: 'center',
+                    fontSize: 10,
+                    bold: true,
+                    margin: [0, 0, 0, 10]
+                });
+
+                doc.content[1].text = 'REPORTE DE ASIGNATURAS';
+                doc.content[1].alignment = 'center';
+                doc.content[1].fontSize = 12;
+                doc.content[1].margin = [0, 0, 0, 10];
+
+                doc['footer'] = function(currentPage, pageCount) {
+                    return {
+                        text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
+                        alignment: 'center',
+                        fontSize: 8,
+                        margin: [40, 10, 40, 20]
+                    };
+                };
+
+                // Ajustar columnas automáticamente al contenido
+                doc.content[2].table.widths = 'auto';
+                doc.content[2].table.headerRows = 1;
+                doc.styles.tableHeader.fillColor = '#343a40';
+                doc.styles.tableHeader.color = '#ffffff';
+                doc.content[2].layout = 'lightHorizontalLines';
+            }
+        };
+
+        // Inicializar DataTables
+        const table = $("#tabla-asignaturas").DataTable({
+            pageLength: 10,
             language: {
-                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                emptyTable: "No hay asignaturas registradas",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ asignaturas",
+                infoEmpty: "Mostrando 0 asignaturas",
+                infoFiltered: "(filtradas de _MAX_ registros totales)",
+                search: "Buscar:",
+                paginate: {
+                    first: "Primero",
+                    last: "Último",
+                    next: "Siguiente",
+                    previous: "Anterior"
+                }
             },
-            columnDefs: [
-                { 
-                    targets: 0,
-                    render: function(data, type, row, meta) {
-                        return meta.row + 1;
+            responsive: true,
+            lengthChange: true,
+            autoWidth: false,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print mr-2"></i>Imprimir',
+                    title: '',
+                    autoPrint: true,
+                    exportOptions: {
+                        columns: [0, 1, 2] // Excluye columna de acciones (índice 3)
                     },
-                    className: 'text-center',
-                    orderable: false
+                    customize: function(win) {
+                        $(win.document.body)
+                            .css('font-size', '10pt')
+                            .find('table')
+                            .css('width', 'auto') // Ajustar al contenido
+                            .css('max-width', 'none');
+
+                        $(win.document.body).prepend(
+                            '<div style="text-align: center; margin-bottom: 20px;">' +
+                            '<img src="{{ asset('images/logo.jpg') }}" style="height: 80px; margin-bottom: 10px;"/>' +
+                            '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
+                            '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
+                            '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
+                            '<h4 style="margin: 5px 0; font-size: 12pt;">SISTEMA DE GESTIÓN DE HORARIOS - ASIGNATURAS</h4>' +
+                            '<h2 style="margin: 15px 0; font-size: 16pt;">REPORTE DE ASIGNATURAS</h2>' +
+                            '</div>'
+                        );
+
+                        $(win.document.body).append(
+                            '<div style="text-align: center; margin-top: 20px; font-size: 8pt;">' +
+                            '<p>Generado el: ' + new Date().toLocaleDateString('es-VE') + '</p>' +
+                            '</div>'
+                        );
+                    },
+                    className: 'btn btn-primary'
                 },
-                { targets: [1,2], className: 'text-center' },
-                { 
-                    targets: 3, 
-                    orderable: false, 
-                    searchable: false, 
-                    className: 'text-center',
-                    width: '120px'
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
+                    customize: pdfConfig.customize,
+                    orientation: 'portrait',
+                    pageSize: 'A4',
+                    exportOptions: {
+                        columns: [0, 1, 2] // Excluye columna de acciones (índice 3)
+                    },
+                    className: 'btn btn-danger mr-2'
+                },
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel mr-2"></i>Excel',
+                    title: 'Asignaturas Registradas',
+                    exportOptions: {
+                        columns: [0, 1, 2] // Excluye columna de acciones (índice 3)
+                    },
+                    className: 'btn btn-success mr-2'
                 }
             ],
-            initComplete: function() {
-                $('.dataTables_filter input')
-                    .addClass('form-control form-control-sm  text-black')
-                    .attr('placeholder', 'Buscar...');
-                
-                $('.dataTables_length select')
-                    .addClass('form-select form-select-sm  text-black');
-                
-                $('.dataTables_paginate').addClass('mt-3');
-            }
+            columnDefs: [
+                { orderable: false, targets: [0, 3] },
+                { className: 'text-center', targets: [0, 1, 3] }
+            ]
+        });
+
+        // Script para llenar el modal de visualización (sin cambios)
+        $('#mostrarModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            const code = button.data('code');
+            const name = button.data('name');
+
+            const modal = $(this);
+            modal.find('#modalCode').text(code);
+            modal.find('#modalName').text(name);
+        });
+
+        // Script para llenar el modal de edición (sin cambios)
+        $('#editarModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            const code = button.data('code');
+            const name = button.data('name');
+
+            const modal = $(this);
+            modal.find('#code_editar').val(code);
+            modal.find('#name_editar').val(name);
+            modal.find('#formEditar').attr('action', '/asignaturas/' + code);
         });
     });
 </script>
-
-
 @endpush
 @endsection
