@@ -380,6 +380,7 @@
 <script>
     $(document).ready(function() {
         $('#tabla').DataTable({
+            pageLength: 5,
             responsive: true,
             autoWidth: false,
             language: {

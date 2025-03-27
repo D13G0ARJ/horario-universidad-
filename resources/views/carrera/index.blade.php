@@ -267,6 +267,7 @@
     <script>
         $(document).ready(function() {
             $('#tabla_carrera').DataTable({
+                pageLength: 5,
                 responsive: true,
                 autoWidth: false,
                 dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +

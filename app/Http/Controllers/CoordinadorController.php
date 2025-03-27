@@ -29,20 +29,20 @@ class CoordinadorController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|confirmed',
         ]);
-
+    
         $usuario = User::create([
             'cedula' => $request->cedula,
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'rol' => 'coordinador', // 👈 Campo crítico si existe
         ]);
-
-        // Registrar en bitácora
+    
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Nuevo coordinador registrado: ' . $usuario->name . ' (Cédula: ' . $usuario->cedula . ')'
         ]);
-
+    
         return redirect()->route('coordinador.index')->with('success', 'Coordinador registrado correctamente.');
     }
 

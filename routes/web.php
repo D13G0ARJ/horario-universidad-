@@ -61,7 +61,7 @@ Route::put('/periodos/{periodo}', [PeriodoController::class, 'update'])->name('p
 Route::delete('/periodos/{periodo}', [PeriodoController::class, 'destroy'])->name('periodo.destroy');
 
 // Rutas para secciones
-Route::resource('secciones', SeccionController::class);
+Route::resource('/secciones', SeccionController::class);
 
 // Rutas para recuperación de contraseña
 Route::prefix('password')->group(function () {

@@ -83,6 +83,5 @@ class SeccionController extends Controller
             'accion' => 'Sección actualizada: ' . $seccion->nombre . ' (Aula: ' . $seccion->aula->nombre . ')'
         ]);
 
-        return response()->json(['success' => 'Sección actualizada exitosamente.']);
-    }
+        return redirect()->back();    }
 }
