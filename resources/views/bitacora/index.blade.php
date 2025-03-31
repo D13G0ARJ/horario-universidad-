@@ -134,7 +134,7 @@
 
         // Inicializar DataTables
         const table = $("#tabla-bitacora").DataTable({
-            pageLength: 10,
+            pageLength: 5,
             order: [[1, 'desc']],
             language: {
                 emptyTable: "No hay registros disponibles",
@@ -164,7 +164,7 @@
                             .css('font-size', '10pt')
                             .prepend(
                                 '<div style="text-align: center; margin-bottom: 20px;">' +
-                                '<img src="{{ asset('images/logo.jpg') }}" style="height: 80px; margin-bottom: 10px;"/>' +
+                                '<img src="{{ asset("images/logo.jpg") }}" style="height: 80px; margin-bottom: 10px;"/>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
                                 '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +

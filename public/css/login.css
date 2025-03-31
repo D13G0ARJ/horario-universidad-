@@ -1,148 +1,160 @@
 /* ========== GENERAL ========== */
-html {
-    overflow: hidden;
-    height: 100%;
+.login-layout {
+    background: #ffffff;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
 }
 
-body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/unefa.jpg') center/cover no-repeat;
+/* ========== COLUMNA IZQUIERDA (IMAGEN) ========== */
+.login-image {
+    background: url('../images/unefa.jpg') center/cover no-repeat;
     height: 100vh;
-    margin: 0;
-    padding: 60px 0 60px;
+    filter: brightness(0.95);
     display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-sizing: border-box;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 1;
 }
 
-/* ========== HEADER ========== */
-header {
-    background-color: #007bff;
-    color: #fff;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    padding: 0px 0;
-    min-height: 40px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-/* Logo alineado a la izquierda */
-.logo {
-    margin-left: 15px;
-    margin-right: 20px;
-}
-
-.logo img {
-    width: 60px;
-    height: auto;
-    display: block;
-}
-
-/* Título centrado en espacio restante */
-.titulo {
-    flex-grow: 1;
-    text-align: center;
-    margin-left: -50px; /* Compensa el ancho del logo */
-}
-
-.titulo h1 {
-    font-size: 1.8rem;
-    font-weight: 600;
-    margin: 0;
-    letter-spacing: 0.5px;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-#fecha-hora {
-    font-weight: bold;
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 3px 10px;
-    border-radius: 4px;
-    margin-right: 15px;
-    font-size: 0.9em;
-}
-
-/* ========== MAIN CONTENT ========== */
-main.container-fluid {
-    height: calc(100vh - 120px);
-    overflow-y: auto;
-    width: 100%;
-    padding: 15px;
-    box-sizing: border-box;
-}
-
-/* ========== LOGIN CARD ========== */
+/* ========== CARD FORMULARIO ========== */
 .card {
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
+    border: 1px solid #ced4da !important; /* Borde más oscuro */
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* ========== FOOTER CENTRADO ========== */
-.main-footer {
+.card-body .d-flex {
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-body img {
+    width: 50px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* ========== FORMULARIO ========== */
+.form-control {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.3s;
+}
+
+.input-group-text {
+    background: #fff;
+    border-color: #ced4da;
+    color: #6c757d;
+    min-width: 45px;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: #007bff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* ========== FOOTER CON FECHA/HORA ========== */
+/* ========== FOOTER ========== */
+.login-footer {
     position: fixed;
     bottom: 0;
-    left: 0;
     width: 100%;
-    background-color: #007bff;
-    color: #fff;
-    padding: 8px 15px;
+    background: #007bff;
+    color: white;
+    height: 40px;
     z-index: 1000;
-    height: 60px;
-    display: flex;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
+    height: 100%;
+    padding: 0 20px;
 }
 
-.footer-content {
-    width: 100%;
+.copyright {
+    font-size: 0.85rem;
     text-align: center;
+    margin: 0;
 }
 
-.footer-section {
-    display: inline-block;
+
+
+.fecha-hora {
+    justify-self: end;
+    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px 12px;
+    border-radius: 15px;
+    margin-right: 10px;
+}
+
+.login-footer strong {
+    font-size: 0.85rem;
 }
 
 /* ========== RESPONSIVE ========== */
+@media (max-width: 992px) {
+    .login-image {
+        display: none !important;
+    }
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .titulo h1 {
-        font-size: 1.4rem;
-        margin-left: 0;
+    .footer-grid {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 5px;
+        padding: 8px 0;
     }
     
-    .logo {
-        margin-left: 10px;
-        margin-right: 15px;
+    .fecha-hora {
+        order: -1;
+        justify-self: center;
+        margin: 0;
+        font-size: 0.75rem;
     }
     
-    .logo img {
-        width: 45px;
+    .empty-space {
+        display: none;
     }
 }
 
 @media (max-width: 576px) {
-    body {
-        padding: 55px 0 50px;
+    .card-body .d-flex {
+        flex-direction: column;
+        text-align: center;
     }
-    
-    .titulo h1 {
-        font-size: 1.2rem;
+
+    .card-body img {
+        width: 45px;
+        margin-bottom: 1rem;
     }
-    
-    .logo img {
-        width: 40px;
+
+    .card {
+        margin-top: 1.5rem;
+        border: 1px solid #e9ecef !important;
     }
-    
-    main.container-fluid {
-        padding: 10px;
-    }
-    
-    .footer-section strong {
-        font-size: 0.8rem;
+
+    .login-footer {
+        height: 50px; /* Más espacio para dos líneas */
     }
 }

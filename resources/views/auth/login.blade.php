@@ -1,69 +1,57 @@
 @extends('layouts.login')
 
 @section('content')
-
-
-<div class="container-fluid">
-    <div class="row justify-content-center align-items-center min-vh-100">
-        <div class="col-lg-4 col-md-6 col-sm-8">
-            <div class="card border-0 shadow-lg" style="max-width: 400px; margin: 0 auto;">
-                <div class="text-center pt-3">
-                    <div class="card-header bg-transparent border-0 pb-0">
-                        <h2 class="text-dark mb-1 font-weight-bold h5">Sistema de Horarios</h2>
-                        <h4 class="text-muted h6">Iniciar Sesión</h4>
-                    </div>
-                </div>
-
-                <div class="card-body px-4">
-                    <form method="POST" action="{{ route('login') }}">
-                        @csrf
-
-                        <!-- Campo de Cédula -->
-                        <div class="form-group mb-3">
-                            <label for="cedula" class="form-label text-secondary small">Cédula</label>
-                            <div class="input-group">
-                                <span class="input-group-text py-2">
-                                    <i class="fas fa-id-card small"></i>
-                                </span>
-                                <input id="cedula" type="text"
-                                    class="form-control form-control-md @error('cedula') is-invalid @enderror"
-                                    name="cedula" placeholder="Cédula" value="{{ old('cedula') }}" required autofocus>
-                            </div>
-                            @error('cedula')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- Campo de Contraseña -->
-                        <div class="form-group mb-3">
-                            <label for="password" class="form-label text-secondary small">Contraseña</label>
-                            <div class="input-group">
-                                <span class="input-group-text py-2">
-                                    <i class="fas fa-lock small"></i>
-                                </span>
-                                <input id="password" type="password"
-                                    class="form-control form-control-md"
-                                    name="password" placeholder="Contraseña" required>
-                            </div>
-                        </div>
-
-                        <!-- Botón de Iniciar Sesión -->
-                        <div class="d-grid gap-2 mt-3">
-                            <button type="submit" class="btn btn-primary btn-md rounded-pill py-2">
-                                <i class="fas fa-sign-in-alt me-2 small"></i>Iniciar Sesión
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- boton para recuperar contraseña -->
-                <div class="bg-light text-center py-3">
-                    <a href="{{ route('password.verifyUserForm') }}" class="text-muted small">¿Olvidaste tu contraseña?</a>                </div>
-                
+<div class="card shadow-lg" style="max-width: 500px; margin: 0 auto; border: 1px solid #dee2e6;"> <!-- Borde más oscuro -->
+    <div class="card-body p-4 p-md-5">
+        <!-- Encabezado con logo -->
+        <div class="d-flex align-items-center gap-3 mb-5">
+            <img 
+                src="{{ asset('images/logo.jpg') }}" 
+                alt="UNEFA" 
+                class="img-fluid" 
+                style="width: 50px; height: auto;"
+            >
+            <div>
+                <h2 class="text-primary mb-0">Sistema de Horarios</h2>
+                <h5 class="text-muted mt-1">Iniciar Sesión</h5>
             </div>
         </div>
+
+        <!-- Formulario (Mantiene tu estructura actual) -->
+        <form method="POST" action="{{ route('login') }}">
+            @csrf
+            <!-- Campo Cédula -->
+            <div class="mb-4">
+                <label class="form-label text-secondary small">Cédula</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-id-card"></i>
+                    </span>
+                    <input type="text" class="form-control" name="cedula" required>
+                </div>
+            </div>
+
+            <!-- Campo Contraseña -->
+            <div class="mb-4">
+                <label class="form-label text-secondary small">Contraseña</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    <input type="password" class="form-control" name="password" required>
+                </div>
+            </div>
+
+            <!-- Botón de Login -->
+            <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+            </button>
+
+            <!-- Enlace olvidé contraseña -->
+            <div class="text-center">
+                <a href="{{ route('password.verifyUserForm') }}" class="text-primary small">¿Olvidaste tu contraseña?</a>
+            </div>
+        </form>
     </div>
 </div>
-
-
 @endsection
