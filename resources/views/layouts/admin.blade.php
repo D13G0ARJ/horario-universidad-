@@ -85,6 +85,10 @@
             overflow: hidden;
         }
     </style>
+
+@yield('style')
+
+
 </head>
 
 <body class="hold-transition sidebar-mini">

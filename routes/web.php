@@ -90,6 +90,7 @@ Route::post('/security-questions', [SecurityQuestionController::class, 'update']
 
 // Rutas para bitácora
 Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index')->middleware('auth');
+Route::get('/bitacora/filtrar', [BitacoraController::class, 'filtrar'])->name('bitacora.filtrar');
 
 // Rutas para respaldos
 Route::prefix('respaldo')->middleware(['auth'])->group(function () {

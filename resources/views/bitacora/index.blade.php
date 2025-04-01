@@ -1,4 +1,18 @@
 @extends('layouts.admin')
+@section('style')
+<style>#mensaje-inicial {
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+#mensaje-inicial h4 {
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+</style>
+@endsection
+
 
 @section('content')
 <div class="container-fluid">
@@ -76,17 +90,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($bitacoras as $registro)
-                            <tr>
-                                <td style="text-align: center">{{ $loop->iteration }}</td>
-                                <td style="text-align: center">{{ $registro->created_at->format('d-m-Y') }}</td>
-                                <td style="text-align: center">{{ $registro->user->cedula }}</td>
-                                <td>{{ $registro->accion }}</td>
-                                <td style="text-align: center">{{ $registro->created_at->format('H:i:s') }}</td>
-                            </tr>
-                            @endforeach
+                        
                         </tbody>
                     </table>
+                    <div id="mensaje-inicial" class="text-center py-5">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">Utilice los filtros para visualizar los registros</h4>
+    </div>
                 </div>
             </div>
         </div>
@@ -96,12 +106,12 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Configuración del PDF (sin imagen)
+        // Configuración del PDF SIN logo
         const pdfConfig = {
             customize: function(doc) {
-                doc.pageMargins = [40, 80, 40, 60];
-
-                // Encabezado con membrete
+                doc.pageMargins = [40, 60, 40, 60]; // Ajuste de márgenes superior
+                
+                // Encabezado solo texto
                 doc.content.splice(0, 0, {
                     text: 'UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA\nDE LA FUERZA ARMADA NACIONAL\nEXTENSIÓN LOS TEQUES\nSISTEMA DE GESTIÓN DE HORARIOS - BITÁCORA',
                     alignment: 'center',
@@ -110,21 +120,34 @@
                     margin: [0, 0, 0, 10]
                 });
 
+                // Título principal
                 doc.content[1].text = 'REPORTE DE BITÁCORA';
                 doc.content[1].alignment = 'center';
                 doc.content[1].fontSize = 12;
                 doc.content[1].margin = [0, 0, 0, 10];
 
+                // Footer
                 doc['footer'] = function(currentPage, pageCount) {
                     return {
-                        text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
-                        alignment: 'center',
-                        fontSize: 8,
+                        columns: [
+                            {
+                                text: 'Generado el: ' + new Date().toLocaleDateString('es-VE'),
+                                alignment: 'left',
+                                fontSize: 8,
+                                margin: [40, 0, 0, 0]
+                            },
+                            {
+                                text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
+                                alignment: 'center',
+                                fontSize: 8
+                            }
+                        ],
                         margin: [40, 10, 40, 20]
                     };
                 };
 
-                doc.content[2].table.widths = ['auto', 'auto', 'auto', '*', 'auto'];
+                // Ajustes de tabla
+                doc.content[2].table.widths = ['10%', '15%', '15%', '45%', '15%'];
                 doc.content[2].table.headerRows = 1;
                 doc.styles.tableHeader.fillColor = '#343a40';
                 doc.styles.tableHeader.color = '#ffffff';
@@ -133,14 +156,16 @@
         };
 
         // Inicializar DataTables
-        const table = $("#tabla-bitacora").DataTable({
+        const table = $('#tabla-bitacora').DataTable({
+            dom: 'Bfrtip',
             pageLength: 5,
+            ordering: true,
             order: [[1, 'desc']],
             language: {
-                emptyTable: "No hay registros disponibles",
+                emptyTable: "No hay registros para mostrar",
                 info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
                 infoEmpty: "Mostrando 0 registros",
-                infoFiltered: "(filtrados de _MAX_ registros totales)",
+                infoFiltered: "(filtrados de _MAX_ registros)",
                 search: "Buscar:",
                 paginate: {
                     first: "Primero",
@@ -149,16 +174,26 @@
                     previous: "Anterior"
                 }
             },
-            responsive: true,
-            lengthChange: true,
-            autoWidth: false,
-            dom: 'Bfrtip',
+            columns: [
+                { data: 0, className: 'text-center' }, // N°
+                { data: 1, className: 'text-center' }, // Fecha
+                { data: 2, className: 'text-center' }, // Actor
+                { data: 3 },                           // Acción
+                { data: 4, className: 'text-center' }  // Hora
+            ],
+            columnDefs: [
+                { width: '10%', targets: 0 },  // N°
+                { width: '15%', targets: 1 },  // Fecha
+                { width: '15%', targets: 2 },  // Actor
+                { width: '45%', targets: 3 },  // Acción
+                { width: '15%', targets: 4 }   // Hora
+            ],
             buttons: [
                 {
                     extend: 'print',
-                    text: '<i class="fas fa-print mr-2"></i>Descargar',
+                    text: '<i class="fas fa-print mr-2"></i>Imprimir',
                     title: '',
-                    autoPrint: true,
+                    className: 'btn btn-primary',
                     customize: function(win) {
                         $(win.document.body)
                             .css('font-size', '10pt')
@@ -173,89 +208,99 @@
                                 '</div>'
                             );
 
-                        $(win.document.body).find('table')
-                            .addClass('compact')
-                            .css('font-size', 'inherit');
-
                         $(win.document.body).append(
                             '<div style="text-align: center; margin-top: 20px; font-size: 8pt;">' +
                             '<p>Generado el: ' + new Date().toLocaleDateString('es-VE') + '</p>' +
                             '</div>'
                         );
-                    },
-                    exportOptions: {
-                        columns: ':visible'
-                    },
-                    className: 'btn btn-primary'
+                    }
                 },
-                {
-                    extend: 'pdf',
-                    text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
-                    customize: pdfConfig.customize,
-                    orientation: 'portrait',
-                    pageSize: 'A4',
-                    exportOptions: {
-                        columns: ':visible'
-                    },
-                    className: 'btn btn-danger mr-2'
-                },
-                {
-                    extend: 'excel',
-                    text: '<i class="fas fa-file-excel mr-2"></i>Excel',
-                    title: 'Bitácora del Sistema',
-                    exportOptions: {
-                        columns: ':visible'
-                    },
-                    className: 'btn btn-success mr-2'
-                },
-            ],
-            columnDefs: [
-                { orderable: false, targets: [2, 3] }
-            ]
+    {
+        extend: 'pdf',
+        text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
+        className: 'btn btn-danger',
+        customize: pdfConfig.customize,
+        orientation: 'portrait',
+        pageSize: 'A4',
+        exportOptions: {
+            columns: ':visible'
+        },
+        // Añade esta configuración:
+        action: function (e, dt, node, config) {
+            config.filename = 'Reporte_Bitacora_' + new Date().toISOString().split('T')[0];
+            $.fn.dataTable.ext.buttons.pdfHtml5.action.call(this, e, dt, node, config);
+        }
+    },
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel mr-2"></i>Excel',
+                className: 'btn btn-success',
+                title: 'Registros de Bitácora'
+            }
+        ],
+        initComplete: function() {
+                $('#tabla-bitacora').hide();
+                $('#mensaje-inicial').show();
+            }
         });
 
-        // Función para aplicar filtros
-        function aplicarFiltros() {
-            const inicio = $('#fecha-inicio').val();
-            const fin = $('#fecha-fin').val();
-
-            if (inicio && fin) {
-                if (new Date(inicio) > new Date(fin)) {
-                    toastr.error('La fecha de inicio no puede ser mayor a la fecha final');
-                    return false;
-                }
-
-                const minDate = new Date(inicio).setHours(0, 0, 0, 0);
-                const maxDate = new Date(fin).setHours(23, 59, 59, 999);
-
-                $.fn.dataTable.ext.search.push(
-                    function(settings, data, dataIndex) {
-                        const rowDate = new Date(data[1].split('-').reverse().join('-')).getTime();
-                        return rowDate >= minDate && rowDate <= maxDate;
+        // Función para cargar datos via AJAX
+        async function cargarDatos(fechaInicio, fechaFin) {
+            try {
+                const response = await $.ajax({
+                    url: '/bitacora/filtrar',
+                    method: 'GET',
+                    data: { 
+                        inicio: fechaInicio, 
+                        fin: fechaFin 
                     }
-                );
-            }
+                });
 
-            table.draw();
-            $.fn.dataTable.ext.search.pop();
-
-            if (table.rows({ filter: 'applied' }).count() === 0) {
-                $('#modalNoResultados').modal('show');
+                if (response.length > 0) {
+                    table.clear().rows.add(response).draw();
+                    $('#tabla-bitacora').fadeIn(500);
+                    $('#mensaje-inicial').hide();
+                } else {
+                    $('#modalNoResultados').modal('show');
+                    $('#tabla-bitacora').hide();
+                    $('#mensaje-inicial').show();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                toastr.error('Error al cargar los datos');
             }
         }
 
         // Eventos
-        $('#filtrar-fechas').on('click', aplicarFiltros);
+        $('#filtrar-fechas').click(function() {
+            const fechaInicio = $('#fecha-inicio').val();
+            const fechaFin = $('#fecha-fin').val();
 
-        $('#reset-filtros').on('click', function() {
-            $('#fecha-inicio, #fecha-fin').val('');
-            table.search('').columns().search('').draw();
+            if (!fechaInicio || !fechaFin) {
+                toastr.error('Debe seleccionar ambas fechas');
+                return;
+            }
+
+            if (new Date(fechaInicio) > new Date(fechaFin)) {
+                toastr.error('La fecha inicial no puede ser mayor a la final');
+                return;
+            }
+
+            cargarDatos(fechaInicio, fechaFin);
         });
 
-        // Configurar fecha máxima como hoy
+        $('#reset-filtros').click(function() {
+            $('#fecha-inicio, #fecha-fin').val('');
+            table.clear().draw();
+            $('#tabla-bitacora').hide();
+            $('#mensaje-inicial').fadeIn(500);
+        });
+
+        // Configurar fecha máxima
         const today = new Date().toISOString().split('T')[0];
         $('#fecha-inicio, #fecha-fin').attr('max', today);
     });
 </script>
 @endpush
+
 @endsection
