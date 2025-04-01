@@ -12,7 +12,9 @@ class RespaldoController extends Controller
 {
     public function index()
     {
-        $respaldos = Respaldo::with('usuario')->get();
+        $respaldos = Respaldo::with('usuario')
+            ->orderBy('created_at', 'desc')  // Ordenar por fecha descendente
+            ->get();
         return view('respaldo.index', compact('respaldos'));
     }
 
