@@ -32,25 +32,34 @@ class CarreraController extends Controller
             'name' => $request->name,
         ]);
 
-        // Registro en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Carrera creada: ' . $carrera->name . ' (Código: ' . $carrera->code . ')'
         ]);
 
-        return redirect()->route('carrera.index')->with('success', 'Carrera registrada correctamente.');
+        return redirect()->route('carrera.index')
+            ->with('alert', [
+                'type' => 'success',
+                'title' => 'Carrera Registrada',
+                'message' => 'La carrera se ha registrado correctamente'
+            ]);
     }
 
     public function destroy(Carrera $carrera)
     {
-        // Registro en bitácora ANTES de eliminar
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Carrera eliminada: ' . $carrera->name . ' (Código: ' . $carrera->code . ')'
         ]);
 
         $carrera->delete();
-        return redirect()->route('carrera.index')->with('success', 'Carrera eliminada correctamente.');
+        
+        return redirect()->route('carrera.index')
+            ->with('alert', [
+                'type' => 'success',
+                'title' => 'Carrera Eliminada',
+                'message' => 'La carrera se ha eliminado permanentemente'
+            ]);
     }
 
     public function update(Request $request, Carrera $carrera)
@@ -64,12 +73,16 @@ class CarreraController extends Controller
             'name' => $request->name,
         ]);
 
-        // Registro en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Carrera actualizada: ' . $carrera->name .  ')'
         ]);
 
-        return redirect()->route('carrera.index')->with('success', 'Carrera actualizada.');
+        return redirect()->route('carrera.index')
+            ->with('alert', [
+                'type' => 'success',
+                'title' => 'Cambios Guardados',
+                'message' => 'La carrera se ha actualizado correctamente'
+            ]);
     }
 }
