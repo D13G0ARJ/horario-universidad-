@@ -20,7 +20,7 @@
                         <i class="fas fa-list-alt mr-2"></i>Secciones Registradas
                     </h4>
                     <a href="#" class="btn btn-light ms-auto text-dark"
-                    data-bs-toggle="modal" data-bs-target="#registroModal">
+                    data-bs-toggle="modal" data-bs-target="#crearSeccionModal">
                      <i class="fas fa-plus mr-1"></i>Nueva Sección
                  </a>
                 </div>
@@ -29,8 +29,8 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th style="text-align: center">N°</th>
-                                <th style="text-align: center">Nombre</th>
-                                <th style="text-align: center">Aula</th>
+                                <th>Nombre</th>
+                                <th>Aula</th>
                                 <th style="text-align: center">Acciones</th>
                             </tr>
                         </thead>
@@ -62,10 +62,10 @@
                                         </button>
 
                                         <!-- Botón para Eliminar -->
-                                        <form action="{{ route('secciones.destroy', $seccion->id) }}" method="POST">
+                                        <form action="{{ route('secciones.destroy', $seccion->id) }}" method="POST" class="delete-form">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro?')">
+                                            <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -81,138 +81,13 @@
     </div>
 </div>
 
-<!-- Modal de Registro -->
-<div class="modal fade" id="crearSeccionModal" tabindex="-1" aria-labelledby="crearSeccionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="crearSeccionModalLabel">
-                    <i class="fas fa-plus-circle mr-2"></i>Registrar Nueva Sección
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="POST" action="{{ route('secciones.store') }}">
-                    @csrf
-                    <div class="form-group mb-3">
-                        <label for="nombre" class="form-label">Nombre</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                            <input id="nombre" type="text" class="form-control @error('nombre') is-invalid @enderror"
-                                name="nombre" placeholder="Nombre de la sección" value="{{ old('nombre') }}" required>
-                        </div>
-                        @error('nombre')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label for="aula_id" class="form-label">Aula</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-building"></i></span>
-                            <select class="form-select @error('aula_id') is-invalid @enderror" name="aula_id" required>
-                                <option value="">Seleccione un aula</option>
-                                @foreach($aulas as $aula)
-                                <option value="{{ $aula->id }}" {{ old('aula_id') == $aula->id ? 'selected' : '' }}>
-                                    {{ $aula->nombre }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @error('aula_id')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save mr-2"></i>Registrar Sección
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Mostrar -->
-<div class="modal fade" id="mostrarSeccionModal" tabindex="-1" aria-labelledby="mostrarSeccionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-info-circle mr-2"></i>Detalles de la Sección
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group mb-3">
-                    <label class="fw-bold">Nombre:</label>
-                    <p id="modalSeccionNombre" class="form-control-plaintext"></p>
-                </div>
-                <div class="form-group mb-3">
-                    <label class="fw-bold">Aula:</label>
-                    <p id="modalSeccionAula" class="form-control-plaintext"></p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times mr-1"></i>Cerrar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Editar -->
-<div class="modal fade" id="editarSeccionModal" tabindex="-1" aria-labelledby="editarSeccionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-edit mr-2"></i>Editar Sección
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="POST" action="" id="formEditarSeccion">
-                    @csrf
-                    @method('PUT')
-
-                    <input type="hidden" name="id" id="edit_id">
-
-                    <div class="form-group mb-3">
-                        <label for="edit_nombre" class="form-label">Nombre</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                            <input type="text" class="form-control" name="nombre" id="edit_nombre" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label for="edit_aula_id" class="form-label">Aula</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-building"></i></span>
-                            <select class="form-select" name="aula_id" id="edit_aula_id" required>
-                                @foreach($aulas as $aula)
-                                <option value="{{ $aula->id }}">{{ $aula->nombre }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save mr-2"></i>Guardar Cambios
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Inclusión de modals -->
+@include('modals.secciones.create')
+@include('modals.secciones.show')
+@include('modals.secciones.edit')
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
         // Configuración del PDF
@@ -249,7 +124,7 @@
             }
         };
 
-        // Inicializar DataTables
+        // Configuración DataTables
         const table = $("#tabla-secciones").DataTable({
             pageLength: 10,
             language: {
@@ -275,6 +150,9 @@
                     text: '<i class="fas fa-print mr-2"></i>Imprimir',
                     title: '',
                     autoPrint: true,
+                    exportOptions: {
+                        columns: [0, 1, 2]
+                    },
                     customize: function(win) {
                         $(win.document.body)
                             .css('font-size', '10pt')
@@ -299,9 +177,6 @@
                             '</div>'
                         );
                     },
-                    exportOptions: {
-                        columns: ':visible'
-                    },
                     className: 'btn btn-primary'
                 },
                 {
@@ -311,7 +186,7 @@
                     orientation: 'portrait',
                     pageSize: 'A4',
                     exportOptions: {
-                        columns: ':visible'
+                        columns: [0, 1, 2]
                     },
                     className: 'btn btn-danger mr-2'
                 },
@@ -320,7 +195,7 @@
                     text: '<i class="fas fa-file-excel mr-2"></i>Excel',
                     title: 'Secciones Registradas',
                     exportOptions: {
-                        columns: ':visible'
+                        columns: [0, 1, 2]
                     },
                     className: 'btn btn-success mr-2'
                 },
@@ -334,33 +209,63 @@
                     className: 'text-center',
                     orderable: false
                 },
-                { targets: 3, className: 'text-center' }
+                { 
+                    targets: 3, 
+                    className: 'text-center',
+                    orderable: false,
+                    searchable: false
+                }
             ]
         });
 
-        // Script para llenar el modal de visualización
-        $('#mostrarSeccionModal').on('show.bs.modal', function(event) {
-            const button = $(event.relatedTarget);
-            const nombre = button.data('nombre');
-            const aula = button.data('aula');
+        // SweetAlerts
+        @if(session('alert'))
+            Swal.fire({
+                icon: '{{ session('alert')['type'] }}',
+                title: '{{ session('alert')['title'] }}',
+                text: '{{ session('alert')['message'] }}',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
 
-            const modal = $(this);
-            modal.find('#modalSeccionNombre').text(nombre);
-            modal.find('#modalSeccionAula').text(aula);
+        // Confirmación eliminación
+        $('.delete-form').on('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            
+            Swal.fire({
+                title: '¿Eliminar Sección?',
+                text: "¡Esta acción no se puede revertir!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
         });
 
-        // Script para llenar el modal de edición
+        // Handlers para modals
+        $('#mostrarSeccionModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            const modal = $(this);
+            modal.find('#modalSeccionNombre').text(button.data('nombre'));
+            modal.find('#modalSeccionAula').text(button.data('aula'));
+        });
+
         $('#editarSeccionModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
-            const id = button.data('id');
-            const nombre = button.data('nombre');
-            const aula_id = button.data('aula_id');
-
             const modal = $(this);
-            modal.find('#edit_id').val(id);
-            modal.find('#edit_nombre').val(nombre);
-            modal.find('#edit_aula_id').val(aula_id);
-            modal.find('#formEditarSeccion').attr('action', '/secciones/' + id);
+            modal.find('#edit_id').val(button.data('id'));
+            modal.find('#edit_nombre').val(button.data('nombre'));
+            modal.find('#edit_aula_id').val(button.data('aula_id'));
+            modal.find('#formEditarSeccion').attr('action', '/secciones/' + button.data('id'));
         });
     });
 </script>

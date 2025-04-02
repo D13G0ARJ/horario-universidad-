@@ -25,16 +25,18 @@ class SeccionController extends Controller
         ]);
 
         $seccion = Seccion::create($request->all());
-        $seccion->load('aula'); // Cargar relación para obtener datos del aula
+        $seccion->load('aula');
 
-        // Registro en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Sección creada: ' . $seccion->nombre . ' (Aula: ' . $seccion->aula->nombre . ')'
         ]);
 
-        return redirect()->route('secciones.index')
-            ->with('success', 'Sección creada exitosamente.');
+        return redirect()->route('secciones.index')->with('alert', [
+            'type' => 'success',
+            'title' => 'Sección Creada',
+            'message' => 'La sección se registró exitosamente'
+        ]);
     }
 
     public function destroy($id)
@@ -43,16 +45,25 @@ class SeccionController extends Controller
             $seccion = Seccion::findOrFail($id);
             $seccion->load('aula');
             
-            // Registro en bitácora antes de eliminar
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
                 'accion' => 'Sección eliminada: ' . $seccion->nombre . ' (Aula: ' . $seccion->aula->nombre . ')'
             ]);
 
             $seccion->delete();
-            return redirect()->route('secciones.index')->with('success', 'Sección eliminada exitosamente.');
+            
+            return redirect()->route('secciones.index')->with('alert', [
+                'type' => 'success',
+                'title' => 'Sección Eliminada',
+                'message' => 'El registro fue removido permanentemente'
+            ]);
+            
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error al eliminar la sección: ' . $e->getMessage());
+            return redirect()->back()->with('alert', [
+                'type' => 'error',
+                'title' => 'Error al Eliminar',
+                'message' => 'Ocurrió un error: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -77,11 +88,15 @@ class SeccionController extends Controller
         $seccion->update($request->all());
         $seccion->load('aula');
 
-        // Registro en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Sección actualizada: ' . $seccion->nombre . ' (Aula: ' . $seccion->aula->nombre . ')'
         ]);
 
-        return redirect()->back();    }
+        return redirect()->route('secciones.index')->with('alert', [
+            'type' => 'success',
+            'title' => 'Cambios Guardados',
+            'message' => 'La sección se actualizó correctamente'
+        ]);
+    }
 }
