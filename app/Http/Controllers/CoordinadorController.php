@@ -34,8 +34,7 @@ class CoordinadorController extends Controller
             'cedula' => $request->cedula,
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'rol' => 'coordinador', // 👈 Campo crítico si existe
+            'password' => Hash::make($request->password), // 👈 Se eliminó el campo 'rol'
         ]);
     
         Bitacora::create([
@@ -48,7 +47,6 @@ class CoordinadorController extends Controller
 
     public function destroy(User $usuario)
     {
-        // Registrar en bitácora antes de eliminar
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Coordinador eliminado: ' . $usuario->name . ' (Cédula: ' . $usuario->cedula . ')'
@@ -70,10 +68,9 @@ class CoordinadorController extends Controller
             'email' => $request->email,
         ]);
 
-        // Registrar en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Coordinador actualizado: ' . $usuario->name .  ')'
+            'accion' => 'Coordinador actualizado: ' . $usuario->name . ')'
         ]);
 
         return redirect()->route('coordinador.index')->with('success', 'Coordinador actualizado.');
