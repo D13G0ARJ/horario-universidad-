@@ -32,25 +32,32 @@ class AsignaturaController extends Controller
             'name' => $request->name,
         ]);
 
-        // Registro en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Asignatura creada: ' . $asignatura->name . ' (Código: ' . $asignatura->code . ')'
         ]);
 
-        return redirect()->route('asignatura.index')->with('success', 'Asignatura registrada correctamente.');
+        return redirect()->route('asignatura.index')->with('alert', [
+            'type' => 'success',
+            'title' => 'Asignatura Registrada',
+            'message' => 'La asignatura se ha creado exitosamente'
+        ]);
     }
 
     public function destroy(Asignatura $asignatura)
     {
-        // Registro en bitácora antes de eliminar
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Asignatura eliminada: ' . $asignatura->name . ' (Código: ' . $asignatura->code . ')'
         ]);
 
         $asignatura->delete();
-        return redirect()->route('asignatura.index')->with('success', 'Asignatura eliminada correctamente.');
+        
+        return redirect()->route('asignatura.index')->with('alert', [
+            'type' => 'success',
+            'title' => 'Asignatura Eliminada',
+            'message' => 'El registro fue eliminado permanentemente'
+        ]);
     }
 
     public function update(Request $request, Asignatura $asignatura)
@@ -59,19 +66,20 @@ class AsignaturaController extends Controller
             'code' => 'required|unique:asignaturas,code,' . $asignatura->code . ',code',
         ]);
 
-        $viejo_codigo = $asignatura->code; // Guardar código anterior
-        
         $asignatura->update([
             'code' => $request->code,
             'name' => $request->name,
         ]);
 
-        // Registro en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Asignatura actualizada: ' . $asignatura->name 
+            'accion' => 'Asignatura actualizada: ' . $asignatura->name . ' (Nuevo código: ' . $asignatura->code . ')'
         ]);
 
-        return redirect()->route('asignatura.index')->with('success', 'Asignatura actualizada.');
+        return redirect()->route('asignatura.index')->with('alert', [
+            'type' => 'success',
+            'title' => 'Cambios Guardados',
+            'message' => 'La asignatura se actualizó correctamente'
+        ]);
     }
 }

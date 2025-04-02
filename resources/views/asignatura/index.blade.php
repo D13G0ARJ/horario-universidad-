@@ -35,11 +35,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php $contador = 0; @endphp
                             @foreach($asignaturas as $asignatura)
-                            @php $contador++; @endphp
                             <tr>
-                                <td style="text-align: center">{{ $contador }}</td>
+                                <td style="text-align: center">{{ $loop->iteration }}</td>
                                 <td style="text-align: center">{{ $asignatura->code }}</td>
                                 <td>{{ $asignatura->name }}</td>
                                 <td style="text-align: center">
@@ -65,7 +63,7 @@
                                         </button>
 
                                         <!-- Botón para Eliminar -->
-                                        <form action="{{ route('asignatura.destroy', $asignatura->code) }}" method="POST">
+                                        <form action="{{ route('asignatura.destroy', $asignatura->code) }}" method="POST" class="delete-form">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm">
@@ -84,123 +82,16 @@
     </div>
 </div>
 
-<!-- Modal de registro -->
-<div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="registroModalLabel">
-                    <i class="fas fa-plus-circle mr-2"></i>Registrar Nueva Asignatura
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="POST" action="{{ route('asignatura.store') }}">
-                    @csrf
-                    <div class="form-group mb-3">
-                        <label for="code" class="form-label">Código</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-                            <input id="code" type="text" class="form-control @error('code') is-invalid @enderror"
-                                name="code" placeholder="Código" value="{{ old('code') }}" required autofocus>
-                        </div>
-                        @error('code')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label for="name" class="form-label">Nombre</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-book"></i></span>
-                            <input id="name" type="text" class="form-control @error('name') is-invalid @enderror"
-                                name="name" placeholder="Nombre" value="{{ old('name') }}" required>
-                        </div>
-                        @error('name')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save mr-2"></i>Registrar Asignatura
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Mostrar -->
-<div class="modal fade" id="mostrarModal" tabindex="-1" aria-labelledby="mostrarModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-info-circle mr-2"></i>Detalles de la Asignatura
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group mb-3">
-                    <label class="fw-bold">Código:</label>
-                    <p id="modalCode" class="form-control-plaintext"></p>
-                </div>
-                <div class="form-group mb-3">
-                    <label class="fw-bold">Nombre:</label>
-                    <p id="modalName" class="form-control-plaintext"></p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times mr-1"></i>Cerrar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Editar -->
-<div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-edit mr-2"></i>Editar Asignatura
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="POST" action="" id="formEditar">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="form-group mb-3">
-                        <label for="code_editar" class="form-label">Código</label>
-                        <input type="text" class="form-control" name="code" id="code_editar" readonly required>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label for="name_editar" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" name="name" id="name_editar" required>
-                    </div>
-
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save mr-2"></i>Guardar Cambios
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Inclusión de modals -->
+@include('modals.asignaturas.create')
+@include('modals.asignaturas.show')
+@include('modals.asignaturas.edit')
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
-        // Configuración del PDF (sin imagen)
+        // Configuración del PDF
         const pdfConfig = {
             customize: function(doc) {
                 doc.pageMargins = [40, 80, 40, 60];
@@ -226,8 +117,7 @@
                     };
                 };
 
-                // Ajustar columnas automáticamente al contenido
-                doc.content[2].table.widths = 'auto';
+                doc.content[2].table.widths = ['auto', 'auto', '*'];
                 doc.content[2].table.headerRows = 1;
                 doc.styles.tableHeader.fillColor = '#343a40';
                 doc.styles.tableHeader.color = '#ffffff';
@@ -235,7 +125,7 @@
             }
         };
 
-        // Inicializar DataTables
+        // Configuración DataTables
         const table = $("#tabla-asignaturas").DataTable({
             pageLength: 10,
             language: {
@@ -262,25 +152,25 @@
                     title: '',
                     autoPrint: true,
                     exportOptions: {
-                        columns: [0, 1, 2] // Excluye columna de acciones (índice 3)
+                        columns: [0, 1, 2]
                     },
                     customize: function(win) {
                         $(win.document.body)
                             .css('font-size', '10pt')
-                            .find('table')
-                            .css('width', 'auto') // Ajustar al contenido
-                            .css('max-width', 'none');
+                            .prepend(
+                                '<div style="text-align: center; margin-bottom: 20px;">' +
+                                '<img src="{{ asset('images/logo.jpg') }}" style="height: 80px; margin-bottom: 10px;"/>' +
+                                '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
+                                '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
+                                '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
+                                '<h4 style="margin: 5px 0; font-size: 12pt;">SISTEMA DE GESTIÓN DE HORARIOS - ASIGNATURAS</h4>' +
+                                '<h2 style="margin: 15px 0; font-size: 16pt;">REPORTE DE ASIGNATURAS</h2>' +
+                                '</div>'
+                            );
 
-                        $(win.document.body).prepend(
-                            '<div style="text-align: center; margin-bottom: 20px;">' +
-                            '<img src="{{ asset('images/logo.jpg') }}" style="height: 80px; margin-bottom: 10px;"/>' +
-                            '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
-                            '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
-                            '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
-                            '<h4 style="margin: 5px 0; font-size: 12pt;">SISTEMA DE GESTIÓN DE HORARIOS - ASIGNATURAS</h4>' +
-                            '<h2 style="margin: 15px 0; font-size: 16pt;">REPORTE DE ASIGNATURAS</h2>' +
-                            '</div>'
-                        );
+                        $(win.document.body).find('table')
+                            .addClass('compact')
+                            .css('font-size', 'inherit');
 
                         $(win.document.body).append(
                             '<div style="text-align: center; margin-top: 20px; font-size: 8pt;">' +
@@ -297,7 +187,7 @@
                     orientation: 'portrait',
                     pageSize: 'A4',
                     exportOptions: {
-                        columns: [0, 1, 2] // Excluye columna de acciones (índice 3)
+                        columns: [0, 1, 2]
                     },
                     className: 'btn btn-danger mr-2'
                 },
@@ -306,38 +196,77 @@
                     text: '<i class="fas fa-file-excel mr-2"></i>Excel',
                     title: 'Asignaturas Registradas',
                     exportOptions: {
-                        columns: [0, 1, 2] // Excluye columna de acciones (índice 3)
+                        columns: [0, 1, 2]
                     },
                     className: 'btn btn-success mr-2'
-                }
+                },
             ],
             columnDefs: [
-                { orderable: false, targets: [0, 3] },
-                { className: 'text-center', targets: [0, 1, 3] }
-            ]
+                {
+                    targets: 0,
+                    className: 'text-center',
+                    orderable: false
+                },
+                {
+                    targets: [1, 3],
+                    className: 'text-center'
+                },
+                {
+                    targets: -1,
+                    visible: true,
+                    exportable: false
+                }
+            ],
+            order: [[1, 'asc']]
         });
 
-        // Script para llenar el modal de visualización (sin cambios)
+        // SweetAlerts
+        @if(session('alert'))
+            Swal.fire({
+                icon: '{{ session('alert')['type'] }}',
+                title: '{{ session('alert')['title'] }}',
+                text: '{{ session('alert')['message'] }}',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+
+        // Confirmación eliminación
+        $('.delete-form').on('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            
+            Swal.fire({
+                title: '¿Eliminar Asignatura?',
+                text: "¡Esta acción no se puede deshacer!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+
+        // Handlers para modals
         $('#mostrarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
-            const code = button.data('code');
-            const name = button.data('name');
-
             const modal = $(this);
-            modal.find('#modalCode').text(code);
-            modal.find('#modalName').text(name);
+            modal.find('#modalCode').text(button.data('code'));
+            modal.find('#modalName').text(button.data('name'));
         });
 
-        // Script para llenar el modal de edición (sin cambios)
         $('#editarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
-            const code = button.data('code');
-            const name = button.data('name');
-
             const modal = $(this);
-            modal.find('#code_editar').val(code);
-            modal.find('#name_editar').val(name);
-            modal.find('#formEditar').attr('action', '/asignaturas/' + code);
+            modal.find('#code_editar').val(button.data('code'));
+            modal.find('#name_editar').val(button.data('name'));
+            modal.find('#formEditar').attr('action', '/asignaturas/' + button.data('code'));
         });
     });
 </script>
