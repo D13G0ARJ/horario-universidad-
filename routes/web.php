@@ -13,6 +13,7 @@ use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\SecurityQuestionController;
 use App\Http\Controllers\RespaldoController;
+use App\Http\Controllers\HorarioController;
 
 // Deshabilitar ciertas rutas de autenticación predeterminadas
 Auth::routes([
@@ -106,3 +107,7 @@ Route::prefix('respaldo')->middleware(['auth'])->group(function () {
     // Ruta para eliminar un respaldo específico
     Route::delete('/delete/{id}', [RespaldoController::class, 'destroy'])->name('respaldo.destroy');
 });
+
+
+// Rutas para horarios
+Route::get('/horario', [HorarioController::class, 'index'])->name('horario.index')->middleware('auth');

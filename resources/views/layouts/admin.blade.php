@@ -100,7 +100,7 @@
                 <a class="nav-link text-dark" data-widget="pushmenu" href="#" role="button">
                     <i class="fas fa-bars"></i>
                 </a>
-                <h1 class="mb-0 fs-4 fw-bold text-primary ms-2">UNEFA</h1>
+                <h1 class="mb-0 fs-4 fw-bold text-primary ms-2">Sistema Horarios</h1>
             </div>
 
             <!-- Right Side -->
@@ -166,7 +166,7 @@
                     alt="Logo Sistema"
                     style="width: 45px; height: 45px; object-fit: cover">
             </div>
-            <span class="brand-text font-weight-light d-block mt-2">Sistema Horarios</span>
+            <span class="brand-text font-weight-light d-block mt-2">UNEFA</span>
         </a>
 
         <!-- Sidebar -->
@@ -246,6 +246,14 @@
                                 </a>
                             </li>
                         </ul>
+                    </li>
+
+                    <!-- Horario -->
+                    <li class="nav-item">
+                        <a href="{{ url('/horario') }}" class="nav-link">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>Horarios</p>
+                        </a>
                     </li>
 
                     <!-- Monitoreo -->
