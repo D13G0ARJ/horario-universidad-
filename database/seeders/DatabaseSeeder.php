@@ -44,9 +44,10 @@ class DatabaseSeeder extends Seeder
 
         // Insertar un docente
         DB::table('docentes')->insert([
+            'cedula_doc' => '16245896', // Cédula del docente
             'name' => 'Gabriela Rivas', // Nombre del docente
             'email' => 'gabriela.rivas@gmail.com', // Email del docente
-            'phone' => '04143111397', // Teléfono del docente
+            'telefono' => '04143111397', // Teléfono del docente
         ]);
 
         // Insertar un período académico

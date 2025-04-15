@@ -464,6 +464,34 @@
         </div>
     </div>
 
+    @if(session('toast_success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: '{{ session('toast_success') }}',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        </script>
+    @endif
+
+    @if($errors->any())
+        <script>
+            @foreach ($errors->all() as $error)
+                Swal.fire({
+                    icon: 'error',
+                    title: '{{ $error }}',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            @endforeach
+        </script>
+    @endif
+
 
     <!-- Script para llenar el modal -->
     <script>

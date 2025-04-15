@@ -9,21 +9,16 @@ class Docente extends Model
 {
     use HasFactory;
 
-    // Tabla asociada al modelo
-    protected $table = 'docentes';
+    // Configuración de clave primaria
+    protected $primaryKey = 'cedula_doc';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
-    // Campos que se pueden asignar masivamente
+    // Campos asignables
     protected $fillable = [
+        'cedula_doc',
         'name',
         'email',
-        'phone',
+        'telefono' // Cambiado de 'phone' a 'telefono'
     ];
-
-    /**
-     * Relación con las asignaturas (muchos a muchos).
-     */
-    public function asignaturas()
-    {
-        return $this->belongsToMany(Asignatura::class, 'asignatura_docente', 'docente_id', 'asignatura_id');
-    }
 }

@@ -12,10 +12,10 @@ class CreateDocentesTable extends Migration
     public function up()
     {
         Schema::create('docentes', function (Blueprint $table) {
-            $table->id();
+            $table->string('cedula_doc')->primary();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('phone');
+            $table->string('telefono');
             $table->timestamps();
         });
     }

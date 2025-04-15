@@ -3,101 +3,114 @@
 namespace App\Http\Controllers;
 
 use App\Models\Docente;
-use App\Models\Asignatura;
 use App\Models\Bitacora;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class DocenteController extends Controller
 {
     /**
-     * Mostrar una lista de docentes.
+     * Mostrar lista de docentes
      */
     public function index()
     {
-        $docentes = Docente::with('asignaturas')->get();
-        $asignaturas = Asignatura::all();
-
-
-
-        return view('docente.index', compact('docentes', 'asignaturas'));
+        $docentes = Docente::all();
+        return view('docente.index', compact('docentes'));
     }
 
     /**
-     * Guardar un nuevo docente.
+     * Guardar nuevo docente
      */
     public function store(Request $request)
     {
         $request->validate([
+            'cedula_doc' => 'required|string|unique:docentes,cedula_doc|max:20',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:docentes,email',
-            'phone' => 'required|string|max:15',
-            'asignaturas' => 'array',
+            'telefono' => 'required|string|unique:docentes,telefono|max:15',
+        ], [
+            'cedula_doc.required' => 'La cédula es obligatoria.',
+            'cedula_doc.unique' => 'Esta cédula ya está registrada.',
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.unique' => 'Este correo ya está en uso.',
+            'telefono.required' => 'El teléfono es obligatorio.',
+            'telefono.unique' => 'Este número de teléfono ya existe.',
         ]);
 
-        $docente = Docente::create($request->only('name', 'email', 'phone'));
+        $docente = Docente::create($request->only(
+            'cedula_doc',
+            'name',
+            'email',
+            'telefono'
+        ));
 
-        if ($request->has('asignaturas')) {
-            $docente->asignaturas()->sync($request->asignaturas);
-        }
-
-        // Registro en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Nuevo docente creado: ' . $docente->name . ' (ID: ' . $docente->id . ')'
+            'accion' => 'Nuevo docente registrado: ' . $docente->name
         ]);
 
-        return redirect()->route('docente.index')->with('success', 'Docente registrado correctamente.');
+        return redirect()->route('docente.index')
+            ->with('success', 'Docente registrado exitosamente');
     }
 
     /**
-     * Actualizar un docente existente.
+     * Actualizar docente
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $cedula_doc)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:docentes,email,' . $id,
-            'phone' => 'required|string|max:15',
-            'asignaturas' => 'array',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('docentes', 'email')->ignore($cedula_doc, 'cedula_doc')
+            ],
+            'telefono' => [
+                'required',
+                'string',
+                'max:15',
+                Rule::unique('docentes', 'telefono')->ignore($cedula_doc, 'cedula_doc')
+            ],
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.unique' => 'Este correo ya está en uso por otro docente.',
+            'telefono.required' => 'El teléfono es obligatorio.',
+            'telefono.unique' => 'Este teléfono ya está registrado por otro docente.',
         ]);
 
-        $docente = Docente::findOrFail($id);
-        $oldName = $docente->name; // Guardar nombre anterior para bitácora
+        $docente = Docente::findOrFail($cedula_doc);
+        $oldName = $docente->name;
 
-        $docente->update($request->only('name', 'email', 'phone'));
+        $docente->update($request->only('name', 'email', 'telefono'));
 
-        if ($request->has('asignaturas')) {
-            $docente->asignaturas()->sync($request->asignaturas);
-        } else {
-            $docente->asignaturas()->detach();
-        }
-
-        // Registro en bitácora
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Docente actualizado: ' . $oldName . ' → ' . $docente->name . ' (ID: ' . $docente->id . ')'
+            'accion' => 'Docente actualizado: ' . $oldName . ' → ' . $docente->name
         ]);
 
-        return redirect()->route('docente.index')->with('success', 'Docente actualizado correctamente.');
+        return redirect()->route('docente.index')
+            ->with('success', 'Docente actualizado correctamente');
     }
 
     /**
-     * Eliminar un docente.
+     * Eliminar docente
      */
-    public function destroy($id)
+    public function destroy($cedula_doc)
     {
-        $docente = Docente::findOrFail($id);
+        $docente = Docente::findOrFail($cedula_doc);
+        $nombreDocente = $docente->name;
 
-        // Registro en bitácora ANTES de eliminar
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Docente eliminado: ' . $docente->name . ' (ID: ' . $docente->id . ')'
+            'accion' => 'Docente eliminado: ' . $nombreDocente
         ]);
 
-        $docente->asignaturas()->detach();
         $docente->delete();
 
-        return redirect()->route('docente.index')->with('success', 'Docente eliminado correctamente.');
+        return redirect()->route('docente.index')
+            ->with('success', 'Docente eliminado permanentemente');
     }
 }
