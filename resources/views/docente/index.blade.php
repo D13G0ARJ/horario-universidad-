@@ -13,11 +13,17 @@
 
 
     @if($errors->any())
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" id="autoCloseAlert"> 
         @foreach($errors->all() as $error)
             <p>{{ $error }}</p>
         @endforeach
     </div>
+
+    <script>
+        setTimeout(() => {
+            document.getElementById('autoCloseAlert').style.display = 'none';
+        }, 3000);
+    </script>
 @endif
 
 
