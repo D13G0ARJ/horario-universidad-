@@ -4,99 +4,116 @@ namespace App\Http\Controllers;
 
 use App\Models\Seccion;
 use App\Models\Aula;
+use App\Models\Carrera;
+use App\Models\Turno;
+use App\Models\Semestre;
 use App\Models\Bitacora;
+use App\Http\Requests\SeccionRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 
 class SeccionController extends Controller
 {
     public function index()
     {
-        $secciones = Seccion::with('aula')->get();
+        $secciones = Seccion::with(['aula', 'carrera', 'turno', 'semestre'])->get();
         $aulas = Aula::all();
-        return view('secciones.index', compact('secciones', 'aulas'));
+        $carreras = Carrera::all();
+        $turnos = Turno::all();
+        $semestres = Semestre::all();
+
+        return view('secciones.index', compact(
+            'secciones', 
+            'aulas',
+            'carreras',
+            'turnos',
+            'semestres'
+        ));
     }
 
-    public function store(Request $request)
+    public function store(SeccionRequest $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'aula_id' => 'required|exists:aulas,id',
-        ]);
-
-        $seccion = Seccion::create($request->all());
-        $seccion->load('aula');
+        $validated = $request->validated();
+        
+        $seccion = Seccion::create($validated);
+        $seccion->load(['aula', 'carrera', 'turno', 'semestre']);
 
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Sección creada: ' . $seccion->nombre . ' (Aula: ' . $seccion->aula->nombre . ')'
+            'accion' => 'Sección creada: ' . $seccion->codigo_seccion . 
+                        ' | Aula: ' . $seccion->aula->nombre .
+                        ' | Carrera: ' . $seccion->carrera->nombre .
+                        ' | Turno: ' . $seccion->turno->nombre .
+                        ' | Semestre: ' . $seccion->semestre->numero
         ]);
 
         return redirect()->route('secciones.index')->with('alert', [
             'type' => 'success',
             'title' => 'Sección Creada',
-            'message' => 'La sección se registró exitosamente'
+            'message' => 'Registro exitoso con código: ' . $seccion->codigo_seccion
         ]);
     }
 
-    public function destroy($id)
+    public function destroy($codigo_seccion)
     {
         try {
-            $seccion = Seccion::findOrFail($id);
-            $seccion->load('aula');
-            
+            $seccion = Seccion::findOrFail($codigo_seccion);
+            $seccion->load(['aula', 'carrera', 'turno', 'semestre']);
+
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
-                'accion' => 'Sección eliminada: ' . $seccion->nombre . ' (Aula: ' . $seccion->aula->nombre . ')'
+                'accion' => 'Sección eliminada: ' . $seccion->codigo_seccion . 
+                            ' | Aula: ' . $seccion->aula->nombre .
+                            ' | Carrera: ' . $seccion->carrera->nombre
             ]);
 
             $seccion->delete();
-            
+
             return redirect()->route('secciones.index')->with('alert', [
                 'type' => 'success',
                 'title' => 'Sección Eliminada',
-                'message' => 'El registro fue removido permanentemente'
+                'message' => 'Código eliminado: ' . $codigo_seccion
             ]);
             
         } catch (\Exception $e) {
             return redirect()->back()->with('alert', [
                 'type' => 'error',
-                'title' => 'Error al Eliminar',
-                'message' => 'Ocurrió un error: ' . $e->getMessage()
+                'title' => 'Error',
+                'message' => 'No se pudo eliminar: ' . $e->getMessage()
             ]);
         }
     }
 
-    public function edit($id)
+    public function edit($codigo_seccion)
     {
-        $seccion = Seccion::findOrFail($id);
-        $aulas = Aula::all();
+        $seccion = Seccion::findOrFail($codigo_seccion);
         return response()->json([
             'seccion' => $seccion,
-            'aulas' => $aulas
+            'aulas' => Aula::all(),
+            'carreras' => Carrera::all(),
+            'turnos' => Turno::all(),
+            'semestres' => Semestre::all()
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(SeccionRequest $request, $codigo_seccion)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'aula_id' => 'required|exists:aulas,id',
-        ]);
+        $seccion = Seccion::findOrFail($codigo_seccion);
+        $validated = $request->validated();
 
-        $seccion = Seccion::findOrFail($id);
-        $seccion->update($request->all());
-        $seccion->load('aula');
+        $seccion->update($validated);
+        $seccion->load(['aula', 'carrera', 'turno', 'semestre']);
 
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Sección actualizada: ' . $seccion->nombre . ' (Aula: ' . $seccion->aula->nombre . ')'
+            'accion' => 'Sección actualizada: ' . $seccion->codigo_seccion . 
+                        ' | Nuevo turno: ' . $seccion->turno->nombre .
+                        ' | Nuevo semestre: ' . $seccion->semestre->numero
         ]);
 
         return redirect()->route('secciones.index')->with('alert', [
             'type' => 'success',
-            'title' => 'Cambios Guardados',
-            'message' => 'La sección se actualizó correctamente'
+            'title' => 'Actualización Exitosa',
+            'message' => 'Datos actualizados para: ' . $seccion->codigo_seccion
         ]);
     }
 }

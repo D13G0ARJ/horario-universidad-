@@ -20,7 +20,7 @@
                         <i class="fas fa-list-alt mr-2"></i>Carreras Registradas
                     </h4>
                     <a href="#" class="btn btn-light ms-auto text-dark"
-                       data-bs-toggle="modal" data-bs-target="#registroModal">
+                        data-bs-toggle="modal" data-bs-target="#registroModal">
                         <i class="fas fa-plus mr-1"></i>Nueva Carrera
                     </a>
                 </div>
@@ -30,7 +30,7 @@
                             <tr>
                                 <th style="text-align: center">N°</th>
                                 <th style="text-align: center">Código</th>
-                                <th style="text-align: center">Nombre</th>
+                                <th>Nombre</th>
                                 <th style="text-align: center">Acciones</th>
                             </tr>
                         </thead>
@@ -38,7 +38,7 @@
                             @foreach($carreras as $carrera)
                             <tr>
                                 <td style="text-align: center"></td>
-                                <td style="text-align: center">{{ $carrera->code }}</td>
+                                <td style="text-align: center">{{ $carrera->carrera_id }}</td>
                                 <td>{{ $carrera->name }}</td>
                                 <td style="text-align: center">
                                     <div class="d-flex justify-content-center gap-2">
@@ -46,9 +46,8 @@
                                         <button class="btn btn-info btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#mostrarModal"
-                                            data-id="{{ $carrera->id }}"
-                                            data-name="{{ $carrera->name }}"
-                                            data-code="{{ $carrera->code }}">
+                                            data-carrera_id="{{ $carrera->carrera_id }}"
+                                            data-name="{{ $carrera->name }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
 
@@ -56,14 +55,13 @@
                                         <button class="btn btn-success btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#editarModal"
-                                            data-id="{{ $carrera->id }}"
-                                            data-name="{{ $carrera->name }}"
-                                            data-code="{{ $carrera->code }}">
+                                            data-carrera_id="{{ $carrera->carrera_id }}"
+                                            data-name="{{ $carrera->name }}">
                                             <i class="fas fa-pencil-alt"></i>
                                         </button>
 
                                         <!-- Botón para Eliminar -->
-                                        <form action="{{ route('carrera.destroy', $carrera->code) }}" method="POST" class="delete-form">
+                                        <form action="{{ route('carrera.destroy', $carrera->carrera_id) }}" method="POST" class="delete-form">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm">
@@ -91,40 +89,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
-        // Configuración del PDF
-        const pdfConfig = {
-            customize: function(doc) {
-                doc.pageMargins = [40, 80, 40, 60];
-                doc.content.splice(0, 0, {
-                    text: 'UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA\nDE LA FUERZA ARMADA NACIONAL\nEXTENSIÓN LOS TEQUES\nSISTEMA DE GESTIÓN DE HORARIOS - CARRERAS',
-                    alignment: 'center',
-                    fontSize: 10,
-                    bold: true,
-                    margin: [0, 0, 0, 10]
-                });
-
-                doc.content[1].text = 'REPORTE DE CARRERAS';
-                doc.content[1].alignment = 'center';
-                doc.content[1].fontSize = 12;
-                doc.content[1].margin = [0, 0, 0, 10];
-
-                doc['footer'] = function(currentPage, pageCount) {
-                    return {
-                        text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
-                        alignment: 'center',
-                        fontSize: 8,
-                        margin: [40, 10, 40, 20]
-                    };
-                };
-
-                doc.content[2].table.widths = ['auto', 'auto', '*'];
-                doc.content[2].table.headerRows = 1;
-                doc.styles.tableHeader.fillColor = '#343a40';
-                doc.styles.tableHeader.color = '#ffffff';
-                doc.content[2].layout = 'lightHorizontalLines';
-            }
-        };
-
         // Configuración DataTables
         const table = $("#tabla-carreras").DataTable({
             pageLength: 10,
@@ -159,7 +123,7 @@
                             .css('font-size', '10pt')
                             .prepend(
                                 '<div style="text-align: center; margin-bottom: 20px;">' +
-                                '<img src="{{ asset('images/logo.jpg') }}" style="height: 80px; margin-bottom: 10px;"/>' +
+                                '<img src="{{ asset("images/logo.jpg") }}" style="height: 80px; margin-bottom: 10px;"/>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
                                 '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
@@ -183,7 +147,6 @@
                 {
                     extend: 'pdf',
                     text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
-                    customize: pdfConfig.customize,
                     orientation: 'portrait',
                     pageSize: 'A4',
                     exportOptions: {
@@ -199,7 +162,7 @@
                         columns: [0, 1, 2]
                     },
                     className: 'btn btn-success mr-2'
-                },
+                }
             ],
             columnDefs: [
                 {
@@ -210,17 +173,16 @@
                     className: 'text-center',
                     orderable: false
                 },
-                {
-                    targets: [1, 3],
+                { 
+                    targets: [1, 3], 
                     className: 'text-center'
                 },
-                {
+                { 
                     targets: -1,
-                    visible: true,
-                    exportable: false
+                    searchable: false,
+                    orderable: false
                 }
-            ],
-            order: [[1, 'asc']]
+            ]
         });
 
         // SweetAlerts
@@ -260,16 +222,16 @@
         $('#mostrarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
             const modal = $(this);
-            modal.find('#modalCode').text(button.data('code'));
+            modal.find('#modalCode').text(button.data('carrera_id'));
             modal.find('#modalName').text(button.data('name'));
         });
 
         $('#editarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
             const modal = $(this);
-            modal.find('#code_editar').val(button.data('code'));
+            modal.find('#carrera_id_editar').val(button.data('carrera_id'));
             modal.find('#name_editar').val(button.data('name'));
-            modal.find('#formEditar').attr('action', '/carreras/' + button.data('code'));
+            modal.find('#formEditar').attr('action', '/carreras/' + button.data('carrera_id'));
         });
     });
 </script>

@@ -21,16 +21,19 @@
                     </h4>
                     <a href="#" class="btn btn-light ms-auto text-dark"
                     data-bs-toggle="modal" data-bs-target="#crearSeccionModal">
-                     <i class="fas fa-plus mr-1"></i>Nueva Sección
-                 </a>
+                    <i class="fas fa-plus mr-1"></i>Nueva Sección
+                </a>
                 </div>
                 <div class="card-body">
                     <table id="tabla-secciones" class="table table-bordered table-hover">
                         <thead class="thead-dark">
                             <tr>
                                 <th style="text-align: center">N°</th>
-                                <th>Nombre</th>
+                                <th>Código</th>
                                 <th>Aula</th>
+                                <th>Carrera</th>
+                                <th>Turno</th>
+                                <th>Semestre</th>
                                 <th style="text-align: center">Acciones</th>
                             </tr>
                         </thead>
@@ -38,16 +41,22 @@
                             @foreach($secciones as $seccion)
                             <tr>
                                 <td style="text-align: center"></td>
-                                <td>{{ $seccion->nombre }}</td>
+                                <td>{{ $seccion->codigo_seccion }}</td>
                                 <td>{{ $seccion->aula->nombre }}</td>
+                                <td>{{ $seccion->carrera->nombre }}</td>
+                                <td>{{ $seccion->turno->nombre }}</td>
+                                <td>{{ $seccion->semestre->numero }}</td>
                                 <td style="text-align: center">
                                     <div class="d-flex justify-content-center gap-2">
                                         <!-- Botón para Mostrar -->
                                         <button class="btn btn-info btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#mostrarSeccionModal"
-                                            data-nombre="{{ $seccion->nombre }}"
-                                            data-aula="{{ $seccion->aula->nombre }}">
+                                            data-codigo="{{ $seccion->codigo_seccion }}"
+                                            data-aula="{{ $seccion->aula->nombre }}"
+                                            data-carrera="{{ $seccion->carrera->nombre }}"
+                                            data-turno="{{ $seccion->turno->nombre }}"
+                                            data-semestre="{{ $seccion->semestre->numero }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
 
@@ -55,14 +64,16 @@
                                         <button class="btn btn-success btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#editarSeccionModal"
-                                            data-id="{{ $seccion->id }}"
-                                            data-nombre="{{ $seccion->nombre }}"
-                                            data-aula_id="{{ $seccion->aula_id }}">
+                                            data-codigo="{{ $seccion->codigo_seccion }}"
+                                            data-aula_id="{{ $seccion->aula_id }}"
+                                            data-carrera_id="{{ $seccion->carrera_id }}"
+                                            data-turno_id="{{ $seccion->turno_id }}"
+                                            data-semestre_id="{{ $seccion->semestre_id }}">
                                             <i class="fas fa-pencil-alt"></i>
                                         </button>
 
                                         <!-- Botón para Eliminar -->
-                                        <form action="{{ route('secciones.destroy', $seccion->id) }}" method="POST" class="delete-form">
+                                        <form action="{{ route('secciones.destroy', $seccion->codigo_seccion) }}" method="POST" class="delete-form">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm">
@@ -116,7 +127,7 @@
                     };
                 };
 
-                doc.content[2].table.widths = ['auto', '*', '*', 'auto'];
+                doc.content[2].table.widths = ['auto', '*', '*', '*', '*', '*', 'auto'];
                 doc.content[2].table.headerRows = 1;
                 doc.styles.tableHeader.fillColor = '#343a40';
                 doc.styles.tableHeader.color = '#ffffff';
@@ -151,7 +162,7 @@
                     title: '',
                     autoPrint: true,
                     exportOptions: {
-                        columns: [0, 1, 2]
+                        columns: [0, 1, 2, 3, 4, 5]
                     },
                     customize: function(win) {
                         $(win.document.body)
@@ -186,7 +197,7 @@
                     orientation: 'portrait',
                     pageSize: 'A4',
                     exportOptions: {
-                        columns: [0, 1, 2]
+                        columns: [0, 1, 2, 3, 4, 5]
                     },
                     className: 'btn btn-danger mr-2'
                 },
@@ -195,7 +206,7 @@
                     text: '<i class="fas fa-file-excel mr-2"></i>Excel',
                     title: 'Secciones Registradas',
                     exportOptions: {
-                        columns: [0, 1, 2]
+                        columns: [0, 1, 2, 3, 4, 5]
                     },
                     className: 'btn btn-success mr-2'
                 },
@@ -210,7 +221,7 @@
                     orderable: false
                 },
                 { 
-                    targets: 3, 
+                    targets: [6], 
                     className: 'text-center',
                     orderable: false,
                     searchable: false
@@ -255,17 +266,24 @@
         $('#mostrarSeccionModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
             const modal = $(this);
-            modal.find('#modalSeccionNombre').text(button.data('nombre'));
-            modal.find('#modalSeccionAula').text(button.data('aula'));
+            modal.find('#modalCodigo').text(button.data('codigo'));
+            modal.find('#modalAula').text(button.data('aula'));
+            modal.find('#modalCarrera').text(button.data('carrera'));
+            modal.find('#modalTurno').text(button.data('turno'));
+            modal.find('#modalSemestre').text(button.data('semestre'));
         });
 
         $('#editarSeccionModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
             const modal = $(this);
-            modal.find('#edit_id').val(button.data('id'));
-            modal.find('#edit_nombre').val(button.data('nombre'));
+            
+            modal.find('#edit_codigo').val(button.data('codigo'));
             modal.find('#edit_aula_id').val(button.data('aula_id'));
-            modal.find('#formEditarSeccion').attr('action', '/secciones/' + button.data('id'));
+            modal.find('#edit_carrera_id').val(button.data('carrera_id'));
+            modal.find('#edit_turno_id').val(button.data('turno_id'));
+            modal.find('#edit_semestre_id').val(button.data('semestre_id'));
+            
+            modal.find('#formEditarSeccion').attr('action', '/secciones/' + button.data('codigo'));
         });
     });
 </script>

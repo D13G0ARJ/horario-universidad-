@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
 
         // Insertar una carrera
         DB::table('carreras')->insert([
-            'code' => '2614', // Cambia este valor por el código de la carrera deseada
+            'carrera_id' => '2614', // Cambia este valor por el código de la carrera deseada
             'name' => 'ING. Sistemas', // Cambia este valor por el nombre de la carrera deseada
         ]);
 

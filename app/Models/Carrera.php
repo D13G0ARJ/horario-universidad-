@@ -16,7 +16,7 @@ class Carrera extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'code', // Agregar 'code' aquí
+        'carrera_id', // Agregar 'code' aquí
         'name',
     ];
 
@@ -25,7 +25,7 @@ class Carrera extends Model
      *
      * @var string
      */
-    protected $primaryKey = 'code';
+    protected $primaryKey = 'carrera_id';
 
     /**
      * Indica que la clave primaria no es autoincremental.

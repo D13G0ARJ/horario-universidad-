@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('carreras', function (Blueprint $table) {
-            $table->string('code')->primary(); // 'code' será la clave primaria
+            $table->string('carrera_id', 20)->primary(); // Clave primaria string con longitud
             $table->string('name');
             $table->timestamps();
         });
