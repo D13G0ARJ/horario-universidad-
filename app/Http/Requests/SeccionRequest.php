@@ -9,7 +9,7 @@ class SeccionRequest extends FormRequest
 {
     public function authorize()
     {
-        return true; // Cambiar a false si necesitas control de acceso
+        return true;
     }
 
     public function rules()
@@ -21,29 +21,35 @@ class SeccionRequest extends FormRequest
                 'max:20',
                 Rule::unique('secciones')->ignore($this->seccion?->codigo_seccion, 'codigo_seccion')
             ],
-            'aula_id' => 'required|exists:aulas,id',
-            'carrera_id' => 'required|exists:carreras,id',
+            'aula_id' => 'required|exists:aulas,id', // Asumiendo que Aula usa 'id' como PK
+            'carrera_id' => 'required|exists:carreras,carrera_id', // Corregido aquí
             'turno_id' => 'required|exists:turnos,id_turno',
             'semestre_id' => [
-                'required',
-                'exists:semestres,id_semestre',
-                function ($attribute, $value, $fail) {
-                    $turno = $this->input('turno_id');
-                    $semestre = \App\Models\Semestre::find($value);
+            'required',
+            'exists:semestres,id_semestre',
+            function ($attribute, $value, $fail) {
+                $turno = $this->input('turno_id');
+                $semestre = \App\Models\Semestre::where('id_semestre', $value)->first(); // Usa where()
 
-                    // Validación personalizada
-                    if ($turno == 1 && $semestre->numero > 8) {
-                        $fail('Para turno diurno solo se permiten semestres del 1 al 8');
-                    }
+                if (!$semestre) {
+                    $fail('Semestre no encontrado');
+                    return;
                 }
-            ]
-        ];
-    }
+
+                if ($turno == 1 && $semestre->numero > 8) {
+                    $fail('Para turno diurno solo se permiten semestres del 1 al 8');
+                }
+            }
+        ]
+    ];
+}
 
     public function messages()
     {
         return [
             'codigo_seccion.unique' => 'Este código de sección ya está registrado',
+            'carrera_id.exists' => 'La carrera seleccionada no es válida', // Nuevo mensaje
+            'aula_id.exists' => 'El aula seleccionada no es válida', // Nuevo mensaje
             'semestre_id.exists' => 'El semestre seleccionado no es válido',
             'turno_id.exists' => 'El turno seleccionado no es válido'
         ];

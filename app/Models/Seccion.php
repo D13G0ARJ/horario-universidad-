@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Seccion extends Model
 {
+    protected $table = 'secciones';
     protected $primaryKey = 'codigo_seccion';
     public $incrementing = false;
     protected $keyType = 'string';
@@ -18,20 +19,20 @@ class Seccion extends Model
         'semestre_id'
     ];
 
-    // Relaciones
+    // Relaciones corregidas
     public function aula() {
-        return $this->belongsTo(Aula::class);
+        return $this->belongsTo(Aula::class, 'aula_id', 'id');
     }
 
     public function carrera() {
-        return $this->belongsTo(Carrera::class);
+        return $this->belongsTo(Carrera::class, 'carrera_id', 'carrera_id');
     }
 
     public function turno() {
-        return $this->belongsTo(Turno::class);
+        return $this->belongsTo(Turno::class, 'turno_id', 'id_turno');
     }
 
     public function semestre() {
-        return $this->belongsTo(Semestre::class);
+        return $this->belongsTo(Semestre::class, 'semestre_id', 'id_semestre');
     }
 }

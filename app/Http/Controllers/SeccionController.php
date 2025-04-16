@@ -15,7 +15,13 @@ class SeccionController extends Controller
 {
     public function index()
     {
-        $secciones = Seccion::with(['aula', 'carrera', 'turno', 'semestre'])->get();
+        $secciones = Seccion::with([
+            'aula:id,nombre',
+            'carrera:carrera_id,name',
+            'turno:id_turno,nombre',
+            'semestre:id_semestre,numero'
+        ])->get();
+
         $aulas = Aula::all();
         $carreras = Carrera::all();
         $turnos = Turno::all();
@@ -35,13 +41,18 @@ class SeccionController extends Controller
         $validated = $request->validated();
         
         $seccion = Seccion::create($validated);
-        $seccion->load(['aula', 'carrera', 'turno', 'semestre']);
+        $seccion->load([ // Cargar relaciones inmediatamente
+            'aula:id,nombre',
+            'carrera:carrera_id,name',
+            'turno:id_turno,nombre',
+            'semestre:id_semestre,numero'
+        ]);
 
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Sección creada: ' . $seccion->codigo_seccion . 
                         ' | Aula: ' . $seccion->aula->nombre .
-                        ' | Carrera: ' . $seccion->carrera->nombre .
+                        ' | Carrera: ' . $seccion->carrera->name .
                         ' | Turno: ' . $seccion->turno->nombre .
                         ' | Semestre: ' . $seccion->semestre->numero
         ]);
@@ -56,14 +67,16 @@ class SeccionController extends Controller
     public function destroy($codigo_seccion)
     {
         try {
-            $seccion = Seccion::findOrFail($codigo_seccion);
-            $seccion->load(['aula', 'carrera', 'turno', 'semestre']);
+            $seccion = Seccion::with([
+                'aula:id,nombre',
+                'carrera:carrera_id,name'
+            ])->findOrFail($codigo_seccion);
 
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
                 'accion' => 'Sección eliminada: ' . $seccion->codigo_seccion . 
                             ' | Aula: ' . $seccion->aula->nombre .
-                            ' | Carrera: ' . $seccion->carrera->nombre
+                            ' | Carrera: ' . $seccion->carrera->name
             ]);
 
             $seccion->delete();
@@ -85,7 +98,13 @@ class SeccionController extends Controller
 
     public function edit($codigo_seccion)
     {
-        $seccion = Seccion::findOrFail($codigo_seccion);
+        $seccion = Seccion::with([
+            'aula:id,nombre',
+            'carrera:carrera_id,name',
+            'turno:id_turno,nombre',
+            'semestre:id_semestre,numero'
+        ])->findOrFail($codigo_seccion);
+
         return response()->json([
             'seccion' => $seccion,
             'aulas' => Aula::all(),
@@ -101,13 +120,20 @@ class SeccionController extends Controller
         $validated = $request->validated();
 
         $seccion->update($validated);
-        $seccion->load(['aula', 'carrera', 'turno', 'semestre']);
+        $seccion->load([ // Forzar carga de relaciones actualizadas
+            'aula:id,nombre',
+            'carrera:carrera_id,name',
+            'turno:id_turno,nombre',
+            'semestre:id_semestre,numero'
+        ]);
 
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'Sección actualizada: ' . $seccion->codigo_seccion . 
-                        ' | Nuevo turno: ' . $seccion->turno->nombre .
-                        ' | Nuevo semestre: ' . $seccion->semestre->numero
+                        ' | Aula: ' . $seccion->aula->nombre .
+                        ' | Carrera: ' . $seccion->carrera->name .
+                        ' | Turno: ' . $seccion->turno->nombre .
+                        ' | Semestre: ' . $seccion->semestre->numero
         ]);
 
         return redirect()->route('secciones.index')->with('alert', [

@@ -44,7 +44,7 @@
                         @enderror
                     </div>
 
-                    <!-- Selector de Carrera -->
+                    <!-- Selector de Carrera (Corregido a carrera_id) -->
                     <div class="form-group mb-3">
                         <label for="edit_carrera_id" class="form-label">Carrera</label>
                         <div class="input-group">
@@ -54,7 +54,7 @@
                                 id="edit_carrera_id" 
                                 required>
                                 @foreach($carreras as $carrera)
-                                    <option value="{{ $carrera->id }}">{{ $carrera->nombre }}</option>
+                                    <option value="{{ $carrera->carrera_id }}">{{ $carrera->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -117,40 +117,48 @@
 
 @push('scripts')
 <script>
-    // Cargar semestres según turno seleccionado
-    $('#edit_turno_id').change(function() {
-        const turnoId = $(this).val();
+    // Función para cargar semestres
+    function cargarSemestres(turnoId, semestreId = null) {
         const semestreSelect = $('#edit_semestre_id');
-        
         semestreSelect.empty().prop('disabled', true);
-        
+
         if(turnoId) {
             @foreach($semestres as $semestre)
                 @if($semestre->numero <= 8)
-                    semestreSelect.append('<option value="{{ $semestre->id_semestre }}">{{ $semestre->numero }}</option>');
+                    semestreSelect.append(
+                        `<option value="{{ $semestre->id_semestre }}" ${semestreId == {{ $semestre->id_semestre }} ? 'selected' : ''}>{{ $semestre->numero }}</option>`
+                    );
                 @else
                     if(turnoId == 2) { // Nocturno
-                        semestreSelect.append('<option value="{{ $semestre->id_semestre }}">{{ $semestre->numero }}</option>');
+                        semestreSelect.append(
+                            `<option value="{{ $semestre->id_semestre }}" ${semestreId == {{ $semestre->id_semestre }} ? 'selected' : ''}>{{ $semestre->numero }}</option>`
+                        );
                     }
                 @endif
             @endforeach
             
             semestreSelect.prop('disabled', false);
         }
+    }
+
+    // Al abrir el modal
+    $('#editarSeccionModal').on('show.bs.modal', function(event) {
+    const button = $(event.relatedTarget);
+    const seccion = JSON.parse(button.data('seccion')); // Obtener objeto JSON
+    const modal = $(this);
+    
+    modal.find('#formEditarSeccion').attr('action', `/secciones/${seccion.codigo_seccion}`);
+    modal.find('#edit_codigo').val(seccion.codigo_seccion);
+    modal.find('#edit_aula_id').val(seccion.aula_id);
+    modal.find('#edit_carrera_id').val(seccion.carrera_id);
+    modal.find('#edit_turno_id').val(seccion.turno_id);
+        // Cargar semestres y seleccionar el actual
+        cargarSemestres(seccion.turno_id, seccion.semestre_id);
     });
 
-    // Actualizar semestres al abrir el modal
-    $('#editarSeccionModal').on('show.bs.modal', function(event) {
-        const button = $(event.relatedTarget);
-        const turnoId = button.data('turno_id');
-        
-        // Forzar actualización de semestres
-        $('#edit_turno_id').val(turnoId).trigger('change');
-        
-        // Establecer semestre después de cargar opciones
-        setTimeout(() => {
-            $('#edit_semestre_id').val(button.data('semestre_id'));
-        }, 100);
+    // Manejar cambio de turno
+    $('#edit_turno_id').change(function() {
+        cargarSemestres($(this).val());
     });
 </script>
 @endpush

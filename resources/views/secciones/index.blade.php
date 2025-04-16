@@ -43,36 +43,28 @@
                                 <td style="text-align: center"></td>
                                 <td>{{ $seccion->codigo_seccion }}</td>
                                 <td>{{ $seccion->aula->nombre }}</td>
-                                <td>{{ $seccion->carrera->nombre }}</td>
+                                <td>{{ $seccion->carrera->name }}</td>
                                 <td>{{ $seccion->turno->nombre }}</td>
                                 <td>{{ $seccion->semestre->numero }}</td>
                                 <td style="text-align: center">
                                     <div class="d-flex justify-content-center gap-2">
-                                        <!-- Botón para Mostrar -->
+                                        <!-- Botón Mostrar -->
                                         <button class="btn btn-info btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#mostrarSeccionModal"
-                                            data-codigo="{{ $seccion->codigo_seccion }}"
-                                            data-aula="{{ $seccion->aula->nombre }}"
-                                            data-carrera="{{ $seccion->carrera->nombre }}"
-                                            data-turno="{{ $seccion->turno->nombre }}"
-                                            data-semestre="{{ $seccion->semestre->numero }}">
+                                            data-seccion="{{ htmlspecialchars(json_encode($seccion), ENT_QUOTES, 'UTF-8') }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
 
-                                        <!-- Botón para Editar -->
+                                        <!-- Botón Editar -->
                                         <button class="btn btn-success btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#editarSeccionModal"
-                                            data-codigo="{{ $seccion->codigo_seccion }}"
-                                            data-aula_id="{{ $seccion->aula_id }}"
-                                            data-carrera_id="{{ $seccion->carrera_id }}"
-                                            data-turno_id="{{ $seccion->turno_id }}"
-                                            data-semestre_id="{{ $seccion->semestre_id }}">
+                                            data-seccion="{{ htmlspecialchars(json_encode($seccion), ENT_QUOTES, 'UTF-8') }}">
                                             <i class="fas fa-pencil-alt"></i>
                                         </button>
 
-                                        <!-- Botón para Eliminar -->
+                                        <!-- Botón Eliminar -->
                                         <form action="{{ route('secciones.destroy', $seccion->codigo_seccion) }}" method="POST" class="delete-form">
                                             @csrf
                                             @method('DELETE')
@@ -262,28 +254,79 @@
             });
         });
 
-        // Handlers para modals
+        // Handlers para modals corregidos
         $('#mostrarSeccionModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
-            const modal = $(this);
-            modal.find('#modalCodigo').text(button.data('codigo'));
-            modal.find('#modalAula').text(button.data('aula'));
-            modal.find('#modalCarrera').text(button.data('carrera'));
-            modal.find('#modalTurno').text(button.data('turno'));
-            modal.find('#modalSemestre').text(button.data('semestre'));
+            try {
+                const seccion = JSON.parse(button.data('seccion').replace(/&quot;/g, '"'));
+                const modal = $(this);
+                
+                modal.find('#modalCodigo').text(seccion.codigo_seccion);
+                modal.find('#modalAula').text(seccion.aula.nombre);
+                modal.find('#modalCarrera').text(seccion.carrera.name);
+                modal.find('#modalTurno').text(seccion.turno.nombre);
+                modal.find('#modalSemestre').text(seccion.semestre.numero);
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+            }
         });
+
+        function cargarSemestres(turnoId, semestreId = null) {
+            const semestreSelect = $('#edit_semestre_id');
+            semestreSelect.empty().prop('disabled', true);
+
+            if(turnoId) {
+                @foreach($semestres as $semestre)
+                    @if($semestre->numero <= 8)
+                        semestreSelect.append(
+                            `<option value="{{ $semestre->id_semestre }}" 
+                            ${semestreId === {{ $semestre->id_semestre }} ? 'selected' : ''}>
+                            {{ $semestre->numero }}
+                            </option>`
+                        );
+                    @else
+                        if(turnoId == 2) {
+                            semestreSelect.append(
+                                `<option value="{{ $semestre->id_semestre }}" 
+                                ${semestreId === {{ $semestre->id_semestre }} ? 'selected' : ''}>
+                                {{ $semestre->numero }}
+                                </option>`
+                            );
+                        }
+                    @endif
+                @endforeach
+                semestreSelect.prop('disabled', false);
+            }
+        }
 
         $('#editarSeccionModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
-            const modal = $(this);
-            
-            modal.find('#edit_codigo').val(button.data('codigo'));
-            modal.find('#edit_aula_id').val(button.data('aula_id'));
-            modal.find('#edit_carrera_id').val(button.data('carrera_id'));
-            modal.find('#edit_turno_id').val(button.data('turno_id'));
-            modal.find('#edit_semestre_id').val(button.data('semestre_id'));
-            
-            modal.find('#formEditarSeccion').attr('action', '/secciones/' + button.data('codigo'));
+            try {
+                const seccion = JSON.parse(button.data('seccion').replace(/&quot;/g, '"'));
+                const modal = $(this);
+                
+                // Actualizar formulario
+                modal.find('#formEditarSeccion').attr('action', `/secciones/${seccion.codigo_seccion}`);
+                modal.find('#edit_codigo').val(seccion.codigo_seccion);
+                modal.find('#edit_aula_id').val(seccion.aula_id);
+                modal.find('#edit_carrera_id').val(seccion.carrera_id);
+                modal.find('#edit_turno_id').val(seccion.turno_id);
+                
+                // Cargar semestres
+                cargarSemestres(seccion.turno_id, seccion.semestre_id);
+                
+                // Forzar actualización de selects
+                $('#edit_turno_id, #edit_semestre_id').trigger('change');
+                
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+            }
+        });
+
+        // Manejar cambio de turno
+        $('#edit_turno_id').change(function() {
+            const turnoId = $(this).val();
+            cargarSemestres(turnoId);
         });
     });
 </script>
