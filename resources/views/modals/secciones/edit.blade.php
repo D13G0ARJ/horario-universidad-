@@ -141,24 +141,5 @@
         }
     }
 
-    // Al abrir el modal
-    $('#editarSeccionModal').on('show.bs.modal', function(event) {
-    const button = $(event.relatedTarget);
-    const seccion = JSON.parse(button.data('seccion')); // Obtener objeto JSON
-    const modal = $(this);
-    
-    modal.find('#formEditarSeccion').attr('action', `/secciones/${seccion.codigo_seccion}`);
-    modal.find('#edit_codigo').val(seccion.codigo_seccion);
-    modal.find('#edit_aula_id').val(seccion.aula_id);
-    modal.find('#edit_carrera_id').val(seccion.carrera_id);
-    modal.find('#edit_turno_id').val(seccion.turno_id);
-        // Cargar semestres y seleccionar el actual
-        cargarSemestres(seccion.turno_id, seccion.semestre_id);
-    });
-
-    // Manejar cambio de turno
-    $('#edit_turno_id').change(function() {
-        cargarSemestres($(this).val());
-    });
 </script>
 @endpush
