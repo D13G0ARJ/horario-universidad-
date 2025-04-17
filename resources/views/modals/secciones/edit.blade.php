@@ -16,7 +16,7 @@
                     <div class="form-group mb-3">
                         <label for="edit_codigo" class="form-label">Código</label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-barcode"></i></span>
+                            <span class="input-group-text bg-primary text-white"><i class="fas fa-barcode"></i></span>
                             <input type="text" 
                                 class="form-control" 
                                 name="codigo_seccion" 
@@ -29,8 +29,8 @@
                     <div class="form-group mb-3">
                         <label for="edit_aula_id" class="form-label">Aula</label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-building"></i></span>
-                            <select class="form-select @error('aula_id') is-invalid @enderror" 
+                            <span class="input-group-text bg-primary text-white"><i class="fas fa-building"></i></span>
+                            <select class="form-select" 
                                 name="aula_id" 
                                 id="edit_aula_id" 
                                 required>
@@ -39,17 +39,14 @@
                                 @endforeach
                             </select>
                         </div>
-                        @error('aula_id')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
                     </div>
 
-                    <!-- Selector de Carrera (Corregido a carrera_id) -->
+                    <!-- Selector de Carrera (Corregido) -->
                     <div class="form-group mb-3">
                         <label for="edit_carrera_id" class="form-label">Carrera</label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-graduation-cap"></i></span>
-                            <select class="form-select @error('carrera_id') is-invalid @enderror" 
+                            <span class="input-group-text bg-primary text-white"><i class="fas fa-graduation-cap"></i></span>
+                            <select class="form-select" 
                                 name="carrera_id" 
                                 id="edit_carrera_id" 
                                 required>
@@ -58,9 +55,6 @@
                                 @endforeach
                             </select>
                         </div>
-                        @error('carrera_id')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
                     </div>
 
                     <!-- Selectores de Turno y Semestre -->
@@ -69,8 +63,8 @@
                             <div class="form-group mb-3">
                                 <label for="edit_turno_id" class="form-label">Turno</label>
                                 <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-clock"></i></span>
-                                    <select class="form-select @error('turno_id') is-invalid @enderror" 
+                                    <span class="input-group-text bg-primary text-white"><i class="fas fa-clock"></i></span>
+                                    <select class="form-select" 
                                         name="turno_id" 
                                         id="edit_turno_id" 
                                         required>
@@ -79,9 +73,6 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                @error('turno_id')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
                             </div>
                         </div>
 
@@ -89,23 +80,20 @@
                             <div class="form-group mb-3">
                                 <label for="edit_semestre_id" class="form-label">Semestre</label>
                                 <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                    <select class="form-select @error('semestre_id') is-invalid @enderror" 
+                                    <span class="input-group-text bg-primary text-white"><i class="fas fa-calendar-alt"></i></span>
+                                    <select class="form-select" 
                                         name="semestre_id" 
                                         id="edit_semestre_id" 
                                         required>
-                                        <!-- Opciones se actualizarán dinámicamente -->
+                                        <!-- Opciones dinámicas -->
                                     </select>
                                 </div>
-                                @error('semestre_id')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
                             </div>
                         </div>
                     </div>
 
                     <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary btn-lg">
                             <i class="fas fa-save mr-2"></i>Guardar Cambios
                         </button>
                     </div>
@@ -117,29 +105,51 @@
 
 @push('scripts')
 <script>
-    // Función para cargar semestres
-    function cargarSemestres(turnoId, semestreId = null) {
+    // Precargar semestres agrupados por turno
+    const semestresPorTurno = @json($turnos->mapWithKeys(function($turno) {
+        return [$turno->id_turno => $turno->semestres];
+    }));
+
+    function actualizarSemestres(turnoId, semestreId = null) {
         const semestreSelect = $('#edit_semestre_id');
         semestreSelect.empty().prop('disabled', true);
-
-        if(turnoId) {
-            @foreach($semestres as $semestre)
-                @if($semestre->numero <= 8)
-                    semestreSelect.append(
-                        `<option value="{{ $semestre->id_semestre }}" ${semestreId == {{ $semestre->id_semestre }} ? 'selected' : ''}>{{ $semestre->numero }}</option>`
-                    );
-                @else
-                    if(turnoId == 2) { // Nocturno
-                        semestreSelect.append(
-                            `<option value="{{ $semestre->id_semestre }}" ${semestreId == {{ $semestre->id_semestre }} ? 'selected' : ''}>{{ $semestre->numero }}</option>`
-                        );
-                    }
-                @endif
-            @endforeach
-            
+        
+        if (semestresPorTurno[turnoId]) {
+            semestresPorTurno[turnoId].forEach(semestre => {
+                const selected = semestre.id_semestre == semestreId ? 'selected' : '';
+                semestreSelect.append(
+                    `<option value="${semestre.id_semestre}" ${selected}>Semestre ${semestre.numero}</option>`
+                );
+            });
             semestreSelect.prop('disabled', false);
         }
     }
 
+    // Evento al mostrar el modal
+    $('#editarSeccionModal').on('show.bs.modal', function(event) {
+        const button = $(event.relatedTarget);
+        const modal = $(this);
+        
+        // Obtener datos
+        const codigo = button.data('codigo');
+        const aulaId = button.data('aula-id');
+        const carreraId = button.data('carrera-id');
+        const turnoId = button.data('turno-id');
+        const semestreId = button.data('semestre-id');
+
+        // Actualizar formulario
+        modal.find('#edit_codigo').val(codigo);
+        modal.find('#edit_aula_id').val(aulaId);
+        modal.find('#edit_carrera_id').val(carreraId);
+        modal.find('#edit_turno_id').val(turnoId);
+        
+        // Cargar semestres
+        actualizarSemestres(turnoId, semestreId);
+    });
+
+    // Evento cambio de turno
+    $('#edit_turno_id').on('change', function() {
+        actualizarSemestres(this.value);
+    });
 </script>
 @endpush

@@ -9,35 +9,28 @@ class Carrera extends Model
 {
     use HasFactory;
 
-    
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'carrera_id', // Agregar 'code' aquí
-        'name',
+        'carrera_id', // Código único (Ej: "ING-SIST")
+        'name'        // Nombre completo de la carrera
     ];
 
     /**
-     * Indica que 'code' es la clave primaria.
-     *
-     * @var string
+     * Clave primaria personalizada
      */
     protected $primaryKey = 'carrera_id';
-
-    /**
-     * Indica que la clave primaria no es autoincremental.
-     *
-     * @var bool
-     */
     public $incrementing = false;
+    protected $keyType = 'string';
 
     /**
-     * El tipo de dato de la clave primaria.
-     *
-     * @var string
+     * Relación con Secciones
      */
-    protected $keyType = 'string';
+    public function secciones()
+    {
+        return $this->hasMany(Seccion::class, 'carrera_id', 'carrera_id');
+    }
 }

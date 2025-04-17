@@ -13,7 +13,7 @@
 
                     <!-- Campo Código de Sección -->
                     <div class="form-group mb-4">
-                        <label for="codigo_seccion" class="form-label fw-bold">Código Único</label>
+                        <label for="codigo_seccion" class="form-label fw-bold">Código Único <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-primary text-white">
                                 <i class="fas fa-barcode"></i>
@@ -23,7 +23,8 @@
                                 name="codigo_seccion"
                                 placeholder="Ej: 01S-2614-D1"
                                 value="{{ old('codigo_seccion') }}"
-                                required>
+                                required
+                                autofocus>
                         </div>
                         @error('codigo_seccion')
                             <div class="invalid-feedback d-block small mt-1">
@@ -34,7 +35,7 @@
 
                     <!-- Selector de Aula -->
                     <div class="form-group mb-4">
-                        <label for="aula_id" class="form-label fw-bold">Aula</label>
+                        <label for="aula_id" class="form-label fw-bold">Aula <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-primary text-white">
                                 <i class="fas fa-building"></i>
@@ -45,7 +46,8 @@
                                 required>
                                 <option value="">Seleccione un aula</option>
                                 @foreach($aulas as $aula)
-                                    <option value="{{ $aula->id }}" {{ old('aula_id') == $aula->id ? 'selected' : '' }}>
+                                    <option value="{{ $aula->id }}" 
+                                        {{ old('aula_id') == $aula->id ? 'selected' : '' }}>
                                         {{ $aula->nombre }}
                                     </option>
                                 @endforeach
@@ -58,9 +60,9 @@
                         @enderror
                     </div>
 
-                    <!-- Selector de Carrera -->
+                    <!-- Selector de Carrera (Corregido) -->
                     <div class="form-group mb-4">
-                        <label for="carrera_id" class="form-label fw-bold">Carrera</label>
+                        <label for="carrera_id" class="form-label fw-bold">Carrera <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-primary text-white">
                                 <i class="fas fa-graduation-cap"></i>
@@ -71,7 +73,8 @@
                                 required>
                                 <option value="">Seleccione una carrera</option>
                                 @foreach($carreras as $carrera)
-                                    <option value="{{ $carrera->carrera_id }}" {{ old('carrera_id') == $carrera->carrera_id ? 'selected' : '' }}>
+                                    <option value="{{ $carrera->carrera_id }}" {{-- Usar carrera_id --}}
+                                        {{ old('carrera_id') == $carrera->carrera_id ? 'selected' : '' }}>
                                         {{ $carrera->name }}
                                     </option>
                                 @endforeach
@@ -88,18 +91,19 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group mb-4">
-                                <label for="turnoSelect" class="form-label fw-bold">Turno</label>
+                                <label for="turno_id" class="form-label fw-bold">Turno <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-primary text-white">
                                         <i class="fas fa-clock"></i>
                                     </span>
                                     <select class="form-select @error('turno_id') is-invalid @enderror"
                                         name="turno_id"
-                                        id="turnoSelect"
+                                        id="turno_id"
                                         required>
                                         <option value="">Seleccione un turno</option>
                                         @foreach($turnos as $turno)
-                                            <option value="{{ $turno->id_turno }}" {{ old('turno_id') == $turno->id_turno ? 'selected' : '' }}>
+                                            <option value="{{ $turno->id_turno }}" 
+                                                {{ old('turno_id') == $turno->id_turno ? 'selected' : '' }}>
                                                 {{ $turno->nombre }}
                                             </option>
                                         @endforeach
@@ -115,16 +119,17 @@
 
                         <div class="col-md-6">
                             <div class="form-group mb-4">
-                                <label for="semestreSelect" class="form-label fw-bold">Semestre</label>
+                                <label for="semestre_id" class="form-label fw-bold">Semestre <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-primary text-white">
                                         <i class="fas fa-calendar-alt"></i>
                                     </span>
                                     <select class="form-select @error('semestre_id') is-invalid @enderror"
                                         name="semestre_id"
-                                        id="semestreSelect"
-                                        required>
-                                        <option value="">Primero seleccione un turno</option>
+                                        id="semestre_id"
+                                        required
+                                        {{ old('turno_id') ? '' : 'disabled' }}>
+                                        <option value="">Seleccione un semestre</option>
                                     </select>
                                 </div>
                                 @error('semestre_id')
@@ -149,36 +154,47 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
-        // Cargar semestres según turno seleccionado
-        $('#turnoSelect').change(function() {
-            const turnoId = $(this).val();
-            const semestreSelect = $('#semestreSelect');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Precargar semestres
+        const semestresPorTurno = @json($turnos->mapWithKeys(function($turno) {
+            return [$turno->id_turno => $turno->semestres];
+        }));
+
+        const turnoSelect = document.getElementById('turno_id');
+        const semestreSelect = document.getElementById('semestre_id');
+
+        // Función para cargar semestres
+        function cargarSemestres(turnoId) {
+            semestreSelect.innerHTML = '<option value="">Seleccione un semestre</option>';
             
-            semestreSelect.empty().prop('disabled', true);
-
-            if(turnoId) {
-                // Agregar opción por defecto
-                semestreSelect.append('<option value="">Seleccione un semestre</option>');
-
-                // Filtrar semestres
-                @foreach($semestres as $semestre)
-                    @if($semestre->numero <= 8)
-                        semestreSelect.append(
-                            '<option value="{{ $semestre->id_semestre }}" {{ old("semestre_id") == "'.$semestre->id_semestre.'" ? "selected" : "" }}>{{ $semestre->numero }}</option>'
-                        );
-                    @else
-                        if(turnoId == 2) { // Nocturno
-                            semestreSelect.append(
-                                '<option value="{{ $semestre->id_semestre }}" {{ old("semestre_id") == "'.$semestre->id_semestre.'" ? "selected" : "" }}>{{ $semestre->numero }}</option>'
-                            );
-                        }
-                    @endif
-                @endforeach
-
-                semestreSelect.prop('disabled', false);
+            if (semestresPorTurno[turnoId]) {
+                semestresPorTurno[turnoId].forEach(semestre => {
+                    const option = new Option(`Semestre ${semestre.numero}`, semestre.id_semestre);
+                    semestreSelect.appendChild(option);
+                });
+                semestreSelect.disabled = false;
+                semestreSelect.required = true;
+            } else {
+                semestreSelect.innerHTML = '<option value="">No hay semestres</option>';
+                semestreSelect.disabled = true;
             }
-        }).trigger('change');
+        }
+
+        // Evento cambio de turno
+        turnoSelect.addEventListener('change', function() {
+            if (this.value) {
+                cargarSemestres(this.value);
+            } else {
+                semestreSelect.innerHTML = '<option value="">Seleccione un turno primero</option>';
+                semestreSelect.disabled = true;
+            }
+        });
+
+        // Cargar semestres si hay valor antiguo
+        @if(old('turno_id'))
+            cargarSemestres({{ old('turno_id') }});
+            semestreSelect.value = "{{ old('semestre_id') }}";
+        @endif
     });
 </script>
 @endpush

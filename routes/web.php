@@ -63,6 +63,8 @@ Route::delete('/periodos/{periodo}', [PeriodoController::class, 'destroy'])->nam
 
 // Rutas para secciones
 Route::resource('/secciones', SeccionController::class);
+// web.php
+Route::get('/semestres-por-turno/{turno}', [SeccionController::class, 'semestresPorTurno']);
 
 // Rutas para recuperación de contraseña
 Route::prefix('password')->group(function () {

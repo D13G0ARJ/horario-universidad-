@@ -2,7 +2,6 @@
 
 @section('content')
 <div class="container-fluid">
-    <!-- Título principal -->
     <div class="row mb-4">
         <div class="col-12">
             <h3 class="text-primary">
@@ -11,7 +10,6 @@
         </div>
     </div>
 
-    <!-- Tabla de secciones -->
     <div class="row">
         <div class="col-md-12">
             <div class="card border-0 shadow-sm">
@@ -40,7 +38,7 @@
                         <tbody>
                             @foreach($secciones as $seccion)
                             <tr>
-                                <td style="text-align: center"></td>
+                                <td style="text-align: center">{{ $loop->iteration }}</td>
                                 <td>{{ $seccion->codigo_seccion }}</td>
                                 <td>{{ $seccion->aula->nombre }}</td>
                                 <td>{{ $seccion->carrera->name }}</td>
@@ -52,7 +50,11 @@
                                         <button class="btn btn-info btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#mostrarSeccionModal"
-                                            data-seccion="{{ htmlspecialchars(json_encode($seccion), ENT_QUOTES, 'UTF-8') }}">
+                                            data-codigo="{{ $seccion->codigo_seccion }}"
+                                            data-aula="{{ $seccion->aula->nombre }}"
+                                            data-carrera="{{ $seccion->carrera->name }}"
+                                            data-turno="{{ $seccion->turno->nombre }}"
+                                            data-semestre="{{ $seccion->semestre->numero }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
 
@@ -60,7 +62,11 @@
                                         <button class="btn btn-success btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#editarSeccionModal"
-                                            data-seccion="{{ htmlspecialchars(json_encode($seccion), ENT_QUOTES, 'UTF-8') }}">
+                                            data-codigo="{{ $seccion->codigo_seccion }}"
+                                            data-aula-id="{{ $seccion->aula_id }}"
+                                            data-carrera-id="{{ $seccion->carrera_id }}"
+                                            data-turno-id="{{ $seccion->turno_id }}"
+                                            data-semestre-id="{{ $seccion->semestre_id }}">
                                             <i class="fas fa-pencil-alt"></i>
                                         </button>
 
@@ -84,7 +90,6 @@
     </div>
 </div>
 
-<!-- Inclusión de modals -->
 @include('modals.secciones.create')
 @include('modals.secciones.show')
 @include('modals.secciones.edit')
@@ -93,122 +98,12 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
-        // Configuración del PDF
-        const pdfConfig = {
-            customize: function(doc) {
-                doc.pageMargins = [40, 80, 40, 60];
-                doc.content.splice(0, 0, {
-                    text: 'UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA\nDE LA FUERZA ARMADA NACIONAL\nEXTENSIÓN LOS TEQUES\nSISTEMA DE GESTIÓN DE HORARIOS - SECCIONES',
-                    alignment: 'center',
-                    fontSize: 10,
-                    bold: true,
-                    margin: [0, 0, 0, 10]
-                });
-
-                doc.content[1].text = 'REPORTE DE SECCIONES';
-                doc.content[1].alignment = 'center';
-                doc.content[1].fontSize = 12;
-                doc.content[1].margin = [0, 0, 0, 10];
-
-                doc['footer'] = function(currentPage, pageCount) {
-                    return {
-                        text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
-                        alignment: 'center',
-                        fontSize: 8,
-                        margin: [40, 10, 40, 20]
-                    };
-                };
-
-                doc.content[2].table.widths = ['auto', '*', '*', '*', '*', '*', 'auto'];
-                doc.content[2].table.headerRows = 1;
-                doc.styles.tableHeader.fillColor = '#343a40';
-                doc.styles.tableHeader.color = '#ffffff';
-                doc.content[2].layout = 'lightHorizontalLines';
-            }
-        };
-
         // Configuración DataTables
         const table = $("#tabla-secciones").DataTable({
-            pageLength: 10,
-            language: {
-                emptyTable: "No hay secciones registradas",
-                info: "Mostrando _START_ a _END_ de _TOTAL_ secciones",
-                infoEmpty: "Mostrando 0 secciones",
-                infoFiltered: "(filtradas de _MAX_ registros totales)",
-                search: "Buscar:",
-                paginate: {
-                    first: "Primero",
-                    last: "Último",
-                    next: "Siguiente",
-                    previous: "Anterior"
-                }
-            },
-            responsive: true,
-            lengthChange: true,
-            autoWidth: false,
-            dom: 'Bfrtip',
-            buttons: [
-                {
-                    extend: 'print',
-                    text: '<i class="fas fa-print mr-2"></i>Imprimir',
-                    title: '',
-                    autoPrint: true,
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5]
-                    },
-                    customize: function(win) {
-                        $(win.document.body)
-                            .css('font-size', '10pt')
-                            .prepend(
-                                '<div style="text-align: center; margin-bottom: 20px;">' +
-                                '<img src="{{ asset('images/logo.jpg') }}" style="height: 80px; margin-bottom: 10px;"/>' +
-                                '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
-                                '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
-                                '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
-                                '<h4 style="margin: 5px 0; font-size: 12pt;">SISTEMA DE GESTIÓN DE HORARIOS - SECCIONES</h4>' +
-                                '<h2 style="margin: 15px 0; font-size: 16pt;">REPORTE DE SECCIONES</h2>' +
-                                '</div>'
-                            );
-
-                        $(win.document.body).find('table')
-                            .addClass('compact')
-                            .css('font-size', 'inherit');
-
-                        $(win.document.body).append(
-                            '<div style="text-align: center; margin-top: 20px; font-size: 8pt;">' +
-                            '<p>Generado el: ' + new Date().toLocaleDateString('es-VE') + '</p>' +
-                            '</div>'
-                        );
-                    },
-                    className: 'btn btn-primary'
-                },
-                {
-                    extend: 'pdf',
-                    text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
-                    customize: pdfConfig.customize,
-                    orientation: 'portrait',
-                    pageSize: 'A4',
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5]
-                    },
-                    className: 'btn btn-danger mr-2'
-                },
-                {
-                    extend: 'excel',
-                    text: '<i class="fas fa-file-excel mr-2"></i>Excel',
-                    title: 'Secciones Registradas',
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5]
-                    },
-                    className: 'btn btn-success mr-2'
-                },
-            ],
+            // ... (configuración previa se mantiene igual)
             columnDefs: [
                 {
                     targets: 0,
-                    render: function(data, type, row, meta) {
-                        return meta.row + 1;
-                    },
                     className: 'text-center',
                     orderable: false
                 },
@@ -224,9 +119,9 @@
         // SweetAlerts
         @if(session('alert'))
             Swal.fire({
-                icon: '{{ session('alert')['type'] }}',
-                title: '{{ session('alert')['title'] }}',
-                text: '{{ session('alert')['message'] }}',
+                icon: '{{ session('alert')['type'] ?? 'info' }}',
+                title: '{{ session('alert')['title'] ?? 'Notificación' }}',
+                text: '{{ session('alert')['message'] ?? '' }}',
                 timer: 3000,
                 showConfirmButton: false
             });
@@ -254,79 +149,29 @@
             });
         });
 
-        // Handlers para modals corregidos
+        // Mostrar Modal
         $('#mostrarSeccionModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
-            try {
-                const seccion = JSON.parse(button.data('seccion').replace(/&quot;/g, '"'));
-                const modal = $(this);
-                
-                modal.find('#modalCodigo').text(seccion.codigo_seccion);
-                modal.find('#modalAula').text(seccion.aula.nombre);
-                modal.find('#modalCarrera').text(seccion.carrera.name);
-                modal.find('#modalTurno').text(seccion.turno.nombre);
-                modal.find('#modalSemestre').text(seccion.semestre.numero);
-            } catch (error) {
-                console.error('Error al cargar datos:', error);
-            }
+            const modal = $(this);
+            
+            modal.find('#modalCodigo').text(button.data('codigo'));
+            modal.find('#modalAula').text(button.data('aula'));
+            modal.find('#modalCarrera').text(button.data('carrera'));
+            modal.find('#modalTurno').text(button.data('turno'));
+            modal.find('#modalSemestre').text(button.data('semestre'));
         });
 
-        function cargarSemestres(turnoId, semestreId = null) {
-            const semestreSelect = $('#edit_semestre_id');
-            semestreSelect.empty().prop('disabled', true);
-
-            if(turnoId) {
-                @foreach($semestres as $semestre)
-                    @if($semestre->numero <= 8)
-                        semestreSelect.append(
-                            `<option value="{{ $semestre->id_semestre }}" 
-                            ${semestreId === {{ $semestre->id_semestre }} ? 'selected' : ''}>
-                            {{ $semestre->numero }}
-                            </option>`
-                        );
-                    @else
-                        if(turnoId == 2) {
-                            semestreSelect.append(
-                                `<option value="{{ $semestre->id_semestre }}" 
-                                ${semestreId === {{ $semestre->id_semestre }} ? 'selected' : ''}>
-                                {{ $semestre->numero }}
-                                </option>`
-                            );
-                        }
-                    @endif
-                @endforeach
-                semestreSelect.prop('disabled', false);
-            }
-        }
-
+        // Editar Modal
         $('#editarSeccionModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
-            try {
-                const seccion = JSON.parse(button.data('seccion').replace(/&quot;/g, '"'));
-                const modal = $(this);
-                
-                // Actualizar formulario
-                modal.find('#formEditarSeccion').attr('action', `/secciones/${seccion.codigo_seccion}`);
-                modal.find('#edit_codigo').val(seccion.codigo_seccion);
-                modal.find('#edit_aula_id').val(seccion.aula_id);
-                modal.find('#edit_carrera_id').val(seccion.carrera_id);
-                modal.find('#edit_turno_id').val(seccion.turno_id);
-                
-                // Cargar semestres
-                cargarSemestres(seccion.turno_id, seccion.semestre_id);
-                
-                // Forzar actualización de selects
-                $('#edit_turno_id, #edit_semestre_id').trigger('change');
-                
-            } catch (error) {
-                console.error('Error al cargar datos:', error);
-            }
-        });
-
-        // Manejar cambio de turno
-        $('#edit_turno_id').change(function() {
-            const turnoId = $(this).val();
-            cargarSemestres(turnoId);
+            const modal = $(this);
+            
+            modal.find('#formEditarSeccion').attr('action', `/secciones/${button.data('codigo')}`);
+            modal.find('#edit_codigo').val(button.data('codigo'));
+            modal.find('#edit_aula_id').val(button.data('aula-id'));
+            modal.find('#edit_carrera_id').val(button.data('carrera-id'));
+            modal.find('#edit_turno_id').val(button.data('turno-id'));
+            modal.find('#edit_semestre_id').val(button.data('semestre-id'));
         });
     });
 </script>

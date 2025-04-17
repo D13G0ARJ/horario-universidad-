@@ -7,139 +7,190 @@ use App\Models\Aula;
 use App\Models\Carrera;
 use App\Models\Turno;
 use App\Models\Semestre;
-use App\Models\Bitacora;
-use App\Http\Requests\SeccionRequest;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SeccionController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
-        $secciones = Seccion::with([
-            'aula:id,nombre',
-            'carrera:carrera_id,name',
-            'turno:id_turno,nombre',
-            'semestre:id_semestre,numero'
-        ])->get();
+        $secciones = Seccion::with(['aula', 'carrera', 'turno', 'semestre'])
+            ->orderBy('codigo_seccion', 'asc')
+            ->get();
 
-        $aulas = Aula::all();
-        $carreras = Carrera::all();
-        $turnos = Turno::all();
-        $semestres = Semestre::all();
-
-        return view('secciones.index', compact(
-            'secciones', 
-            'aulas',
-            'carreras',
-            'turnos',
-            'semestres'
-        ));
-    }
-
-    public function store(SeccionRequest $request)
-    {
-        $validated = $request->validated();
-        
-        $seccion = Seccion::create($validated);
-        $seccion->load([ // Cargar relaciones inmediatamente
-            'aula:id,nombre',
-            'carrera:carrera_id,name',
-            'turno:id_turno,nombre',
-            'semestre:id_semestre,numero'
-        ]);
-
-        Bitacora::create([
-            'cedula' => Auth::user()->cedula,
-            'accion' => 'Sección creada: ' . $seccion->codigo_seccion . 
-                        ' | Aula: ' . $seccion->aula->nombre .
-                        ' | Carrera: ' . $seccion->carrera->name .
-                        ' | Turno: ' . $seccion->turno->nombre .
-                        ' | Semestre: ' . $seccion->semestre->numero
-        ]);
-
-        return redirect()->route('secciones.index')->with('alert', [
-            'type' => 'success',
-            'title' => 'Sección Creada',
-            'message' => 'Registro exitoso con código: ' . $seccion->codigo_seccion
-        ]);
-    }
-
-    public function destroy($codigo_seccion)
-    {
-        try {
-            $seccion = Seccion::with([
-                'aula:id,nombre',
-                'carrera:carrera_id,name'
-            ])->findOrFail($codigo_seccion);
-
-            Bitacora::create([
-                'cedula' => Auth::user()->cedula,
-                'accion' => 'Sección eliminada: ' . $seccion->codigo_seccion . 
-                            ' | Aula: ' . $seccion->aula->nombre .
-                            ' | Carrera: ' . $seccion->carrera->name
-            ]);
-
-            $seccion->delete();
-
-            return redirect()->route('secciones.index')->with('alert', [
-                'type' => 'success',
-                'title' => 'Sección Eliminada',
-                'message' => 'Código eliminado: ' . $codigo_seccion
-            ]);
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->with('alert', [
-                'type' => 'error',
-                'title' => 'Error',
-                'message' => 'No se pudo eliminar: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    public function edit($codigo_seccion)
-    {
-        $seccion = Seccion::with([
-            'aula:id,nombre',
-            'carrera:carrera_id,name',
-            'turno:id_turno,nombre',
-            'semestre:id_semestre,numero'
-        ])->findOrFail($codigo_seccion);
-
-        return response()->json([
-            'seccion' => $seccion,
+        return view('secciones.index', [
+            'secciones' => $secciones,
             'aulas' => Aula::all(),
             'carreras' => Carrera::all(),
-            'turnos' => Turno::all(),
+            'turnos' => Turno::with('semestres')->get(),
             'semestres' => Semestre::all()
         ]);
     }
 
-    public function update(SeccionRequest $request, $codigo_seccion)
+    /**
+     * 
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
-        $seccion = Seccion::findOrFail($codigo_seccion);
-        $validated = $request->validated();
+        return view('secciones.create', [
+            'aulas' => Aula::all(),
+            'carreras' => Carrera::all(),
+            'turnos' => Turno::with('semestres')->get() // Carga semestres relacionados
+        ]);
+    }
 
-        $seccion->update($validated);
-        $seccion->load([ // Forzar carga de relaciones actualizadas
-            'aula:id,nombre',
-            'carrera:carrera_id,name',
-            'turno:id_turno,nombre',
-            'semestre:id_semestre,numero'
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'codigo_seccion' => 'required|string|unique:secciones,codigo_seccion',
+            'aula_id' => 'required|exists:aulas,id',
+            'carrera_id' => 'required|exists:carreras,carrera_id',
+            'turno_id' => 'required|exists:turnos,id_turno', // Corregido a id_turno
+            'semestre_id' => 'required|exists:semestres,id_semestre' // Corregido a id_semestre
         ]);
 
-        Bitacora::create([
-            'cedula' => Auth::user()->cedula,
-            'accion' => 'Sección actualizada: ' . $seccion->codigo_seccion . 
-                        ' | Aula: ' . $seccion->aula->nombre .
-                        ' | Carrera: ' . $seccion->carrera->name .
-                        ' | Turno: ' . $seccion->turno->nombre .
-                        ' | Semestre: ' . $seccion->semestre->numero
+        try {
+            DB::beginTransaction();
+
+            $seccion = Seccion::create($request->all());
+
+            // Establecer relaciones con claves personalizadas
+            $seccion->aula()->associate($request->aula_id);
+            $seccion->carrera()->associate($request->carrera_id);
+            $seccion->turno()->associate(Turno::find($request->turno_id));
+            $seccion->semestre()->associate(Semestre::find($request->semestre_id));
+            $seccion->save();
+
+            DB::commit();
+
+            return redirect()->route('secciones.index')
+                ->with('alert', [
+                    'type' => 'success',
+                    'title' => '¡Éxito!',
+                    'message' => 'Sección creada correctamente.'
+                ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('alert', [
+                    'type' => 'error',
+                    'title' => 'Error',
+                    'message' => 'Error al crear la sección: ' . $e->getMessage()
+                ]);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        $seccion = Seccion::with(['aula', 'carrera', 'turno', 'semestre'])
+            ->findOrFail($id);
+
+        return view('secciones.show', compact('seccion'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $seccion = Seccion::with(['aula', 'carrera', 'turno', 'semestre'])
+            ->findOrFail($id);
+
+        return view('secciones.edit', [
+            'seccion' => $seccion,
+            'aulas' => Aula::all(),
+            'carreras' => Carrera::all(),
+            'turnos' => Turno::with('semestres')->get()
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        $seccion = Seccion::findOrFail($id);
+
+        $request->validate([
+            'codigo_seccion' => 'required|string|unique:secciones,codigo_seccion,'.$seccion->codigo_seccion.',codigo_seccion',
+            'aula_id' => 'required|exists:aulas,id',
+            'carrera_id' => 'required|exists:carreras,carrera_id',
+            'turno_id' => 'required|exists:turnos,id_turno', // Corregido
+            'semestre_id' => 'required|exists:semestres,id_semestre' // Corregido
         ]);
 
-        return redirect()->route('secciones.index')->with('alert', [
-            'type' => 'success',
-            'title' => 'Actualización Exitosa',
-            'message' => 'Datos actualizados para: ' . $seccion->codigo_seccion
-        ]);
+        try {
+            DB::beginTransaction();
+
+            $seccion->update($request->all());
+
+            // Actualizar relaciones con claves personalizadas
+            $seccion->aula()->associate($request->aula_id);
+            $seccion->carrera()->associate($request->carrera_id);
+            $seccion->turno()->associate(Turno::find($request->turno_id));
+            $seccion->semestre()->associate(Semestre::find($request->semestre_id));
+            $seccion->save();
+
+            DB::commit();
+
+            return redirect()->route('secciones.index')
+                ->with('alert', [
+                    'type' => 'success',
+                    'title' => '¡Actualizado!',
+                    'message' => 'Sección actualizada correctamente.'
+                ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('alert', [
+                    'type' => 'error',
+                    'title' => 'Error',
+                    'message' => 'Error al actualizar: ' . $e->getMessage()
+                ]);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $seccion = Seccion::findOrFail($id);
+        
+        try {
+            DB::beginTransaction();
+            $seccion->delete();
+            DB::commit();
+
+            return redirect()->route('secciones.index')
+                ->with('alert', [
+                    'type' => 'success',
+                    'title' => 'Eliminado',
+                    'message' => 'Sección eliminada exitosamente.'
+                ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('alert', [
+                    'type' => 'error',
+                    'title' => 'Error',
+                    'message' => 'Error al eliminar: ' . $e->getMessage()
+                ]);
+        }
     }
 }
