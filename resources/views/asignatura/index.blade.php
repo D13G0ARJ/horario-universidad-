@@ -20,9 +20,9 @@
                         <i class="fas fa-list-alt mr-2"></i>Asignaturas Registradas
                     </h4>
                     <a href="#" class="btn btn-light ms-auto text-dark"
-                    data-bs-toggle="modal" data-bs-target="#registroModal">
-                     <i class="fas fa-plus mr-1"></i>Nueva Asignatura
-                 </a>
+                        data-bs-toggle="modal" data-bs-target="#registroModal">
+                        <i class="fas fa-plus mr-1"></i>Nueva Asignatura
+                    </a>
                 </div>
                 <div class="card-body">
                     <table id="tabla-asignaturas" class="table table-bordered table-hover">
@@ -44,12 +44,12 @@
                                 <td>{{ $asignatura->name }}</td>
                                 <td style="text-align: center">
                                     @foreach($asignatura->secciones as $seccion)
-                                        <span class="badge bg-success">{{ $seccion->codigo_seccion }}</span>
+                                    <span class="badge bg-success">{{ $seccion->codigo_seccion }}</span>
                                     @endforeach
                                 </td>
                                 <td style="text-align: center">
                                     @foreach($asignatura->docentes as $docente)
-                                        <span class="badge bg-info">{{ $docente->name }}</span>
+                                    <span class="badge bg-info">{{ $docente->name }}</span>
                                     @endforeach
                                 </td>
                                 <td style="text-align: center">
@@ -58,11 +58,10 @@
                                         <button class="btn btn-info btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#mostrarModal"
-                                            data-id="{{ $asignatura->asignatura_id }}"
+                                            data-asignatura_id="{{ $asignatura->asignatura_id }}"
                                             data-name="{{ $asignatura->name }}"
-                                            data-docentes="{{ $asignatura->docentes->pluck('name')->join(', ') }}"
-                                            data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->join(', ') }}"
-                                            data-asignatura_id="{{ $asignatura->asignatura_id }}">
+                                            data-docentes="{{ $asignatura->docentes->pluck('name')->toJson() }}"
+                                            data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->toJson() }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
 
@@ -99,7 +98,10 @@
 </div>
 
 <!-- Inclusión de modals -->
-@include('modals.asignaturas.create')
+@include('modals.asignaturas.create', [
+'docentes' => $docentes,
+'secciones' => $secciones
+])
 @include('modals.asignaturas.show')
 @include('modals.asignaturas.edit')
 
@@ -161,8 +163,7 @@
             lengthChange: true,
             autoWidth: false,
             dom: 'Bfrtip',
-            buttons: [
-                {
+            buttons: [{
                     extend: 'print',
                     text: '<i class="fas fa-print mr-2"></i>Imprimir',
                     title: '',
@@ -175,7 +176,8 @@
                             .css('font-size', '10pt')
                             .prepend(
                                 '<div style="text-align: center; margin-bottom: 20px;">' +
-                                '<img src="{{ asset('images/logo.jpg') }}" style="height: 80px; margin-bottom: 10px;"/>' +
+                                '<img src="{{ asset('
+                                images / logo.jpg ') }}" style="height: 80px; margin-bottom: 10px;"/>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
                                 '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
@@ -217,8 +219,7 @@
                     className: 'btn btn-success mr-2'
                 },
             ],
-            columnDefs: [
-                {
+            columnDefs: [{
                     targets: [0, 1, 3, 4, 5],
                     className: 'text-center'
                 },
@@ -228,25 +229,32 @@
                     searchable: false
                 }
             ],
-            order: [[1, 'asc']]
+            order: [
+                [1, 'asc']
+            ]
         });
 
         // SweetAlerts
-        @if(session('alert'))
-            Swal.fire({
-                icon: '{{ session('alert')['type'] }}',
-                title: '{{ session('alert')['title'] }}',
-                text: '{{ session('alert')['message'] }}',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        @endif
+        @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    @if(session('alert'))
+        Swal.fire({
+            icon: '{{ session("alert")["type"] ?? "info" }}',
+            title: '{{ session("alert")["title"] ?? "Notificación" }}',
+            text: '{{ session("alert")["message"] ?? "" }}',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    @endif
+</script>
+@endpush
 
         // Confirmación eliminación
         $('.delete-form').on('submit', function(e) {
             e.preventDefault();
             const form = this;
-            
+
             Swal.fire({
                 title: '¿Eliminar Asignatura?',
                 text: "¡Se eliminarán todas las secciones y relaciones asociadas!",
@@ -279,7 +287,7 @@
             const modal = $(this);
             const docentes = JSON.parse(button.data('docentes'));
             const secciones = JSON.parse(button.data('secciones'));
-            
+
             modal.find('#asignatura_id_editar').val(button.data('asignatura_id'));
             modal.find('#name_editar').val(button.data('name'));
             modal.find('#docentes_editar').val(docentes).trigger('change');

@@ -18,11 +18,5 @@ class Periodo extends Model
         'fecha_fin',
     ];
 
-    /**
-     * Opcional: Si necesitas agregar relaciones, puedes definirlas aquí.
-     */
-    // public function asignaturas()
-    // {
-    //     return $this->hasMany(Asignatura::class);
-    // }
+
 }
