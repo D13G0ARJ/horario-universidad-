@@ -12,7 +12,7 @@ class CreateAsignaturasTable extends Migration
     {
         Schema::create('asignaturas', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique(); // Agregar la columna 'code'
+            $table->string('asignatura_id')->unique(); // Agregar la columna 'code'
             $table->string('name');
             $table->timestamps();
         });

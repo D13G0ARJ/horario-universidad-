@@ -35,4 +35,14 @@ class Seccion extends Model
     public function semestre() {
         return $this->belongsTo(Semestre::class, 'semestre_id', 'id_semestre');
     }
+
+    public function asignaturas()
+    {
+        return $this->belongsToMany(
+            Asignatura::class,
+            'asignatura_seccion',
+            'seccion_id',
+            'asignatura_id'
+        );
+    }
 }

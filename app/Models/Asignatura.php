@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Asignatura extends Model
 {
@@ -12,19 +14,19 @@ class Asignatura extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array<string>
      */
     protected $fillable = [
-        'code', // Agregar 'code' aquí
+        'asignatura_id', // Nombre correcto del campo (coincide con migración)
         'name',
     ];
 
     /**
-     * Indica que 'code' es la clave primaria.
+     * La clave primaria personalizada.
      *
      * @var string
      */
-    protected $primaryKey = 'code';
+    protected $primaryKey = 'asignatura_id';
 
     /**
      * Indica que la clave primaria no es autoincremental.
@@ -39,4 +41,30 @@ class Asignatura extends Model
      * @var string
      */
     protected $keyType = 'string';
+
+    /**
+     * Relación muchos a muchos con Docente.
+     */
+    public function docentes(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Docente::class,
+            'asignatura_docente', // Tabla pivot
+            'asignatura_id',      // FK de asignatura en pivot
+            'docente_id'          // FK de docente en pivot
+        );
+    }
+
+    /**
+     * Relación uno a muchos con Seccion.
+     */
+    public function secciones()
+    {
+        return $this->belongsToMany(
+            Seccion::class,
+            'asignatura_seccion',
+            'asignatura_id',
+            'seccion_id'
+        );
+    }
 }

@@ -34,6 +34,8 @@ return new class extends Migration
                   ->references('id_semestre')
                   ->on('semestres')
                   ->onDelete('cascade');
+
+            
             
             $table->timestamps();
         });

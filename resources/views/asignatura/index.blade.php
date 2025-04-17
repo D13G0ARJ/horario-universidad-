@@ -31,6 +31,8 @@
                                 <th style="text-align: center">N°</th>
                                 <th style="text-align: center">Código</th>
                                 <th style="text-align: center">Nombre</th>
+                                <th style="text-align: center">Secciones</th>
+                                <th style="text-align: center">Docentes</th>
                                 <th style="text-align: center">Acciones</th>
                             </tr>
                         </thead>
@@ -38,17 +40,29 @@
                             @foreach($asignaturas as $asignatura)
                             <tr>
                                 <td style="text-align: center">{{ $loop->iteration }}</td>
-                                <td style="text-align: center">{{ $asignatura->code }}</td>
+                                <td style="text-align: center">{{ $asignatura->asignatura_id }}</td>
                                 <td>{{ $asignatura->name }}</td>
+                                <td style="text-align: center">
+                                    @foreach($asignatura->secciones as $seccion)
+                                        <span class="badge bg-success">{{ $seccion->codigo_seccion }}</span>
+                                    @endforeach
+                                </td>
+                                <td style="text-align: center">
+                                    @foreach($asignatura->docentes as $docente)
+                                        <span class="badge bg-info">{{ $docente->name }}</span>
+                                    @endforeach
+                                </td>
                                 <td style="text-align: center">
                                     <div class="d-flex justify-content-center gap-2">
                                         <!-- Botón para Mostrar -->
                                         <button class="btn btn-info btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#mostrarModal"
-                                            data-id="{{ $asignatura->id }}"
+                                            data-id="{{ $asignatura->asignatura_id }}"
                                             data-name="{{ $asignatura->name }}"
-                                            data-code="{{ $asignatura->code }}">
+                                            data-docentes="{{ $asignatura->docentes->pluck('name')->join(', ') }}"
+                                            data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->join(', ') }}"
+                                            data-asignatura_id="{{ $asignatura->asignatura_id }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
 
@@ -56,14 +70,16 @@
                                         <button class="btn btn-success btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#editarModal"
-                                            data-id="{{ $asignatura->id }}"
+                                            data-id="{{ $asignatura->asignatura_id }}"
                                             data-name="{{ $asignatura->name }}"
-                                            data-code="{{ $asignatura->code }}">
+                                            data-docentes="{{ $asignatura->docentes->pluck('cedula_doc')->toJson() }}"
+                                            data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->toJson() }}"
+                                            data-asignatura_id="{{ $asignatura->asignatura_id }}">
                                             <i class="fas fa-pencil-alt"></i>
                                         </button>
 
                                         <!-- Botón para Eliminar -->
-                                        <form action="{{ route('asignatura.destroy', $asignatura->code) }}" method="POST" class="delete-form">
+                                        <form action="{{ route('asignatura.destroy', $asignatura->asignatura_id) }}" method="POST" class="delete-form">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm">
@@ -117,7 +133,7 @@
                     };
                 };
 
-                doc.content[2].table.widths = ['auto', 'auto', '*'];
+                doc.content[2].table.widths = ['auto', 'auto', '*', 'auto', 'auto'];
                 doc.content[2].table.headerRows = 1;
                 doc.styles.tableHeader.fillColor = '#343a40';
                 doc.styles.tableHeader.color = '#ffffff';
@@ -152,7 +168,7 @@
                     title: '',
                     autoPrint: true,
                     exportOptions: {
-                        columns: [0, 1, 2]
+                        columns: [0, 1, 2, 3, 4]
                     },
                     customize: function(win) {
                         $(win.document.body)
@@ -187,7 +203,7 @@
                     orientation: 'portrait',
                     pageSize: 'A4',
                     exportOptions: {
-                        columns: [0, 1, 2]
+                        columns: [0, 1, 2, 3, 4]
                     },
                     className: 'btn btn-danger mr-2'
                 },
@@ -196,25 +212,20 @@
                     text: '<i class="fas fa-file-excel mr-2"></i>Excel',
                     title: 'Asignaturas Registradas',
                     exportOptions: {
-                        columns: [0, 1, 2]
+                        columns: [0, 1, 2, 3, 4]
                     },
                     className: 'btn btn-success mr-2'
                 },
             ],
             columnDefs: [
                 {
-                    targets: 0,
-                    className: 'text-center',
-                    orderable: false
-                },
-                {
-                    targets: [1, 3],
+                    targets: [0, 1, 3, 4, 5],
                     className: 'text-center'
                 },
                 {
                     targets: -1,
-                    visible: true,
-                    exportable: false
+                    orderable: false,
+                    searchable: false
                 }
             ],
             order: [[1, 'asc']]
@@ -238,7 +249,7 @@
             
             Swal.fire({
                 title: '¿Eliminar Asignatura?',
-                text: "¡Esta acción no se puede deshacer!",
+                text: "¡Se eliminarán todas las secciones y relaciones asociadas!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -257,16 +268,23 @@
         $('#mostrarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
             const modal = $(this);
-            modal.find('#modalCode').text(button.data('code'));
+            modal.find('#modalCode').text(button.data('asignatura_id'));
             modal.find('#modalName').text(button.data('name'));
+            modal.find('#modalDocentes').text(button.data('docentes'));
+            modal.find('#modalSecciones').text(button.data('secciones'));
         });
 
         $('#editarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
             const modal = $(this);
-            modal.find('#code_editar').val(button.data('code'));
+            const docentes = JSON.parse(button.data('docentes'));
+            const secciones = JSON.parse(button.data('secciones'));
+            
+            modal.find('#asignatura_id_editar').val(button.data('asignatura_id'));
             modal.find('#name_editar').val(button.data('name'));
-            modal.find('#formEditar').attr('action', '/asignaturas/' + button.data('code'));
+            modal.find('#docentes_editar').val(docentes).trigger('change');
+            modal.find('#secciones_editar').val(secciones).trigger('change');
+            modal.find('#formEditar').attr('action', '/asignaturas/' + button.data('asignatura_id'));
         });
     });
 </script>

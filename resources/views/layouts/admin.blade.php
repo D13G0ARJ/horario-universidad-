@@ -228,15 +228,15 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ url('/asignatura') }}" class="nav-link">
-                                    <i class="nav-icon fas fa-book"></i>
-                                    <p>Asignaturas</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
                                 <a href="/secciones" class="nav-link">
                                     <i class="nav-icon fas fa-layer-group"></i>
                                     <p>Secciones</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url('/asignatura') }}" class="nav-link">
+                                    <i class="nav-icon fas fa-book"></i>
+                                    <p>Asignaturas</p>
                                 </a>
                             </li>
                             <li class="nav-item">
