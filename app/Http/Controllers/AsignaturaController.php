@@ -65,30 +65,23 @@ class AsignaturaController extends Controller
 
     public function update(Request $request, Asignatura $asignatura)
     {
-        $validated = $request->validate([
-            'asignatura_id' => 'required|unique:asignaturas,asignatura_id,' . $asignatura->asignatura_id . ',asignatura_id',
+        $request->validate([
+            'asignatura_id' => 'required|unique:asignaturas,asignatura_id,'.$asignatura->id,
             'name' => 'required|string|max:255',
-            'docentes' => 'required|array|min:1',
-            'secciones' => 'required|array|min:1'
+            'docente' => 'required|string|exists:docentes,cedula_doc',
+            'seccion' => 'required|string|exists:secciones,codigo_seccion'
         ]);
-
-        $asignatura->update($validated);
+    
+        $asignatura->update($request->only('asignatura_id', 'name'));
         
-        $asignatura->docentes()->sync($validated['docentes']);
-        $asignatura->secciones()->sync($validated['secciones']);
-
-        Bitacora::create([
-            'cedula' => Auth::user()->cedula,
-            'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name .
-                       ' (ID: ' . $asignatura->asignatura_id . ') ' .
-                       'Docentes: ' . $asignatura->docentes()->count() .
-                       ' | Secciones: ' . $asignatura->secciones()->count()
-        ]);
-
+        // Actualizar relaciones
+        $asignatura->docentes()->sync([$request->docente]);
+        $asignatura->secciones()->sync([$request->seccion]);
+    
         return redirect()->route('asignatura.index')->with('alert', [
             'type' => 'success',
             'title' => 'Actualización Exitosa',
-            'message' => 'Registro y relaciones actualizadas correctamente'
+            'message' => 'Cambios guardados correctamente'
         ]);
     }
 

@@ -67,15 +67,14 @@
 
                                         <!-- Botón para Editar -->
                                         <button class="btn btn-success btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editarModal"
-                                            data-id="{{ $asignatura->asignatura_id }}"
-                                            data-name="{{ $asignatura->name }}"
-                                            data-docentes="{{ $asignatura->docentes->pluck('cedula_doc')->toJson() }}"
-                                            data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->toJson() }}"
-                                            data-asignatura_id="{{ $asignatura->asignatura_id }}">
-                                            <i class="fas fa-pencil-alt"></i>
-                                        </button>
+        data-bs-toggle="modal"
+        data-bs-target="#editarModal"
+        data-asignatura_id="{{ $asignatura->asignatura_id }}"
+        data-name="{{ $asignatura->name }}"
+        data-docentes="{{ $asignatura->docentes->pluck('cedula_doc')->toJson() }}"
+        data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->toJson() }}">
+    <i class="fas fa-pencil-alt"></i>
+</button>
 
                                         <!-- Botón para Eliminar -->
                                         <form action="{{ route('asignatura.destroy', $asignatura->asignatura_id) }}" method="POST" class="delete-form">
