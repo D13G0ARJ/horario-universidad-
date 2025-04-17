@@ -2,20 +2,32 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Asignatura;
+use Illuminate\Support\Str;
 
 class AsignaturaSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
-          // Insertar una asignatura
-       // DB::table('asignaturas')->insert([
-            //'code' => 'SYC-32714', // Cambia este valor por el código de la asignatura deseada
-            //'name' => 'Implantación de sistemas', // Cambia este valor por el nombre de la asignatura deseada
-        //]);
+        $asignaturas = [
+            'Cálculo Diferencial',
+            'Física General',
+            'Programación Básica',
+            'Base de Datos I',
+            'Redes de Computadoras',
+            'Inteligencia Artificial',
+            'Ética Profesional',
+            'Ingeniería de Software',
+            'Sistemas Operativos',
+            'Estadística Aplicada'
+        ];
+
+        foreach ($asignaturas as $key => $nombre) {
+            Asignatura::create([
+                'asignatura_id' => 'ASG-' . str_pad($key + 1, 3, '0', STR_PAD_LEFT),
+                'name' => $nombre
+            ]);
+        }
     }
 }
