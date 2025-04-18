@@ -25,7 +25,7 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <table id="tabla-asignaturas" class="table table-bordered table-hover">
+                    <table id="tabla-asignaturas" class="table table-bordered table-hover w-100">
                         <thead class="thead-dark">
                             <tr>
                                 <th style="text-align: center">N°</th>
@@ -67,14 +67,14 @@
 
                                         <!-- Botón para Editar -->
                                         <button class="btn btn-success btn-sm"
-        data-bs-toggle="modal"
-        data-bs-target="#editarModal"
-        data-asignatura_id="{{ $asignatura->asignatura_id }}"
-        data-name="{{ $asignatura->name }}"
-        data-docentes="{{ $asignatura->docentes->pluck('cedula_doc')->toJson() }}"
-        data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->toJson() }}">
-    <i class="fas fa-pencil-alt"></i>
-</button>
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editarModal"
+                                            data-asignatura_id="{{ $asignatura->asignatura_id }}"
+                                            data-name="{{ $asignatura->name }}"
+                                            data-docentes="{{ $asignatura->docentes->pluck('cedula_doc')->toJson() }}"
+                                            data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->toJson() }}">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
 
                                         <!-- Botón para Eliminar -->
                                         <form action="{{ route('asignatura.destroy', $asignatura->asignatura_id) }}" method="POST" class="delete-form">
@@ -98,75 +98,38 @@
 
 <!-- Inclusión de modals -->
 @include('modals.asignaturas.create', [
-'docentes' => $docentes,
-'secciones' => $secciones
+    'docentes' => $docentes,
+    'secciones' => $secciones
 ])
 @include('modals.asignaturas.show')
 @include('modals.asignaturas.edit')
 
+@endsection
+
+@push('styles')
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.13.6/b-2.4.2/b-html5-2.4.2/r-2.5.0/datatables.min.css"/>
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+@endpush
+
 @push('scripts')
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.13.6/b-2.4.2/b-html5-2.4.2/r-2.5.0/datatables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     $(document).ready(function() {
-        // Configuración del PDF
-        const pdfConfig = {
-            customize: function(doc) {
-                doc.pageMargins = [40, 80, 40, 60];
-                doc.content.splice(0, 0, {
-                    text: 'UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA\nDE LA FUERZA ARMADA NACIONAL\nEXTENSIÓN LOS TEQUES\nSISTEMA DE GESTIÓN DE HORARIOS - ASIGNATURAS',
-                    alignment: 'center',
-                    fontSize: 10,
-                    bold: true,
-                    margin: [0, 0, 0, 10]
-                });
-
-                doc.content[1].text = 'REPORTE DE ASIGNATURAS';
-                doc.content[1].alignment = 'center';
-                doc.content[1].fontSize = 12;
-                doc.content[1].margin = [0, 0, 0, 10];
-
-                doc['footer'] = function(currentPage, pageCount) {
-                    return {
-                        text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
-                        alignment: 'center',
-                        fontSize: 8,
-                        margin: [40, 10, 40, 20]
-                    };
-                };
-
-                doc.content[2].table.widths = ['auto', 'auto', '*', 'auto', 'auto'];
-                doc.content[2].table.headerRows = 1;
-                doc.styles.tableHeader.fillColor = '#343a40';
-                doc.styles.tableHeader.color = '#ffffff';
-                doc.content[2].layout = 'lightHorizontalLines';
-            }
-        };
-
         // Configuración DataTables
-        const table = $("#tabla-asignaturas").DataTable({
-            pageLength: 10,
-            language: {
-                emptyTable: "No hay asignaturas registradas",
-                info: "Mostrando _START_ a _END_ de _TOTAL_ asignaturas",
-                infoEmpty: "Mostrando 0 asignaturas",
-                infoFiltered: "(filtradas de _MAX_ registros totales)",
-                search: "Buscar:",
-                paginate: {
-                    first: "Primero",
-                    last: "Último",
-                    next: "Siguiente",
-                    previous: "Anterior"
-                }
-            },
+        const table = $('#tabla-asignaturas').DataTable({
             responsive: true,
-            lengthChange: true,
-            autoWidth: false,
             dom: 'Bfrtip',
-            buttons: [{
+            buttons: [
+                {
                     extend: 'print',
                     text: '<i class="fas fa-print mr-2"></i>Imprimir',
                     title: '',
-                    autoPrint: true,
                     exportOptions: {
                         columns: [0, 1, 2, 3, 4]
                     },
@@ -175,8 +138,6 @@
                             .css('font-size', '10pt')
                             .prepend(
                                 '<div style="text-align: center; margin-bottom: 20px;">' +
-                                '<img src="{{ asset('
-                                images / logo.jpg ') }}" style="height: 80px; margin-bottom: 10px;"/>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
                                 '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
@@ -188,25 +149,26 @@
                         $(win.document.body).find('table')
                             .addClass('compact')
                             .css('font-size', 'inherit');
-
-                        $(win.document.body).append(
-                            '<div style="text-align: center; margin-top: 20px; font-size: 8pt;">' +
-                            '<p>Generado el: ' + new Date().toLocaleDateString('es-VE') + '</p>' +
-                            '</div>'
-                        );
-                    },
-                    className: 'btn btn-primary'
+                    }
                 },
                 {
                     extend: 'pdf',
                     text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
-                    customize: pdfConfig.customize,
                     orientation: 'portrait',
                     pageSize: 'A4',
                     exportOptions: {
                         columns: [0, 1, 2, 3, 4]
                     },
-                    className: 'btn btn-danger mr-2'
+                    customize: function(doc) {
+                        doc.content.splice(0, 0, {
+                            text: 'UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA\nDE LA FUERZA ARMADA NACIONAL\nEXTENSIÓN LOS TEQUES\nSISTEMA DE GESTIÓN DE HORARIOS - ASIGNATURAS',
+                            alignment: 'center',
+                            fontSize: 10,
+                            bold: true,
+                            margin: [0, 0, 0, 10]
+                        });
+                        doc.content[1].text = 'REPORTE DE ASIGNATURAS';
+                    }
                 },
                 {
                     extend: 'excel',
@@ -214,40 +176,33 @@
                     title: 'Asignaturas Registradas',
                     exportOptions: {
                         columns: [0, 1, 2, 3, 4]
-                    },
-                    className: 'btn btn-success mr-2'
-                },
-            ],
-            columnDefs: [{
-                    targets: [0, 1, 3, 4, 5],
-                    className: 'text-center'
-                },
-                {
-                    targets: -1,
-                    orderable: false,
-                    searchable: false
+                    }
                 }
             ],
-            order: [
-                [1, 'asc']
-            ]
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            columnDefs: [
+                { targets: [0, 1, 3, 4, 5], className: 'text-center' },
+                { targets: -1, orderable: false, searchable: false }
+            ],
+            order: [[1, 'asc']],
+            autoWidth: false,
+            paging: true,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100]
         });
 
         // SweetAlerts
-        @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    @if(session('alert'))
-        Swal.fire({
-            icon: '{{ session("alert")["type"] ?? "info" }}',
-            title: '{{ session("alert")["title"] ?? "Notificación" }}',
-            text: '{{ session("alert")["message"] ?? "" }}',
-            timer: 3000,
-            showConfirmButton: false
-        });
-    @endif
-</script>
-@endpush
+        @if(session('alert'))
+            Swal.fire({
+                icon: '{{ session("alert")["type"] ?? "info" }}',
+                title: '{{ session("alert")["title"] ?? "Notificación" }}',
+                text: '{{ session("alert")["message"] ?? "" }}',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
 
         // Confirmación eliminación
         $('.delete-form').on('submit', function(e) {
@@ -296,4 +251,3 @@
     });
 </script>
 @endpush
-@endsection
