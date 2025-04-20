@@ -208,17 +208,6 @@
                 }
             });
         });
-
-        // SweetAlert para notificaciones
-        @if(session('alert'))
-            Swal.fire({
-                icon: '{{ session('alert')['type'] }}',
-                title: '{{ session('alert')['title'] }}',
-                text: '{{ session('alert')['message'] }}',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        @endif
         
         // Handlers para modals
         $('#mostrarModal').on('show.bs.modal', function(event) {
