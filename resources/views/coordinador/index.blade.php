@@ -19,7 +19,7 @@
                     <h4 class="card-title mb-0">
                         <i class="fas fa-list-alt mr-2"></i>Coordinadores Registrados
                     </h4>
-                    <a href="#" class="btn btn-light ms-auto text-dark"
+                    <a href="#" class="btn btn-success ms-auto text-dark"
                     data-bs-toggle="modal" data-bs-target="#registroModal">
                      <i class="fas fa-plus mr-1"></i>Nuevo Coordinador
                  </a>
@@ -67,13 +67,12 @@
                                         </button>
 
                                         <!-- Botón para Eliminar -->
-                                        <form action="{{ route('coordinador.destroy', $usuario->cedula) }}" method="POST">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro?')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                         <!-- Botón para Eliminar -->
+                                         <button class="btn btn-danger btn-sm btn-eliminar"
+                                            data-id="{{ $usuario->cedula }}"
+                                            data-name="{{ $usuario->name }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -312,7 +311,7 @@
                             .css('font-size', '10pt')
                             .prepend(
                                 '<div style="text-align: center; margin-bottom: 20px;">' +
-                                '<img src="{{ asset('images/logo.jpg') }}" style="height: 80px; margin-bottom: 10px;"/>' +
+                                '<img src="{{ asset("images/logo.jpg") }}" style="height: 80px; margin-bottom: 10px;"/>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
                                 '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
@@ -365,6 +364,33 @@
                 },
                 { targets: [1, 4], className: 'text-center' }
             ]
+        });
+
+        // Confirmación de eliminación con SweetAlert
+        $('.btn-eliminar').on('click', function() {
+            const coordinadorId = $(this).data('id');
+            const coordinadorName = $(this).data('name');
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¡Vas a eliminar al coordinador "${coordinadorName}"!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Crear y enviar el formulario de eliminación
+                    const form = $(`<form method="POST" action="/coordinadores/${coordinadorId}">`);
+                    form.append('@csrf');
+                    form.append('@method("DELETE")');
+                    $('body').append(form);
+                    form.submit();
+                }
+            });
         });
 
         // Script para llenar el modal de visualización

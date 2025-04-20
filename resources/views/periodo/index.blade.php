@@ -19,7 +19,7 @@
                     <h4 class="card-title mb-0">
                         <i class="fas fa-list-alt mr-2"></i>Periodos Registrados
                     </h4>
-                    <a href="#" class="btn btn-light ms-auto text-dark"
+                    <a href="#" class="btn btn-success ms-auto text-dark"
                     data-bs-toggle="modal" data-bs-target="#registroModal">
                      <i class="fas fa-plus mr-1"></i>Nuevo Período
                  </a>

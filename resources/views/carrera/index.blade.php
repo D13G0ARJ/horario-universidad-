@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('content')
@@ -19,7 +20,7 @@
                     <h4 class="card-title mb-0">
                         <i class="fas fa-list-alt mr-2"></i>Carreras Registradas
                     </h4>
-                    <a href="#" class="btn btn-light ms-auto text-dark"
+                    <a href="#" class="btn btn-success ms-auto text-dark"
                         data-bs-toggle="modal" data-bs-target="#registroModal">
                         <i class="fas fa-plus mr-1"></i>Nueva Carrera
                     </a>
@@ -89,9 +90,12 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
-        // Configuración DataTables
+        // Configuración del DataTable
         const table = $("#tabla-carreras").DataTable({
             pageLength: 10,
+            responsive: true,
+            autoWidth: false,
+            lengthChange: true,
             language: {
                 emptyTable: "No hay carreras registradas",
                 info: "Mostrando _START_ a _END_ de _TOTAL_ carreras",
@@ -105,16 +109,12 @@
                     previous: "Anterior"
                 }
             },
-            responsive: true,
-            lengthChange: true,
-            autoWidth: false,
             dom: 'Bfrtip',
             buttons: [
                 {
                     extend: 'print',
                     text: '<i class="fas fa-print mr-2"></i>Imprimir',
-                    title: '',
-                    autoPrint: true,
+                    title: 'Reporte de Carreras',
                     exportOptions: {
                         columns: [0, 1, 2]
                     },
@@ -185,22 +185,13 @@
             ]
         });
 
-        // SweetAlerts
-        @if(session('alert'))
-            Swal.fire({
-                icon: '{{ session('alert')['type'] }}',
-                title: '{{ session('alert')['title'] }}',
-                text: '{{ session('alert')['message'] }}',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        @endif
+        
 
-        // Confirmación eliminación
+        // Confirmación de eliminación con SweetAlert
         $('.delete-form').on('submit', function(e) {
             e.preventDefault();
             const form = this;
-            
+
             Swal.fire({
                 title: '¿Eliminar Carrera?',
                 text: "¡Esta acción no se puede deshacer!",
@@ -218,6 +209,17 @@
             });
         });
 
+        // SweetAlert para notificaciones
+        @if(session('alert'))
+            Swal.fire({
+                icon: '{{ session('alert')['type'] }}',
+                title: '{{ session('alert')['title'] }}',
+                text: '{{ session('alert')['message'] }}',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        @endif
+        
         // Handlers para modals
         $('#mostrarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);

@@ -19,7 +19,7 @@
                     <h4 class="card-title mb-0">
                         <i class="fas fa-list-alt mr-2"></i>Asignaturas Registradas
                     </h4>
-                    <a href="#" class="btn btn-light ms-auto text-dark"
+                    <a href="#" class="btn btn-success ms-auto text-dark"
                         data-bs-toggle="modal" data-bs-target="#registroModal">
                         <i class="fas fa-plus mr-1"></i>Nueva Asignatura
                     </a>
@@ -67,14 +67,14 @@
 
                                         <!-- Botón para Editar -->
                                         <button class="btn btn-success btn-sm"
-        data-bs-toggle="modal"
-        data-bs-target="#editarModal"
-        data-asignatura_id="{{ $asignatura->asignatura_id }}"
-        data-name="{{ $asignatura->name }}"
-        data-docentes="{{ $asignatura->docentes->pluck('cedula_doc')->toJson() }}"
-        data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->toJson() }}">
-    <i class="fas fa-pencil-alt"></i>
-</button>
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editarModal"
+                                            data-asignatura_id="{{ $asignatura->asignatura_id }}"
+                                            data-name="{{ $asignatura->name }}"
+                                            data-docentes="{{ $asignatura->docentes->pluck('cedula_doc')->toJson() }}"
+                                            data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->toJson() }}">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
 
                                         <!-- Botón para Eliminar -->
                                         <form action="{{ route('asignatura.destroy', $asignatura->asignatura_id) }}" method="POST" class="delete-form">
@@ -98,11 +98,13 @@
 
 <!-- Inclusión de modals -->
 @include('modals.asignaturas.create', [
-'docentes' => $docentes,
-'secciones' => $secciones
+    'docentes' => $docentes,
+    'secciones' => $secciones
 ])
 @include('modals.asignaturas.show')
 @include('modals.asignaturas.edit')
+
+@endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -145,6 +147,9 @@
         // Configuración DataTables
         const table = $("#tabla-asignaturas").DataTable({
             pageLength: 10,
+            responsive: true,
+            autoWidth: false,
+            lengthChange: true,
             language: {
                 emptyTable: "No hay asignaturas registradas",
                 info: "Mostrando _START_ a _END_ de _TOTAL_ asignaturas",
@@ -158,11 +163,9 @@
                     previous: "Anterior"
                 }
             },
-            responsive: true,
-            lengthChange: true,
-            autoWidth: false,
             dom: 'Bfrtip',
-            buttons: [{
+            buttons: [
+                {
                     extend: 'print',
                     text: '<i class="fas fa-print mr-2"></i>Imprimir',
                     title: '',
@@ -175,8 +178,7 @@
                             .css('font-size', '10pt')
                             .prepend(
                                 '<div style="text-align: center; margin-bottom: 20px;">' +
-                                '<img src="{{ asset('
-                                images / logo.jpg ') }}" style="height: 80px; margin-bottom: 10px;"/>' +
+                                '<img src="{{ asset("images/logo.jpg") }}" style="height: 80px; margin-bottom: 10px;"/>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
                                 '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
                                 '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
@@ -216,38 +218,17 @@
                         columns: [0, 1, 2, 3, 4]
                     },
                     className: 'btn btn-success mr-2'
-                },
-            ],
-            columnDefs: [{
-                    targets: [0, 1, 3, 4, 5],
-                    className: 'text-center'
-                },
-                {
-                    targets: -1,
-                    orderable: false,
-                    searchable: false
                 }
             ],
-            order: [
-                [1, 'asc']
-            ]
+            columnDefs: [
+                { targets: [0, 1, 3, 4, 5], className: 'text-center' },
+                { targets: -1, orderable: false, searchable: false }
+            ],
+            order: [[1, 'asc']]
         });
 
-        // SweetAlerts
-        @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    @if(session('alert'))
-        Swal.fire({
-            icon: '{{ session("alert")["type"] ?? "info" }}',
-            title: '{{ session("alert")["title"] ?? "Notificación" }}',
-            text: '{{ session("alert")["message"] ?? "" }}',
-            timer: 3000,
-            showConfirmButton: false
-        });
-    @endif
-</script>
-@endpush
+        // SweetAlerts para notificaciones
+      
 
         // Confirmación eliminación
         $('.delete-form').on('submit', function(e) {
@@ -270,6 +251,15 @@
                 }
             });
         });
+
+        (session('alert'))
+            Swal.fire({
+                icon: '{{ session("alert")["type"] ?? "info" }}',
+                title: '{{ session("alert")["title"] ?? "Notificación" }}',
+                text: '{{ session("alert")["message"] ?? "" }}',
+                timer: 3000,
+                showConfirmButton: false
+            });
 
         // Handlers para modals
         $('#mostrarModal').on('show.bs.modal', function(event) {
@@ -296,4 +286,3 @@
     });
 </script>
 @endpush
-@endsection

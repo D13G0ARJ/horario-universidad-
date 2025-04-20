@@ -35,7 +35,7 @@
                     <h4 class="card-title mb-0">
                         <i class="fas fa-list-alt mr-2"></i>Docentes Registrados
                     </h4>
-                    <a href="#" class="btn btn-light ms-auto text-dark"
+                    <a href="#" class="btn btn-success ms-auto text-dark"
                         data-bs-toggle="modal" data-bs-target="#registroModal">
                         <i class="fas fa-plus mr-1"></i>Nuevo Docente
                     </a>
@@ -83,13 +83,11 @@
                                         </button>
 
                                         <!-- Botón para Eliminar -->
-                                        <form action="{{ route('docente.destroy', $docente->cedula_doc) }}" method="POST">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro?')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                            <button class="btn btn-danger btn-sm btn-eliminar"
+                                            data-id="{{ $docente->cedula_doc }}"
+                                            data-name="{{ $docente->name }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -172,6 +170,34 @@
                 className: 'text-center'
             }]
         });
+
+          // Confirmación de eliminación con SweetAlert
+          $('.btn-eliminar').on('click', function() {
+            const docenteId = $(this).data('id');
+            const docenteName = $(this).data('name');
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¡Vas a eliminar al docente "${docenteName}"!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Crear y enviar el formulario de eliminación
+                    const form = $(`<form method="POST" action="/docentes/${docenteId}">`);
+                    form.append('@csrf');
+                    form.append('@method("DELETE")');
+                    $('body').append(form);
+                    form.submit();
+                }
+            });
+        });
+
 
         // Script para llenar el modal de visualización
         $('#mostrarModal').on('show.bs.modal', function(event) {

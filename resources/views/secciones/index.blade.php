@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('content')
@@ -17,10 +18,10 @@
                     <h4 class="card-title mb-0">
                         <i class="fas fa-list-alt mr-2"></i>Secciones Registradas
                     </h4>
-                    <a href="#" class="btn btn-light ms-auto text-dark"
-                    data-bs-toggle="modal" data-bs-target="#crearSeccionModal">
-                    <i class="fas fa-plus mr-1"></i>Nueva Sección
-                </a>
+                    <a href="#" class="btn btn-success ms-auto text-dark"
+                        data-bs-toggle="modal" data-bs-target="#crearSeccionModal">
+                        <i class="fas fa-plus mr-1"></i>Nueva Sección
+                    </a>
                 </div>
                 <div class="card-body">
                     <table id="tabla-secciones" class="table table-bordered table-hover">
@@ -98,40 +99,93 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
-        // Configuración DataTables
+        // Configuración del DataTable
         const table = $("#tabla-secciones").DataTable({
-            // ... (configuración previa se mantiene igual)
-            columnDefs: [
-                {
-                    targets: 0,
-                    className: 'text-center',
-                    orderable: false
-                },
-                { 
-                    targets: [6], 
-                    className: 'text-center',
-                    orderable: false,
-                    searchable: false
+            pageLength: 10,
+            responsive: true,
+            autoWidth: false,
+            lengthChange: true,
+            language: {
+                emptyTable: "No hay secciones registradas",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ secciones",
+                infoEmpty: "Mostrando 0 secciones",
+                infoFiltered: "(filtradas de _MAX_ registros totales)",
+                search: "Buscar:",
+                paginate: {
+                    first: "Primero",
+                    last: "Último",
+                    next: "Siguiente",
+                    previous: "Anterior"
                 }
-            ]
+            },
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print mr-2"></i>Imprimir',
+                    title: 'Reporte de Secciones',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5]
+                    },
+                    customize: function(win) {
+                        $(win.document.body)
+                            .css('font-size', '10pt')
+                            .prepend(
+                                '<div style="text-align: center; margin-bottom: 20px;">' +
+                                '<img src="{{ asset("images/logo.jpg") }}" style="height: 80px; margin-bottom: 10px;"/>' +
+                                '<h3 style="margin: 5px 0; font-size: 14pt;">UNIVERSIDAD NACIONAL EXPERIMENTAL POLITÉCNICA</h3>' +
+                                '<h3 style="margin: 5px 0; font-size: 14pt;">DE LA FUERZA ARMADA NACIONAL</h3>' +
+                                '<h4 style="margin: 5px 0; font-size: 12pt;">EXTENSIÓN LOS TEQUES</h4>' +
+                                '<h4 style="margin: 5px 0; font-size: 12pt;">SISTEMA DE GESTIÓN DE HORARIOS - SECCIONES</h4>' +
+                                '<h2 style="margin: 15px 0; font-size: 16pt;">REPORTE DE SECCIONES</h2>' +
+                                '</div>'
+                            );
+
+                        $(win.document.body).find('table')
+                            .addClass('compact')
+                            .css('font-size', 'inherit');
+
+                        $(win.document.body).append(
+                            '<div style="text-align: center; margin-top: 20px; font-size: 8pt;">' +
+                            '<p>Generado el: ' + new Date().toLocaleDateString('es-VE') + '</p>' +
+                            '</div>'
+                        );
+                    },
+                    className: 'btn btn-primary'
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
+                    orientation: 'portrait',
+                    pageSize: 'A4',
+                    title: 'Reporte de Secciones',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5]
+                    },
+                    className: 'btn btn-danger mr-2'
+                },
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel mr-2"></i>Excel',
+                    title: 'Secciones Registradas',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5]
+                    },
+                    className: 'btn btn-success mr-2'
+                }
+            ],
+            columnDefs: [
+                { targets: 0, className: 'text-center', orderable: false },
+                { targets: 6, className: 'text-center', orderable: false, searchable: false }
+            ],
+            order: [[1, 'asc']]
         });
 
-        // SweetAlerts
-        @if(session('alert'))
-            Swal.fire({
-                icon: '{{ session('alert')['type'] ?? 'info' }}',
-                title: '{{ session('alert')['title'] ?? 'Notificación' }}',
-                text: '{{ session('alert')['message'] ?? '' }}',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        @endif
-
-        // Confirmación eliminación
+        // Confirmación de eliminación con SweetAlert
         $('.delete-form').on('submit', function(e) {
             e.preventDefault();
             const form = this;
-            
+
             Swal.fire({
                 title: '¿Eliminar Sección?',
                 text: "¡Esta acción no se puede revertir!",
@@ -153,7 +207,7 @@
         $('#mostrarSeccionModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
             const modal = $(this);
-            
+
             modal.find('#modalCodigo').text(button.data('codigo'));
             modal.find('#modalAula').text(button.data('aula'));
             modal.find('#modalCarrera').text(button.data('carrera'));
@@ -165,7 +219,7 @@
         $('#editarSeccionModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
             const modal = $(this);
-            
+
             modal.find('#formEditarSeccion').attr('action', `/secciones/${button.data('codigo')}`);
             modal.find('#edit_codigo').val(button.data('codigo'));
             modal.find('#edit_aula_id').val(button.data('aula-id'));
