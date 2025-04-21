@@ -61,6 +61,15 @@ Route::post('/periodos', [PeriodoController::class, 'store'])->name('periodo.sto
 Route::put('/periodos/{periodo}', [PeriodoController::class, 'update'])->name('periodo.update');
 Route::delete('/periodos/{periodo}', [PeriodoController::class, 'destroy'])->name('periodo.destroy');
 
+
+// Rutas para la gestión de horarios
+Route::middleware(['auth'])->group(function () {
+    Route::get('/horarios', [HorarioController::class, 'index'])->name('horario.index'); // Mostrar el calendario
+    Route::post('/horarios', [HorarioController::class, 'store'])->name('horario.store'); // Crear un nuevo horario
+    Route::put('/horarios/{horario}', [HorarioController::class, 'update'])->name('horario.update'); // Actualizar un horario
+    Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->name('horario.destroy'); // Eliminar un horario
+});
+
 // Rutas para secciones
 Route::resource('/secciones', SeccionController::class);
 // web.php

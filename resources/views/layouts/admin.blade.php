@@ -18,9 +18,14 @@
 
     <!-- DataTables -->
     <!-- DataTables CSS -->
+     <!-- FullCalendar CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.dataTables.min.css">
+    
+     
+
     <!-- AdminLTE -->
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.css') }}">
 
@@ -522,6 +527,9 @@
     <!-- jQuery -->
     <!-- jQuery (debe ir primero) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <!-- FullCalendar JS -->
+      <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
+
 
     <!-- Bootstrap 5 -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
@@ -543,6 +551,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
+  
     <!-- AdminLTE -->
     <script src="{{ asset('dist/js/adminlte.min.js') }}"></script>
 
