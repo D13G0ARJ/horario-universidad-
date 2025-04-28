@@ -1,21 +1,21 @@
 <!-- Modal para agregar un nuevo horario -->
 <div class="modal fade" id="agregarHorarioModal" tabindex="-1" aria-labelledby="agregarHorarioModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen-lg-down modal-xxl">
+    <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white py-3">
-                <h2 class="modal-title fs-4" id="agregarHorarioModalLabel">Agregar Nuevo Horario</h2>
+                <h2 class="modal-title fs-3" id="agregarHorarioModalLabel">Gestión de Horarios</h2>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{{ route('horario.store') }}" method="POST" id="horarioForm">
                 @csrf
                 <input type="hidden" name="horario_data" id="horarioData">
                 <div class="modal-body p-4">
-                    <!-- Fila de campos del formulario -->
-                    <div class="row g-3 mb-4">
+                    <!-- Fila superior de filtros -->
+                    <div class="row g-3 mb-4 bg-light p-3 rounded">
                         <!-- Periodo -->
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                             <label for="periodo" class="form-label fw-bold">Periodo</label>
-                            <select id="periodo" name="periodo_id" class="form-select form-select-sm" required>
+                            <select id="periodo" name="periodo_id" class="form-select form-select-lg" required>
                                 <option value="">Seleccione...</option>
                                 @foreach($periodos as $periodo)
                                     <option value="{{ $periodo->id }}">{{ $periodo->nombre }}</option>
@@ -26,7 +26,7 @@
                         <!-- Carrera -->
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                             <label for="carrera" class="form-label fw-bold">Carrera</label>
-                            <select id="carrera" name="carrera_id" class="form-select form-select-sm" required>
+                            <select id="carrera" name="carrera_id" class="form-select form-select-lg" required>
                                 <option value="">Seleccione...</option>
                                 @foreach($carreras as $carrera)
                                     <option value="{{ $carrera->carrera_id }}">{{ $carrera->name }}</option>
@@ -34,85 +34,83 @@
                             </select>
                         </div>
                         
-                        <!-- Turno (ahora antes de semestre) -->
+                        <!-- Turno -->
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                             <label for="turno" class="form-label fw-bold">Turno</label>
-                            <select id="turno" name="turno_id" class="form-select form-select-sm" required>
+                            <select id="turno" name="turno_id" class="form-select form-select-lg" required>
                                 <option value="">Seleccione...</option>
                                 @foreach($turnos as $turno)
-                                    <option value="{{ $turno->id_turno }}" data-tipo="{{ $turno->tipo }}">{{ $turno->nombre }}</option>
+                                    <option value="{{ $turno->id_turno }}">{{ $turno->nombre }}</option>
                                 @endforeach
                             </select>
                         </div>
                         
-                        <!-- Semestre (se carga dinámicamente según turno) -->
+                        <!-- Semestre -->
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                             <label for="semestre" class="form-label fw-bold">Semestre</label>
-                            <select id="semestre" name="semestre_id" class="form-select form-select-sm" required disabled>
-                                <option value="">Seleccione turno primero</option>
+                            <select id="semestre" name="semestre_id" class="form-select form-select-lg" required disabled>
+                                <option value="">Seleccione turno</option>
                             </select>
                         </div>
                         
-                        <!-- Sección (se carga dinámicamente) -->
+                        <!-- Sección -->
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                             <label for="seccion" class="form-label fw-bold">Sección</label>
-                            <select id="seccion" name="seccion_id" class="form-select form-select-sm" required disabled>
-                                <option value="">Complete los filtros</option>
+                            <select id="seccion" name="seccion_id" class="form-select form-select-lg" required disabled>
+                                <option value="">Complete filtros</option>
                             </select>
                         </div>
                         
                         <!-- Botón de búsqueda -->
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 d-flex align-items-end">
-                            <button type="button" class="btn btn-primary btn-sm w-100" id="buscarHorarios">
-                                <i class="fas fa-search me-1"></i> Buscar
+                            <button type="button" class="btn btn-primary btn-lg w-100 py-2" id="buscarHorarios">
+                                <i class="fas fa-search me-2"></i> Buscar
                             </button>
                         </div>
                     </div>
                     
-                    <!-- Contenedor del horario y asignaturas -->
-                    <div class="row mt-3">
-                        <!-- Lista de asignaturas -->
-                        <div class="col-md-3">
-                            <div class="card">
-                                <div class="card-header bg-secondary text-white">
-                                    <h6 class="mb-0">Asignaturas Disponibles</h6>
+                    <!-- Contenedor principal -->
+                    <div class="row g-3" style="height: calc(100vh - 250px);">
+                        <!-- Panel de asignaturas -->
+                        <div class="col-md-3 h-100">
+                            <div class="card h-100 border-primary">
+                                <div class="card-header bg-primary text-white py-2">
+                                    <h5 class="mb-0"><i class="fas fa-book me-2"></i>Asignaturas Disponibles</h5>
                                 </div>
-                                <div class="card-body p-2" id="asignaturasContainer">
+                                <div class="card-body p-2 overflow-auto" id="asignaturasContainer">
                                     <div class="list-group" id="listaAsignaturas">
-                                        <!-- Las asignaturas se cargarán aquí dinámicamente -->
-                                        <div class="text-center py-3 text-muted">
-                                            Seleccione una sección primero
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fas fa-info-circle me-2"></i>Seleccione una sección y haga clic en Buscar
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Horario -->
-                        <div class="col-md-9">
-                            <div class="card">
-                                <div class="card-header bg-secondary text-white">
-                                    <h6 class="mb-0">Horario - Lunes a Sábado</h6>
+                        <!-- Panel del horario -->
+                        <div class="col-md-9 h-100">
+                            <div class="card h-100 border-primary">
+                                <div class="card-header bg-primary text-white py-2">
+                                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Horario - Lunes a Sábado</h5>
                                 </div>
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered mb-0" id="horarioTable">
-                                            <thead class="table-light">
+                                <div class="card-body p-0 h-100">
+                                    <div class="table-responsive h-100">
+                                        <table class="table table-bordered table-hover mb-0 h-100">
+                                            <thead class="table-light sticky-top">
                                                 <tr>
-                                                    <th style="width: 10%">Hora</th>
-                                                    <th style="width: 15%">Lunes</th>
-                                                    <th style="width: 15%">Martes</th>
-                                                    <th style="width: 15%">Miércoles</th>
-                                                    <th style="width: 15%">Jueves</th>
-                                                    <th style="width: 15%">Viernes</th>
-                                                    <th style="width: 15%">Sábado</th>
+                                                    <th class="text-center" style="width: 10%">Hora</th>
+                                                    <th class="text-center" style="width: 15%">Lunes</th>
+                                                    <th class="text-center" style="width: 15%">Martes</th>
+                                                    <th class="text-center" style="width: 15%">Miércoles</th>
+                                                    <th class="text-center" style="width: 15%">Jueves</th>
+                                                    <th class="text-center" style="width: 15%">Viernes</th>
+                                                    <th class="text-center" style="width: 15%">Sábado</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="horarioBody">
-                                                <!-- Las filas del horario se generarán aquí dinámicamente -->
                                                 <tr>
-                                                    <td colspan="7" class="text-center py-4 text-muted">
-                                                        Complete los filtros y haga clic en Buscar
+                                                    <td colspan="7" class="text-center py-5 text-muted">
+                                                        <i class="fas fa-info-circle me-2"></i>Complete los filtros y haga clic en Buscar
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -124,95 +122,17 @@
                     </div>
                 </div>
                 <div class="modal-footer bg-light p-3">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i> Cancelar
+                    <button type="button" class="btn btn-secondary btn-lg px-4" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i> Cancelar
                     </button>
-                    <button type="submit" class="btn btn-primary btn-sm" id="guardarHorario" disabled>
-                        <i class="fas fa-save me-1"></i> Guardar Horario
+                    <button type="submit" class="btn btn-primary btn-lg px-4" id="guardarHorario" disabled>
+                        <i class="fas fa-save me-2"></i> Guardar
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-<style>
-    /* Estilos personalizados para la modal extra grande */
-    .modal-xxl {
-        max-width: 150%;
-    }
-    
-    @media (min-width: 1900px) {
-        .modal-xxl {
-            max-width: 1700px;
-        }
-    }
-    
-    /* Estilos para los selects */
-    #agregarHorarioModal .form-select-sm {
-        padding: 0.35rem 0.5rem;
-        font-size: 0.875rem;
-    }
-    
-    /* Estilo para selects deshabilitados */
-    #agregarHorarioModal select[disabled] {
-        background-color: #f8f9fa;
-        cursor: not-allowed;
-    }
-    
-    /* Estilos para el horario */
-    #horarioTable th, #horarioTable td {
-        text-align: center;
-        vertical-align: middle;
-        height: 60px;
-    }
-    
-    #horarioTable td {
-        position: relative;
-    }
-    
-    /* Estilos para las asignaturas */
-    .asignatura-item {
-        cursor: move;
-        margin-bottom: 5px;
-        padding: 8px;
-        border-radius: 4px;
-        background-color: #e9ecef;
-        border: 1px solid #dee2e6;
-    }
-    
-    .asignatura-item:hover {
-        background-color: #d1e7ff;
-    }
-    
-    /* Estilos para las celdas del horario */
-    .celda-horario {
-        min-height: 60px;
-    }
-    
-    .bloque-horario {
-        position: absolute;
-        width: 100%;
-        left: 0;
-        border-radius: 4px;
-        padding: 2px 5px;
-        font-size: 0.8rem;
-        color: white;
-        cursor: pointer;
-        z-index: 10;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    /* Colores para diferentes asignaturas */
-    .bg-asignatura-1 { background-color: #4e73df; }
-    .bg-asignatura-2 { background-color: #1cc88a; }
-    .bg-asignatura-3 { background-color: #36b9cc; }
-    .bg-asignatura-4 { background-color: #f6c23e; }
-    .bg-asignatura-5 { background-color: #e74a3b; }
-    .bg-asignatura-6 { background-color: #858796; }
-    .bg-asignatura-7 { background-color: #5a5c69; }
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -225,154 +145,175 @@ document.addEventListener('DOMContentLoaded', function() {
     const listaAsignaturas = document.getElementById('listaAsignaturas');
     const horarioBody = document.getElementById('horarioBody');
     const guardarBtn = document.getElementById('guardarHorario');
-    
-    // Cargar semestres según turno seleccionado
-// En tu archivo JavaScript del modal
-turnoSelect.addEventListener('change', function() {
-    const turnoId = this.value;
-    const turnoNombre = this.options[this.selectedIndex].text.toLowerCase();
-    
-    semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
-    semestreSelect.disabled = !turnoId;
-    
-    if (!turnoId) return;
-    
-    // Determinar cantidad de semestres según turno
-    const esNocturno = turnoNombre.includes('nocturno');
-    const maxSemestres = esNocturno ? 10 : 8;
-    
-    // Llenar semestres
-    for (let i = 1; i <= maxSemestres; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = `Semestre ${i}`;
-        semestreSelect.appendChild(option);
-    }
-});
-    
-    // Función para filtrar secciones
-    function filtrarSecciones() {
-    const carreraId = carreraSelect.value;
-    const semestreId = semestreSelect.value;
-    const turnoId = turnoSelect.value;
-    
-    seccionSelect.innerHTML = '<option value="">Cargando secciones...</option>';
-    seccionSelect.disabled = true;
 
-    // Verificar que todos los filtros estén seleccionados
-    if (!carreraId || !semestreId || !turnoId) {
-        seccionSelect.innerHTML = '<option value="">Complete todos los filtros</option>';
-        return;
-    }
-
-    // Mostrar spinner de carga
-    const loadingSpinner = document.createElement('div');
-    loadingSpinner.className = 'text-center py-2';
-    loadingSpinner.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando secciones...';
-    seccionSelect.parentNode.appendChild(loadingSpinner);
-
-    // Hacer petición para obtener secciones filtradas
-    fetch(`/api/secciones-filtradas?carrera_id=${carreraId}&semestre_id=${semestreId}&turno_id=${turnoId}`)
-        .then(response => {
-            // Remover spinner
-            if (loadingSpinner.parentNode) {
-                loadingSpinner.parentNode.removeChild(loadingSpinner);
+    // 1. Cargar semestres según turno seleccionado
+    turnoSelect.addEventListener('change', function() {
+        const turnoId = this.value;
+        const turnoNombre = this.options[this.selectedIndex].text.toLowerCase();
+        
+        semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
+        semestreSelect.disabled = !turnoId;
+        
+        if (turnoId) {
+            // Determinar cantidad de semestres según turno
+            const esNocturno = turnoNombre.includes('nocturno');
+            const maxSemestres = esNocturno ? 10 : 8;
+            
+            // Llenar semestres
+            for (let i = 1; i <= maxSemestres; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Semestre ${i}`;
+                semestreSelect.appendChild(option);
             }
+        }
+    });
+    
+    // 2. Función para cargar secciones según los filtros
+    async function cargarSecciones() {
+        const carreraId = carreraSelect.value;
+        const semestreId = semestreSelect.value;
+        const turnoId = turnoSelect.value;
+        
+        seccionSelect.innerHTML = '<option value="">Cargando...</option>';
+        seccionSelect.disabled = true;
+
+        if (!carreraId || !semestreId || !turnoId) {
+            seccionSelect.innerHTML = '<option value="">Complete los filtros</option>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/obtener-secciones?carrera_id=${carreraId}&semestre_id=${semestreId}&turno_id=${turnoId}`);
             
             if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            seccionSelect.innerHTML = '<option value="">Seleccione una sección</option>';
-            
-            if (data.length === 0) {
-                seccionSelect.innerHTML = '<option value="">No hay secciones disponibles</option>';
-                return;
+                throw new Error('Error al obtener secciones');
             }
             
-            data.forEach(seccion => {
-                const option = document.createElement('option');
-                option.value = seccion.id;
-                option.textContent = seccion.text || seccion.id;
-                seccionSelect.appendChild(option);
-            });
+            const data = await response.json();
             
+            seccionSelect.innerHTML = data.length > 0 
+                ? '<option value="">Seleccione sección</option>' + 
+                  data.map(s => `<option value="${s.id}">${s.text}</option>`).join('')
+                : '<option value="">No hay secciones</option>';
+                
             seccionSelect.disabled = false;
-        })
-        .catch(error => {
-            console.error('Error al cargar secciones:', error);
-            seccionSelect.innerHTML = '<option value="">Error al cargar secciones</option>';
-            
-            // Mostrar mensaje de error detallado
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'text-danger small mt-1';
-            errorDiv.textContent = 'Error al conectar con el servidor';
-            seccionSelect.parentNode.appendChild(errorDiv);
-            
-            // Eliminar mensaje después de 5 segundos
-            setTimeout(() => {
-                if (errorDiv.parentNode) {
-                    errorDiv.parentNode.removeChild(errorDiv);
-                }
-            }, 5000);
-        });
-}
-    
-    // Event listeners para los selects
-    carreraSelect.addEventListener('change', filtrarSecciones);
-    semestreSelect.addEventListener('change', filtrarSecciones);
-    
-    // Función para cargar asignaturas de la sección seleccionada
-    function cargarAsignaturas(seccionId) {
-        listaAsignaturas.innerHTML = '<div class="text-center py-2"><i class="fas fa-spinner fa-spin"></i> Cargando asignaturas...</div>';
+        } catch (error) {
+            console.error('Error:', error);
+            seccionSelect.innerHTML = '<option value="">Error al cargar</option>';
+        }
+    }
+
+    // 3. Event listeners para los filtros
+    ['carrera', 'semestre'].forEach(filter => {
+        document.getElementById(filter).addEventListener('change', cargarSecciones);
+    });
+
+    // 4. Función principal al hacer clic en Buscar
+    buscarBtn.addEventListener('click', async function() {
+        const seccionId = seccionSelect.value;
         
-        fetch(`/api/asignaturas-seccion/${seccionId}`)
-            .then(response => response.json())
-            .then(data => {
-                listaAsignaturas.innerHTML = '';
-                
-                if (data.length === 0) {
-                    listaAsignaturas.innerHTML = '<div class="text-center py-2 text-muted">No hay asignaturas disponibles</div>';
-                    return;
-                }
-                
-                data.forEach((asignatura, index) => {
+        if (!seccionId) {
+            alert('Por favor seleccione una sección primero');
+            return;
+        }
+        
+        // Mostrar carga en asignaturas
+        listaAsignaturas.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando asignaturas...</p>
+            </div>
+        `;
+        
+        // Mostrar carga en horario
+        horarioBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Preparando horario...</p>
+                </td>
+            </tr>
+        `;
+        
+        try {
+            // Obtener asignaturas de la sección
+            const response = await fetch(`/obtener-asignaturas/${seccionId}`);
+            
+            if (!response.ok) {
+                throw new Error('Error al obtener asignaturas');
+            }
+            
+            const asignaturas = await response.json();
+            
+            // Mostrar asignaturas en el panel izquierdo
+            if (asignaturas.length > 0) {
+                listaAsignaturas.innerHTML = asignaturas.map((asignatura, index) => {
                     const colorClass = `bg-asignatura-${(index % 7) + 1}`;
-                    
-                    const item = document.createElement('div');
-                    item.className = `list-group-item asignatura-item ${colorClass} text-white mb-2`;
-                    item.textContent = asignatura.nombre;
-                    item.draggable = true;
-                    item.dataset.asignaturaId = asignatura.asignatura_id;
-                    
-                    // Eventos para drag and drop
-                    item.addEventListener('dragstart', function(e) {
-                        e.dataTransfer.setData('text/plain', JSON.stringify({
-                            asignatura_id: asignatura.asignatura_id,
-                            nombre: asignatura.nombre,
-                            colorIndex: (index % 7) + 1
-                        }));
-                        this.classList.add('opacity-50');
-                    });
-                    
-                    item.addEventListener('dragend', function() {
-                        this.classList.remove('opacity-50');
-                    });
-                    
-                    listaAsignaturas.appendChild(item);
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                listaAsignaturas.innerHTML = '<div class="text-center py-2 text-danger">Error al cargar asignaturas</div>';
+                    return `
+                        <div class="list-group-item asignatura-item ${colorClass} text-white mb-2" 
+                             draggable="true" 
+                             data-asignatura-id="${asignatura.asignatura_id}"
+                             data-asignatura-nombre="${asignatura.nombre}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>${asignatura.nombre}</span>
+                                <i class="fas fa-arrows-alt"></i>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Configurar eventos de drag and drop
+                configurarDragAndDrop();
+            } else {
+                listaAsignaturas.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        No hay asignaturas asignadas a esta sección
+                    </div>
+                `;
+            }
+            
+            // Generar la estructura del horario
+            generarHorario();
+            
+        } catch (error) {
+            console.error('Error:', error);
+            listaAsignaturas.innerHTML = `
+                <div class="text-center py-4 text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error al cargar las asignaturas
+                </div>
+            `;
+        }
+    });
+    
+    // 5. Configurar eventos de drag and drop para las asignaturas
+    function configurarDragAndDrop() {
+        document.querySelectorAll('.asignatura-item').forEach(item => {
+            item.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('text/plain', JSON.stringify({
+                    asignatura_id: this.dataset.asignaturaId,
+                    nombre: this.dataset.asignaturaNombre,
+                    colorIndex: Array.from(this.classList)
+                        .find(cls => cls.startsWith('bg-asignatura-'))
+                        .split('-')[2]
+                }));
+                this.classList.add('dragging');
             });
+            
+            item.addEventListener('dragend', function() {
+                this.classList.remove('dragging');
+            });
+        });
     }
     
-    // Función para generar el horario
+    // 6. Generar la estructura del horario
     function generarHorario() {
-        // Limpiar el horario existente
         horarioBody.innerHTML = '';
         
         // Generar bloques de tiempo (de 7:00 AM a 9:00 PM, bloques de 45 minutos)
@@ -404,16 +345,16 @@ turnoSelect.addEventListener('change', function() {
         document.querySelectorAll('.celda-horario').forEach(celda => {
             celda.addEventListener('dragover', function(e) {
                 e.preventDefault();
-                this.classList.add('bg-light');
+                this.classList.add('hover-cell');
             });
             
             celda.addEventListener('dragleave', function() {
-                this.classList.remove('bg-light');
+                this.classList.remove('hover-cell');
             });
             
             celda.addEventListener('drop', function(e) {
                 e.preventDefault();
-                this.classList.remove('bg-light');
+                this.classList.remove('hover-cell');
                 
                 const data = JSON.parse(e.dataTransfer.getData('text/plain'));
                 
@@ -423,83 +364,84 @@ turnoSelect.addEventListener('change', function() {
                 // Crear bloque de horario
                 const bloque = document.createElement('div');
                 bloque.className = `bloque-horario bg-asignatura-${data.colorIndex}`;
-                bloque.textContent = data.nombre;
+                bloque.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center h-100">
+                        <span>${data.nombre}</span>
+                        <button class="btn btn-sm btn-light p-0" onclick="this.parentElement.parentElement.remove(); actualizarBotonGuardar();">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
                 bloque.dataset.asignaturaId = data.asignaturaId;
                 bloque.dataset.hora = this.dataset.hora;
                 bloque.dataset.dia = this.dataset.dia;
                 
-                // Botón para eliminar
-                const btnEliminar = document.createElement('span');
-                btnEliminar.className = 'float-end cursor-pointer';
-                btnEliminar.innerHTML = '&times;';
-                btnEliminar.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    bloque.remove();
-                    actualizarEstadoGuardado();
-                });
-                
-                bloque.appendChild(btnEliminar);
                 this.appendChild(bloque);
-                
-                // Habilitar botón de guardar
-                actualizarEstadoGuardado();
+                actualizarBotonGuardar();
             });
         });
     }
     
-    // Función para actualizar estado del botón guardar
-    function actualizarEstadoGuardado() {
+    // 7. Actualizar estado del botón guardar
+    function actualizarBotonGuardar() {
         const bloques = document.querySelectorAll('.bloque-horario');
         guardarBtn.disabled = bloques.length === 0;
     }
     
-    // Evento para el botón de búsqueda
-    buscarBtn.addEventListener('click', function() {
-        if (!seccionSelect.value) {
-            alert('Por favor seleccione una sección primero');
-            return;
-        }
-        
-        generarHorario();
-        cargarAsignaturas(seccionSelect.value);
-    });
-    
-    // Evento para enviar el formulario
+    // 8. Enviar formulario
     document.getElementById('horarioForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Recopilar datos del horario
-        const horario = [];
-        document.querySelectorAll('.bloque-horario').forEach(bloque => {
-            horario.push({
-                asignatura_id: bloque.dataset.asignaturaId,
-                dia: bloque.dataset.dia,
-                hora: bloque.dataset.hora,
-                seccion_id: seccionSelect.value
-            });
-        });
+        const bloques = Array.from(document.querySelectorAll('.bloque-horario')).map(bloque => ({
+            asignatura_id: bloque.dataset.asignaturaId,
+            dia: bloque.dataset.dia,
+            hora: bloque.dataset.hora
+        }));
         
-        // Asignar datos al campo oculto
-        document.getElementById('horarioData').value = JSON.stringify(horario);
-        
-        // Enviar formulario
+        document.getElementById('horarioData').value = JSON.stringify(bloques);
         this.submit();
     });
     
-    // Inicializar el modal
-    const horarioModal = document.getElementById('agregarHorarioModal');
-    if (horarioModal) {
-        horarioModal.addEventListener('shown.bs.modal', function() {
-            // Resetear formulario
-            this.querySelector('form').reset();
-            semestreSelect.innerHTML = '<option value="">Seleccione turno primero</option>';
-            semestreSelect.disabled = true;
-            seccionSelect.innerHTML = '<option value="">Complete los filtros</option>';
-            seccionSelect.disabled = true;
-            listaAsignaturas.innerHTML = '<div class="text-center py-3 text-muted">Seleccione una sección primero</div>';
-            horarioBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Complete los filtros y haga clic en Buscar</td></tr>';
-            guardarBtn.disabled = true;
-        });
-    }
+    // Función global para actualizar botón guardar
+    window.actualizarBotonGuardar = actualizarBotonGuardar;
 });
 </script>
+
+<style>
+    /* Estilos para elementos en arrastre */
+    .asignatura-item.dragging {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
+    
+    /* Estilo para celdas con hover */
+    .celda-horario.hover-cell {
+        background-color: rgba(0, 123, 255, 0.1) !important;
+        border: 2px dashed #007bff !important;
+    }
+    
+    /* Ajustes para bloques de horario */
+    .bloque-horario {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        right: 2px;
+        bottom: 2px;
+        border-radius: 4px;
+        padding: 5px;
+        font-size: 0.85rem;
+        overflow: hidden;
+        cursor: move;
+    }
+    
+    /* Botón de eliminar en bloques */
+    .bloque-horario button {
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .bloque-horario:hover button {
+        opacity: 1;
+    }
+</style>

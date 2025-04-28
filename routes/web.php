@@ -134,6 +134,9 @@ Route::prefix('horarios')->group(function () {
 });
 
 
+Route::get('/obtener-secciones', [HorarioController::class, 'getSeccionesFiltradas']);
+Route::get('/obtener-asignaturas/{seccion}', [HorarioController::class, 'getAsignaturasBySeccion']);
+
 
 Route::get('/secciones-filtradas', [HorarioController::class, 'getSeccionesFiltradas']);
 Route::get('/asignaturas-seccion/{seccion}', [HorarioController::class, 'getAsignaturasBySeccion']);
