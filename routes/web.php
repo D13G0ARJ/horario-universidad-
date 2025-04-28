@@ -122,3 +122,18 @@ Route::prefix('respaldo')->middleware(['auth'])->group(function () {
 
 // Rutas para horarios
 Route::get('/horario', [HorarioController::class, 'index'])->name('horario.index')->middleware('auth');
+
+Route::prefix('horarios')->group(function () {
+    Route::get('/', [HorarioController::class, 'index'])->name('horario.index');
+    Route::get('/create', [HorarioController::class, 'create'])->name('horario.create');
+    Route::post('/', [HorarioController::class, 'store'])->name('horario.store');
+    Route::delete('/{id}', [HorarioController::class, 'destroy'])->name('horario.destroy');
+    
+    // Ruta para filtrado AJAX (opcional)
+    Route::get('/secciones-filtradas', [HorarioController::class, 'getSeccionesFiltradas']);
+});
+
+
+
+Route::get('/secciones-filtradas', [HorarioController::class, 'getSeccionesFiltradas']);
+Route::get('/asignaturas-seccion/{seccion}', [HorarioController::class, 'getAsignaturasBySeccion']);

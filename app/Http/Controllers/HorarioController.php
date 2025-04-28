@@ -12,6 +12,7 @@ use App\Models\Semestre;
 use App\Models\Periodo;
 use App\Models\Carrera;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class HorarioController extends Controller
 {
@@ -20,14 +21,31 @@ class HorarioController extends Controller
      */
     public function index()
     {
-        // Cargar los horarios con sus relaciones
-        $horarios = Horario::with(['asignatura', 'carrera', 'docente', 'turno', 'semestre', 'periodo', 'seccion'])->get();
+        $horarios = Horario::with(['asignatura', 'carrera', 'docente', 'turno', 'semestre', 'periodo', 'seccion'])
+                          ->orderBy('dia_semana')
+                          ->orderBy('hora_inicio')
+                          ->get();
 
-        // Pasar los datos necesarios a la vista
         return view('horario.index', [
             'horarios' => $horarios,
             'asignaturas' => Asignatura::all(),
-            'secciones' => Seccion::all(),
+            'secciones' => Seccion::with(['asignaturas', 'turno'])->get(),
+            'docentes' => Docente::all(),
+            'turnos' => Turno::all(),
+            'semestres' => Semestre::all(),
+            'periodos' => Periodo::all(),
+            'carreras' => Carrera::all(),
+        ]);
+    }
+
+    /**
+     * Muestra el formulario de creación de horario.
+     */
+    public function create()
+    {
+        return view('horario.create', [
+            'asignaturas' => Asignatura::all(),
+            'secciones' => Seccion::with(['asignaturas', 'turno'])->get(),
             'docentes' => Docente::all(),
             'turnos' => Turno::all(),
             'semestres' => Semestre::all(),
@@ -41,7 +59,12 @@ class HorarioController extends Controller
      */
     public function store(Request $request)
     {
-        // Validar los datos del formulario
+        // Validar si es un horario simple o múltiple (drag and drop)
+        if ($request->has('horario_data')) {
+            return $this->storeHorarioMultiple($request);
+        }
+
+        // Validación para horario simple
         $request->validate([
             'coordinador_cedula' => 'required|exists:users,cedula',
             'periodo_id' => 'required|exists:periodos,id',
@@ -51,7 +74,7 @@ class HorarioController extends Controller
             'seccion_id' => 'required|exists:secciones,codigo_seccion',
             'turno_id' => 'required|exists:turnos,id_turno',
             'semestre_id' => 'required|exists:semestres,id_semestre',
-            'fecha' => 'required|date',
+            'dia_semana' => 'required|integer|between:1,6',
             'hora_inicio' => 'required|date_format:H:i',
             'hora_fin' => 'required|date_format:H:i|after:hora_inicio',
         ], [
@@ -59,20 +82,63 @@ class HorarioController extends Controller
             'periodo_id.exists' => 'El periodo seleccionado no es válido.',
             'carrera_id.exists' => 'La carrera seleccionada no es válida.',
             'hora_fin.after' => 'La hora de fin debe ser posterior a la hora de inicio.',
+            'dia_semana.between' => 'El día de la semana debe ser entre 1 (Lunes) y 6 (Sábado).',
         ]);
 
         try {
-            // Crear el horario
             Horario::create($request->all());
-
-            // Redirigir con mensaje de éxito
             return redirect()->route('horario.index')->with('success', 'Horario asignado correctamente.');
         } catch (\Exception $e) {
-            // Registrar el error para depuración
             Log::error('Error al asignar horario: ' . $e->getMessage());
-
-            // Redirigir con mensaje de error
             return redirect()->route('horario.index')->with('error', 'Ocurrió un error al asignar el horario.');
+        }
+    }
+
+    /**
+     * Almacena múltiples bloques de horario (para drag and drop)
+     */
+    protected function storeHorarioMultiple(Request $request)
+    {
+        $request->validate([
+            'periodo_id' => 'required|exists:periodos,id',
+            'carrera_id' => 'required|exists:carreras,carrera_id',
+            'semestre_id' => 'required|exists:semestres,id_semestre',
+            'turno_id' => 'required|exists:turnos,id_turno',
+            'seccion_id' => 'required|exists:secciones,codigo_seccion',
+            'horario_data' => 'required|json',
+        ]);
+
+        try {
+            $horarioData = json_decode($request->horario_data, true);
+            $bloques = [];
+            
+            foreach ($horarioData as $bloque) {
+                $horaFin = Carbon::createFromFormat('H:i', $bloque['hora'])->addMinutes(45)->format('H:i');
+                
+                $bloques[] = [
+                    'periodo_id' => $request->periodo_id,
+                    'carrera_id' => $request->carrera_id,
+                    'semestre_id' => $request->semestre_id,
+                    'turno_id' => $request->turno_id,
+                    'seccion_id' => $request->seccion_id,
+                    'asignatura_id' => $bloque['asignatura_id'],
+                    'docente_id' => $bloque['docente_id'] ?? null,
+                    'dia_semana' => $bloque['dia'],
+                    'hora_inicio' => $bloque['hora'],
+                    'hora_fin' => $horaFin,
+                    'coordinador_cedula' => $request->coordinador_cedula ?? auth()->user()->cedula,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            
+            // Insertar todos los bloques en una sola operación
+            Horario::insert($bloques);
+            
+            return redirect()->route('horario.index')->with('success', 'Horario guardado correctamente con ' . count($bloques) . ' bloques.');
+        } catch (\Exception $e) {
+            Log::error('Error al guardar horario múltiple: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al guardar el horario.');
         }
     }
 
@@ -82,18 +148,61 @@ class HorarioController extends Controller
     public function destroy($id)
     {
         try {
-            // Buscar y eliminar el horario
             $horario = Horario::findOrFail($id);
             $horario->delete();
-
-            // Redirigir con mensaje de éxito
             return redirect()->route('horario.index')->with('success', 'Horario eliminado correctamente.');
         } catch (\Exception $e) {
-            // Registrar el error para depuración
             Log::error('Error al eliminar horario: ' . $e->getMessage());
-
-            // Redirigir con mensaje de error
             return redirect()->route('horario.index')->with('error', 'Ocurrió un error al eliminar el horario.');
         }
+    }
+
+    /**
+     * Obtiene las secciones filtradas
+     */
+    public function getSeccionesFiltradas(Request $request)
+    {
+        $request->validate([
+            'carrera_id' => 'required|exists:carreras,carrera_id',
+            'semestre_id' => 'required|exists:semestres,id_semestre',
+            'turno_id' => 'required|exists:turnos,id_turno',
+        ]);
+    
+        try {
+            $secciones = Seccion::whereHas('asignaturas', function($query) use ($request) {
+                    $query->where('carrera_id', $request->carrera_id)
+                          ->where('semestre_id', $request->semestre_id);
+                })
+                ->where('turno_id', $request->turno_id)
+                ->get(['codigo_seccion as id', 'codigo_seccion as text']); // Formato para select2
+    
+            return response()->json($secciones);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener secciones: ' . $e->getMessage());
+            return response()->json([], 500);
+        }
+    }
+
+    /**
+     * Obtiene las asignaturas de una sección específica
+     */
+    public function getAsignaturasBySeccion($seccionId)
+    {
+        $seccion = Seccion::with('asignaturas.docentes')->findOrFail($seccionId);
+        
+        $asignaturas = $seccion->asignaturas->map(function($asignatura) {
+            return [
+                'asignatura_id' => $asignatura->asignatura_id,
+                'nombre' => $asignatura->nombre,
+                'docentes' => $asignatura->docentes->map(function($docente) {
+                    return [
+                        'cedula_doc' => $docente->cedula_doc,
+                        'nombre' => $docente->nombre
+                    ];
+                })
+            ];
+        });
+
+        return response()->json($asignaturas);
     }
 }

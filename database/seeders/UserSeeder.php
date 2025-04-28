@@ -28,5 +28,13 @@ class UserSeeder extends Seeder
             'email' => 'admin@admin.com', // Cambia este valor por el email deseado
             'password' => Hash::make('12345678'), // Cambia este valor por la contraseña deseada
         ]);
+
+        DB::table('users')->insert([
+            'cedula' => '30328271', // Cambia este valor por la cédula deseada
+            'name' => 'Diego', // Cambia este valor por el nombre deseado
+            'email' => 'diego@gmail.com', // Cambia este valor por el email deseado
+            'password' => Hash::make('12345678'), // Cambia este valor por la contraseña deseada
+        ]);
     }
+
 }

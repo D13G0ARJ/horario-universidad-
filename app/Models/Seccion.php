@@ -45,4 +45,9 @@ class Seccion extends Model
             'asignatura_id'
         );
     }
+
+    public function horarios()
+    {
+        return $this->hasMany(Horario::class, 'seccion_id', 'codigo_seccion');
+    }
 }
