@@ -60,11 +60,7 @@ class Asignatura extends Model
      */
     public function secciones()
     {
-        return $this->belongsToMany(
-            Seccion::class,
-            'asignatura_seccion',
-            'asignatura_id',
-            'seccion_id'
-        );
+        return $this->belongsToMany(Seccion::class, 'asignatura_seccion', 'asignatura_id', 'seccion_id')
+                    ->withPivot(['carrera_id', 'semestre_id', 'turno_id']);
     }
 }

@@ -227,30 +227,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const guardarBtn = document.getElementById('guardarHorario');
     
     // Cargar semestres según turno seleccionado
-    turnoSelect.addEventListener('change', function() {
-        const turnoId = this.value;
-        const tipoTurno = this.options[this.selectedIndex].dataset.tipo;
-        semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
-        semestreSelect.disabled = !turnoId;
-        
-        if (!turnoId) {
-            semestreSelect.disabled = true;
-            seccionSelect.innerHTML = '<option value="">Seleccione turno primero</option>';
-            seccionSelect.disabled = true;
-            return;
-        }
-        
-        // Definir rango de semestres según tipo de turno
-        const maxSemestres = (tipoTurno === 'nocturno') ? 10 : 8;
-        
-        // Llenar semestres disponibles
-        for (let i = 1; i <= maxSemestres; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `Semestre ${i}`;
-            semestreSelect.appendChild(option);
-        }
-    });
+// En tu archivo JavaScript del modal
+turnoSelect.addEventListener('change', function() {
+    const turnoId = this.value;
+    const turnoNombre = this.options[this.selectedIndex].text.toLowerCase();
+    
+    semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
+    semestreSelect.disabled = !turnoId;
+    
+    if (!turnoId) return;
+    
+    // Determinar cantidad de semestres según turno
+    const esNocturno = turnoNombre.includes('nocturno');
+    const maxSemestres = esNocturno ? 10 : 8;
+    
+    // Llenar semestres
+    for (let i = 1; i <= maxSemestres; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `Semestre ${i}`;
+        semestreSelect.appendChild(option);
+    }
+});
     
     // Función para filtrar secciones
     function filtrarSecciones() {

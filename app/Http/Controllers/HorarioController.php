@@ -168,19 +168,14 @@ class HorarioController extends Controller
             'turno_id' => 'required|exists:turnos,id_turno',
         ]);
     
-        try {
-            $secciones = Seccion::whereHas('asignaturas', function($query) use ($request) {
-                    $query->where('carrera_id', $request->carrera_id)
-                          ->where('semestre_id', $request->semestre_id);
-                })
-                ->where('turno_id', $request->turno_id)
-                ->get(['codigo_seccion as id', 'codigo_seccion as text']); // Formato para select2
+        $secciones = Seccion::whereHas('asignaturas', function($query) use ($request) {
+                $query->where('asignatura_seccion.carrera_id', $request->carrera_id)
+                      ->where('asignatura_seccion.semestre_id', $request->semestre_id);
+            })
+            ->where('turno_id', $request->turno_id)
+            ->get(['codigo_seccion as id', 'codigo_seccion as text']);
     
-            return response()->json($secciones);
-        } catch (\Exception $e) {
-            Log::error('Error al obtener secciones: ' . $e->getMessage());
-            return response()->json([], 500);
-        }
+        return response()->json($secciones);
     }
 
     /**

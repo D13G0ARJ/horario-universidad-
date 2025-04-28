@@ -38,12 +38,8 @@ class Seccion extends Model
 
     public function asignaturas()
     {
-        return $this->belongsToMany(
-            Asignatura::class,
-            'asignatura_seccion',
-            'seccion_id',
-            'asignatura_id'
-        );
+        return $this->belongsToMany(Asignatura::class, 'asignatura_seccion', 'seccion_id', 'asignatura_id')
+                    ->withPivot(['carrera_id', 'semestre_id']);
     }
 
     public function horarios()
