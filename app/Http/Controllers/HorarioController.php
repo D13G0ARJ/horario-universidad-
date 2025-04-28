@@ -182,22 +182,17 @@ class HorarioController extends Controller
      * Obtiene las asignaturas de una sección específica
      */
     public function getAsignaturasBySeccion($seccionId)
-    {
-        $seccion = Seccion::with('asignaturas.docentes')->findOrFail($seccionId);
-        
-        $asignaturas = $seccion->asignaturas->map(function($asignatura) {
-            return [
-                'asignatura_id' => $asignatura->asignatura_id,
-                'nombre' => $asignatura->nombre,
-                'docentes' => $asignatura->docentes->map(function($docente) {
-                    return [
-                        'cedula_doc' => $docente->cedula_doc,
-                        'nombre' => $docente->nombre
-                    ];
-                })
-            ];
-        });
+{
+    $seccion = Seccion::with('asignaturas')->findOrFail($seccionId);
+    
+    $asignaturas = $seccion->asignaturas->map(function($asignatura) {
+        return [
+            'asignatura_id' => $asignatura->asignatura_id,
+            'name' => $asignatura->name, // Asegúrate de usar 'name' aquí
+            'docentes' => $asignatura->docentes
+        ];
+    });
 
-        return response()->json($asignaturas);
-    }
+    return response()->json($asignaturas);
+}
 }
