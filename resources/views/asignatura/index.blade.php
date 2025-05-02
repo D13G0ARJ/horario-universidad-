@@ -235,8 +235,32 @@
                 { data: 0, className: 'text-center' }, // N°
                 { data: 1, className: 'text-center' }, // Código
                 { data: 2, className: 'text-center' }, // Nombre
-                { data: 3, className: 'text-center' }, // Secciones
-                { data: 4, className: 'text-center' },  // Docentes
+                { 
+                    data: 3, 
+                    className: 'text-center', 
+                    title: 'Sección',
+                    render: function(data, type, row) {
+                        if (!data) return '<span class="badge bg-secondary">Sin asignar</span>';
+                    return `
+                        <span class="badge bg-primary">
+                            <i class="fas fa-layer-group me-2"></i>${data}
+                        </span>
+                    `;
+                    }
+                 }, // Secciones
+                { 
+                    data: 4, 
+                    className: 'text-center', 
+                    title: 'Docente',
+                    render: function(data, type, row) {
+                        if (!data) return '<span class="badge bg-secondary">Sin asignar</span>';
+                    return `
+                        <span class="badge bg-info text-dark">
+                            <i class="fas fa-user-tie me-2"></i>${data}
+                        </span>
+                    `;
+                    }
+                 },  // Docentes
                 { 
                     data: null,
                     title: 'Acciones',
@@ -457,6 +481,9 @@
         });
 
         $('#reset-filtros').click(function() {
+
+            var table = $('#tabla-asignaturas').DataTable();
+
             $('#carrera, #turno, #semestre').val();
             table.clear().draw();
             $('#tabla-asignaturas').hide();

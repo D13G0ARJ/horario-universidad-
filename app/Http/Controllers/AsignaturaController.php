@@ -58,6 +58,8 @@ class AsignaturaController extends Controller
                 '2' => $item->name,
                 '3' => $seccion ? $seccion->codigo_seccion : null, // Usar codigo_section de la relación
                 '4' => $docente ? $docente->name : null, // Usar name del docente
+                'docentes' => $item->docentes->pluck('name')->toArray(),
+                'secciones' => $item->secciones->pluck('codigo_seccion')->toArray()
             ];
         });
 
