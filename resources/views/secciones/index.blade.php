@@ -29,7 +29,6 @@
                             <tr>
                                 <th style="text-align: center">N°</th>
                                 <th>Código</th>
-                                <th>Aula</th>
                                 <th>Carrera</th>
                                 <th>Turno</th>
                                 <th>Semestre</th>
@@ -41,7 +40,6 @@
                             <tr>
                                 <td style="text-align: center">{{ $loop->iteration }}</td>
                                 <td>{{ $seccion->codigo_seccion }}</td>
-                                <td>{{ $seccion->aula->nombre }}</td>
                                 <td>{{ $seccion->carrera->name }}</td>
                                 <td>{{ $seccion->turno->nombre }}</td>
                                 <td>{{ $seccion->semestre->numero }}</td>
@@ -52,7 +50,6 @@
                                             data-bs-toggle="modal"
                                             data-bs-target="#mostrarSeccionModal"
                                             data-codigo="{{ $seccion->codigo_seccion }}"
-                                            data-aula="{{ $seccion->aula->nombre }}"
                                             data-carrera="{{ $seccion->carrera->name }}"
                                             data-turno="{{ $seccion->turno->nombre }}"
                                             data-semestre="{{ $seccion->semestre->numero }}">
@@ -64,7 +61,6 @@
                                             data-bs-toggle="modal"
                                             data-bs-target="#editarSeccionModal"
                                             data-codigo="{{ $seccion->codigo_seccion }}"
-                                            data-aula-id="{{ $seccion->aula_id }}"
                                             data-carrera-id="{{ $seccion->carrera_id }}"
                                             data-turno-id="{{ $seccion->turno_id }}"
                                             data-semestre-id="{{ $seccion->semestre_id }}">
@@ -160,7 +156,7 @@
                     pageSize: 'A4',
                     title: 'Reporte de Secciones',
                     exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5]
+                        columns: [0, 1, 2, 3, 4]
                     },
                     className: 'btn btn-danger mr-2'
                 },
@@ -169,14 +165,14 @@
                     text: '<i class="fas fa-file-excel mr-2"></i>Excel',
                     title: 'Secciones Registradas',
                     exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5]
+                        columns: [0, 1, 2, 3, 4]
                     },
                     className: 'btn btn-success mr-2'
                 }
             ],
             columnDefs: [
                 { targets: 0, className: 'text-center', orderable: false },
-                { targets: 6, className: 'text-center', orderable: false, searchable: false }
+                { targets: 5, className: 'text-center', orderable: false, searchable: false }
             ],
             order: [[1, 'asc']]
         });
@@ -209,7 +205,6 @@
             const modal = $(this);
 
             modal.find('#modalCodigo').text(button.data('codigo'));
-            modal.find('#modalAula').text(button.data('aula'));
             modal.find('#modalCarrera').text(button.data('carrera'));
             modal.find('#modalTurno').text(button.data('turno'));
             modal.find('#modalSemestre').text(button.data('semestre'));
@@ -222,7 +217,6 @@
 
             modal.find('#formEditarSeccion').attr('action', `/secciones/${button.data('codigo')}`);
             modal.find('#edit_codigo').val(button.data('codigo'));
-            modal.find('#edit_aula_id').val(button.data('aula-id'));
             modal.find('#edit_carrera_id').val(button.data('carrera-id'));
             modal.find('#edit_turno_id').val(button.data('turno-id'));
             modal.find('#edit_semestre_id').val(button.data('semestre-id'));

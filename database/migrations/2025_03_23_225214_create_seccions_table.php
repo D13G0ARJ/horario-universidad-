@@ -11,9 +11,6 @@ return new class extends Migration
         Schema::create('secciones', function (Blueprint $table) {
             $table->string('codigo_seccion', 20)->primary();
             
-            // Relación con aulas (ajustar si su PK no es 'id')
-            $table->foreignId('aula_id')->constrained('aulas')->onDelete('cascade');
-            
             // Relación con carreras (PK: carrera_id)
             $table->string('carrera_id', 20);
             $table->foreign('carrera_id')

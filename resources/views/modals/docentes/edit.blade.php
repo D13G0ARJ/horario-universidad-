@@ -45,6 +45,31 @@
                         </div>
                     </div>
 
+                    <div class="form-group mb-3">
+                        <label for="dedicacion_editar" class="form-label">Dedicación</label>
+                        <div class="select-group">
+                            <span class="select-group-text"><i class="fa fa-clock-o"></i></span>
+                            <select class="form-select @error('dedicacion_id') is-invalid @enderror" 
+                                name="dedicacion_id" 
+                                id="dedicacion_id" 
+                                required>
+                                <option value="">Seleccione...</option>
+                                @foreach($dedicaciones as $dedicacion)
+                                    <option value="{{ $dedicacion->dedicacion_id }}" {{-- Usar dedicacion_id --}}
+                                        {{ old('dedicacion_id') == $dedicacion->dedicacion_id ? 'selected' : '' }}>
+                                        {{ $dedicacion->dedicacion }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @error('dedicacion_id')
+                            <div class="invalid-feedback d-block small mt-1">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                        </div>
+                    </div>
+
                     <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save mr-2"></i>Guardar Cambios

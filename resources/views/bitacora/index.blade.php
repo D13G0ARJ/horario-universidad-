@@ -33,7 +33,7 @@
                     <h5 class="modal-title" id="modalNoResultadosLabel">
                         <i class="fas fa-exclamation-circle mr-2"></i>Sin resultados
                     </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -41,7 +41,7 @@
                     No se encontraron registros para el rango de fechas seleccionado.
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -178,7 +178,7 @@
                 { data: 0, className: 'text-center' }, // N°
                 { data: 1, className: 'text-center' }, // Fecha
                 { data: 2, className: 'text-center' }, // Actor
-                { data: 3 },                           // Acción
+                { data: 3, className: 'text-center' }, // Acción
                 { data: 4, className: 'text-center' }  // Hora
             ],
             columnDefs: [

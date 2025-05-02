@@ -33,33 +33,6 @@
                         @enderror
                     </div>
 
-                    <!-- Selector de Aula -->
-                    <div class="form-group mb-4">
-                        <label for="aula_id" class="form-label fw-bold">Aula <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-primary text-white">
-                                <i class="fas fa-building"></i>
-                            </span>
-                            <select class="form-select @error('aula_id') is-invalid @enderror"
-                                name="aula_id"
-                                id="aula_id"
-                                required>
-                                <option value="">Seleccione un aula</option>
-                                @foreach($aulas as $aula)
-                                    <option value="{{ $aula->id }}" 
-                                        {{ old('aula_id') == $aula->id ? 'selected' : '' }}>
-                                        {{ $aula->nombre }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @error('aula_id')
-                            <div class="invalid-feedback d-block small mt-1">
-                                {{ $message }}
-                            </div>
-                        @enderror
-                    </div>
-
                     <!-- Selector de Carrera (Corregido) -->
                     <div class="form-group mb-4">
                         <label for="carrera_id" class="form-label fw-bold">Carrera <span class="text-danger">*</span></label>

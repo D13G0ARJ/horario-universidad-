@@ -17,6 +17,12 @@ class CreateDocentesTable extends Migration
             $table->string('email')->unique();
             $table->string('telefono');
             $table->timestamps();
+
+            $table->foreignId('dedicacion_id')
+                ->references('dedicacion_id')
+                ->on('dedicaciones')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
         });
     }
 

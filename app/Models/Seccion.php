@@ -13,17 +13,12 @@ class Seccion extends Model
 
     protected $fillable = [
         'codigo_seccion',
-        'aula_id',
         'carrera_id',
         'turno_id',
         'semestre_id'
     ];
 
     // Relaciones corregidas
-    public function aula() {
-        return $this->belongsTo(Aula::class, 'aula_id', 'id');
-    }
-
     public function carrera() {
         return $this->belongsTo(Carrera::class, 'carrera_id', 'carrera_id');
     }

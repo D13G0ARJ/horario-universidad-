@@ -25,22 +25,6 @@
                         </div>
                     </div>
 
-                    <!-- Selector de Aula -->
-                    <div class="form-group mb-3">
-                        <label for="edit_aula_id" class="form-label">Aula</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-primary text-white"><i class="fas fa-building"></i></span>
-                            <select class="form-select" 
-                                name="aula_id" 
-                                id="edit_aula_id" 
-                                required>
-                                @foreach($aulas as $aula)
-                                    <option value="{{ $aula->id }}">{{ $aula->nombre }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
                     <!-- Selector de Carrera (Corregido) -->
                     <div class="form-group mb-3">
                         <label for="edit_carrera_id" class="form-label">Carrera</label>
@@ -132,14 +116,12 @@
         
         // Obtener datos
         const codigo = button.data('codigo');
-        const aulaId = button.data('aula-id');
         const carreraId = button.data('carrera-id');
         const turnoId = button.data('turno-id');
         const semestreId = button.data('semestre-id');
 
         // Actualizar formulario
         modal.find('#edit_codigo').val(codigo);
-        modal.find('#edit_aula_id').val(aulaId);
         modal.find('#edit_carrera_id').val(carreraId);
         modal.find('#edit_turno_id').val(turnoId);
         

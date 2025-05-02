@@ -25,6 +25,10 @@
                     <label class="fw-bold">Teléfono:</label>
                     <p id="modalTelefono" class="form-control-plaintext"></p>
                 </div>
+                <div class="form-group mb-3">
+                    <label class="fw-bold">Dedicación:</label>
+                    <p id="modalDedicacion" class="form-control-plaintext"></p>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">

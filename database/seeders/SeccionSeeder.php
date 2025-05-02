@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Seccion;
-use App\Models\Aula;
 use App\Models\Carrera;
 use App\Models\Turno;
 use App\Models\Semestre;
@@ -13,7 +12,6 @@ class SeccionSeeder extends Seeder
 {
     public function run()
     {
-        $aulas = Aula::all();
         $carreras = Carrera::all();
         $turnos = Turno::with('semestres')->get();
         $codigosGenerados = []; // Almacenar códigos únicos
@@ -35,7 +33,6 @@ class SeccionSeeder extends Seeder
             // Crear sección
             Seccion::create([
                 'codigo_seccion' => $codigo,
-                'aula_id' => $aulas->random()->id,
                 'carrera_id' => $carreras->random()->carrera_id,
                 'turno_id' => $turnos->random()->id_turno,
                 'semestre_id' => $turnos->random()->semestres->random()->id_semestre

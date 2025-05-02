@@ -1,4 +1,17 @@
 @extends('layouts.admin')
+@section('style')
+<style>#mensaje-inicial {
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+#mensaje-inicial h4 {
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+</style>
+@endsection
 
 @section('content')
 <div class="container-fluid">
@@ -8,6 +21,76 @@
             <h3 class="text-primary">
                 <i class="fas fa-book mr-2"></i>Listado de Asignaturas
             </h3>
+        </div>
+    </div>
+
+    <!-- Modal para mensaje de no resultados -->
+    <div class="modal fade" id="modalNoResultados" tabindex="-1" role="dialog" aria-labelledby="modalNoResultadosLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="modalNoResultadosLabel">
+                        <i class="fas fa-exclamation-circle mr-2"></i>Sin resultados
+                    </h5>
+                    <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    No se encontraron registros para los datos seleccionados.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de búsqueda mejorados -->
+
+    <!-- Carrera -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <label for="carrera" class="form-label">Carrera:</label>
+            <select id="carrera" name="carrera_id" class="form-select form-select-lg" required>
+                <option value="">Seleccione...</option>
+                    @foreach($carreras as $carrera)
+                            <option value="{{ $carrera->carrera_id }}">{{ $carrera->name }}</option>
+                    @endforeach
+            </select>
+        </div>
+
+        <!-- Turno -->
+        <div class="col-md-2">
+            <label for="turno" class="form-label">Turno:</label>
+            <select id="turno" name="turno_id" class="form-select form-select-lg" required>
+                <option value="">Seleccione...</option>
+                    @foreach($turnos as $turno)
+                        <option value="{{ $turno->id_turno }}">{{ $turno->nombre }}</option>
+                    @endforeach
+            </select>
+        </div>
+
+        <!-- Semestre -->
+        <div class="col-md-3">
+            <label for="semestre" class="form-label">Semestre:</label>
+            <select id="semestre" name="semestre_id" class="form-select form-select-lg" required disabled>
+                <option value="">Seleccione turno</option>
+            </select>
+        </div>
+
+        <!-- Buscar -->
+        <div class="col-md-2 d-flex align-items-end">
+            <button id="filtrar-datos" class="btn btn-primary w-100">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+        </div>
+
+        <!-- Limpiar datos -->
+        <div class="col-md-2 d-flex align-items-end">
+            <button id="reset-filtros" class="btn btn-outline-secondary w-100">
+                <i class="fas fa-broom mr-2"></i>Limpiar filtros
+            </button>
         </div>
     </div>
 
@@ -37,59 +120,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($asignaturas as $asignatura)
-                            <tr>
-                                <td style="text-align: center">{{ $loop->iteration }}</td>
-                                <td style="text-align: center">{{ $asignatura->asignatura_id }}</td>
-                                <td>{{ $asignatura->name }}</td>
-                                <td style="text-align: center">
-                                    @foreach($asignatura->secciones as $seccion)
-                                    <span class="badge bg-success">{{ $seccion->codigo_seccion }}</span>
-                                    @endforeach
-                                </td>
-                                <td style="text-align: center">
-                                    @foreach($asignatura->docentes as $docente)
-                                    <span class="badge bg-info">{{ $docente->name }}</span>
-                                    @endforeach
-                                </td>
-                                <td style="text-align: center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <!-- Botón para Mostrar -->
-                                        <button class="btn btn-info btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#mostrarModal"
-                                            data-asignatura_id="{{ $asignatura->asignatura_id }}"
-                                            data-name="{{ $asignatura->name }}"
-                                            data-docentes="{{ $asignatura->docentes->pluck('name')->toJson() }}"
-                                            data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->toJson() }}">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-
-                                        <!-- Botón para Editar -->
-                                        <button class="btn btn-success btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editarModal"
-                                            data-asignatura_id="{{ $asignatura->asignatura_id }}"
-                                            data-name="{{ $asignatura->name }}"
-                                            data-docentes="{{ $asignatura->docentes->pluck('cedula_doc')->toJson() }}"
-                                            data-secciones="{{ $asignatura->secciones->pluck('codigo_seccion')->toJson() }}">
-                                            <i class="fas fa-pencil-alt"></i>
-                                        </button>
-
-                                        <!-- Botón para Eliminar -->
-                                        <form action="{{ route('asignatura.destroy', $asignatura->asignatura_id) }}" method="POST" class="delete-form">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
+                           
                         </tbody>
                     </table>
+                        <div id="mensaje-inicial" class="text-center py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">Utilice los filtros para visualizar las asignaturas</h4>
+                        </div>
                 </div>
             </div>
         </div>
@@ -108,6 +145,36 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const turnoSelect = document.getElementById('turno');
+    const semestreSelect = document.getElementById('semestre');
+
+    turnoSelect.addEventListener('change', function() {
+        const turnoId = this.value;
+        const turnoNombre = this.options[this.selectedIndex].text.toLowerCase();
+        
+        // Resetear semestre
+        semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
+        semestreSelect.disabled = true;
+        if (!turnoId) return;
+
+        // Determinar máximo de semestres
+        const esNocturno = turnoNombre.includes('nocturno');
+        const maxSemestres = esNocturno ? 10 : 8;
+        
+        // Generar opciones
+        for (let i = 1; i <= maxSemestres; i++) {
+            const option = new Option(`Semestre ${i}`, i);
+            semestreSelect.add(option);
+        }
+        
+        semestreSelect.disabled = false;
+    });
+});
+</script>
+
 <script>
     $(document).ready(function() {
         // Configuración del PDF
@@ -164,6 +231,63 @@
                 }
             },
             dom: 'Bfrtip',
+            columns: [
+                { data: 0, className: 'text-center' }, // N°
+                { data: 1, className: 'text-center' }, // Código
+                { data: 2, className: 'text-center' }, // Nombre
+                { data: 3, className: 'text-center' }, // Secciones
+                { data: 4, className: 'text-center' },  // Docentes
+                { 
+                    data: null,
+                    title: 'Acciones',
+                    render: function(data, type, row) {
+                    // Obtener docentes y secciones si están en la respuesta
+                    const docentes = row.docentes ? JSON.stringify(row.docentes) : '[]';
+                    const secciones = row.secciones ? JSON.stringify(row.secciones) : '[]';
+        
+                    return `
+                        <div class="btn-group" role="group">
+                        <!-- Botón Ver -->
+                            <button class="btn btn-info btn-sm btn-ver"
+                                data-bs-toggle="modal"
+                                data-bs-target="#mostrarModal"
+                                data-asignatura_id="${row[1]}"  // ID de la asignatura
+                                data-name="${row[2]}"           // Nombre de la asignatura
+                                data-docentes='${docentes}'
+                                data-secciones='${secciones}'>
+                            <i class="fas fa-eye"></i>
+                            </button>
+
+                        <!-- Botón Editar -->
+                            <button class="btn btn-success btn-sm btn-editar"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editarModal"
+                                data-asignatura_id="${row[1]}"
+                                data-name="${row[2]}"
+                                data-docentes='${docentes}'
+                                data-secciones='${secciones}'>
+                            <i class="fas fa-pencil-alt"></i>
+                            </button>
+
+                        <!-- Botón Eliminar -->
+                            <button class="btn btn-danger btn-sm btn-eliminar" data-id="${row[1]}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        `;
+                    },
+                orderable: false,
+                searchable: false
+                }
+            ],
+            columnDefs: [
+                { width: 'auto', targets: 0 },  // N°
+                { width: 'auto', targets: 1 },  // Código
+                { width: '*', targets: 2 },  // Nombre
+                { width: 'auto', targets: 3 },  // Secciones
+                { width: 'auto', targets: 4 },   // Docentes
+                { width: 'auto', targets: 5 }   // Acciones
+            ],
             buttons: [
                 {
                     extend: 'print',
@@ -284,5 +408,83 @@
             modal.find('#formEditar').attr('action', '/asignaturas/' + button.data('asignatura_id'));
         });
     });
+</script>
+
+<script>
+            // Función para cargar datos via AJAX
+            async function cargarDatos(idCarrera, idTurno, idSemestre) {
+
+            var table = $('#tabla-asignaturas').DataTable();
+            
+            try {
+                const response = await $.ajax({
+                    url: '/asignatura/filtrar',
+                    method: 'GET',
+                    data: { 
+                        carrera_id: idCarrera, 
+                        id_turno: idTurno,
+                        id_semestre: idSemestre 
+                    }
+                });
+
+                if (response.length > 0) {
+                    table.clear().rows.add(response).draw();
+                    $('#tabla-asignaturas').fadeIn(500);
+                    $('#mensaje-inicial').hide();
+                } else {
+                    $('#modalNoResultados').modal('show');
+                    $('#tabla-asignaturas').hide();
+                    $('#mensaje-inicial').show();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                toastr.error('Error al cargar los datos');
+            }
+        }
+
+        // Eventos
+        $('#filtrar-datos').click(function() {
+            const idCarrera = $('#carrera').val();
+            const idTurno = $('#turno').val();
+            const idSemestre = $('#semestre').val();
+
+            if (!idCarrera || !idTurno || !idSemestre) {
+                toastr.error('Debe seleccionar todos los campos');
+                return;
+            }
+
+            cargarDatos(idCarrera, idTurno, idSemestre);
+        });
+
+        $('#reset-filtros').click(function() {
+            $('#carrera, #turno, #semestre').val();
+            table.clear().draw();
+            $('#tabla-asignaturas').hide();
+            $('#mensaje-inicial').fadeIn(500);
+        });
+
+</script>
+
+<script>
+    $(document).on('click', '.btn-eliminar', function() {
+    const id = $(this).data('id');
+    if (confirm('¿Estás seguro de eliminar esta asignatura?')) {
+        $.ajax({
+            url: `/asignatura/${id}`,
+            method: 'POST',
+            data: {
+                _method: 'DELETE',
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function() {
+                table.ajax.reload(); // Recargar la tabla
+                toastr.success('Asignatura eliminada correctamente');
+            },
+            error: function() {
+                toastr.error('Error al eliminar la asignatura');
+            }
+        });
+    }
+});
 </script>
 @endpush

@@ -45,6 +45,7 @@ Route::delete('/carreras/{carrera}', [CarreraController::class, 'destroy'])->nam
 
 // Rutas para asignaturas
 Route::get('/asignatura', [AsignaturaController::class, 'index'])->name('asignatura.index')->middleware('auth');
+Route::get('/asignatura/filtrar', [AsignaturaController::class, 'filtrar'])->name('asignatura.filtrar');
 Route::post('/asignaturas', [AsignaturaController::class, 'store'])->name('asignatura.store');
 Route::put('/asignaturas/{asignatura}', [AsignaturaController::class, 'update'])->name('asignatura.update');
 Route::delete('/asignaturas/{asignatura}', [AsignaturaController::class, 'destroy'])->name('asignatura.destroy');

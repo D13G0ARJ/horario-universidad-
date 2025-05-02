@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             PeriodoSeeder::class,
             SeccionSeeder::class,
             AsignaturaSeeder::class,
+            DedicacionesSeeder::class,
             DocenteSeeder::class,
             asignaturadocenteSeeder::class,
             asignaturaseccionSeeder::class,

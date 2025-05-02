@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Seccion;
-use App\Models\Aula;
 use App\Models\Carrera;
 use App\Models\Turno;
 use App\Models\Semestre;
@@ -17,13 +16,12 @@ class SeccionController extends Controller
      */
     public function index()
     {
-        $secciones = Seccion::with(['aula', 'carrera', 'turno', 'semestre'])
+        $secciones = Seccion::with(['carrera', 'turno', 'semestre'])
             ->orderBy('codigo_seccion', 'asc')
             ->get();
 
         return view('secciones.index', [
             'secciones' => $secciones,
-            'aulas' => Aula::all(),
             'carreras' => Carrera::all(),
             'turnos' => Turno::with('semestres')->get(),
             'semestres' => Semestre::all()
@@ -37,7 +35,6 @@ class SeccionController extends Controller
     public function create()
     {
         return view('secciones.create', [
-            'aulas' => Aula::all(),
             'carreras' => Carrera::all(),
             'turnos' => Turno::with('semestres')->get() // Carga semestres relacionados
         ]);
@@ -50,7 +47,6 @@ class SeccionController extends Controller
     {
         $request->validate([
             'codigo_seccion' => 'required|string|unique:secciones,codigo_seccion',
-            'aula_id' => 'required|exists:aulas,id',
             'carrera_id' => 'required|exists:carreras,carrera_id',
             'turno_id' => 'required|exists:turnos,id_turno', // Corregido a id_turno
             'semestre_id' => 'required|exists:semestres,id_semestre' // Corregido a id_semestre
@@ -62,7 +58,6 @@ class SeccionController extends Controller
             $seccion = Seccion::create($request->all());
 
             // Establecer relaciones con claves personalizadas
-            $seccion->aula()->associate($request->aula_id);
             $seccion->carrera()->associate($request->carrera_id);
             $seccion->turno()->associate(Turno::find($request->turno_id));
             $seccion->semestre()->associate(Semestre::find($request->semestre_id));
@@ -94,7 +89,7 @@ class SeccionController extends Controller
      */
     public function show(string $id)
     {
-        $seccion = Seccion::with(['aula', 'carrera', 'turno', 'semestre'])
+        $seccion = Seccion::with(['carrera', 'turno', 'semestre'])
             ->findOrFail($id);
 
         return view('secciones.show', compact('seccion'));
@@ -105,12 +100,11 @@ class SeccionController extends Controller
      */
     public function edit(string $id)
     {
-        $seccion = Seccion::with(['aula', 'carrera', 'turno', 'semestre'])
+        $seccion = Seccion::with(['carrera', 'turno', 'semestre'])
             ->findOrFail($id);
 
         return view('secciones.edit', [
             'seccion' => $seccion,
-            'aulas' => Aula::all(),
             'carreras' => Carrera::all(),
             'turnos' => Turno::with('semestres')->get()
         ]);
@@ -125,7 +119,6 @@ class SeccionController extends Controller
 
         $request->validate([
             'codigo_seccion' => 'required|string|unique:secciones,codigo_seccion,'.$seccion->codigo_seccion.',codigo_seccion',
-            'aula_id' => 'required|exists:aulas,id',
             'carrera_id' => 'required|exists:carreras,carrera_id',
             'turno_id' => 'required|exists:turnos,id_turno', // Corregido
             'semestre_id' => 'required|exists:semestres,id_semestre' // Corregido
@@ -137,7 +130,6 @@ class SeccionController extends Controller
             $seccion->update($request->all());
 
             // Actualizar relaciones con claves personalizadas
-            $seccion->aula()->associate($request->aula_id);
             $seccion->carrera()->associate($request->carrera_id);
             $seccion->turno()->associate(Turno::find($request->turno_id));
             $seccion->semestre()->associate(Semestre::find($request->semestre_id));

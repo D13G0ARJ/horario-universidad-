@@ -40,7 +40,9 @@ class Docente extends Model
         'cedula_doc',
         'name',
         'email',
-        'telefono'
+        'telefono',
+        'docente_id',
+        'dedicacion_id'
     ];
 
     /**
@@ -54,5 +56,10 @@ class Docente extends Model
             'docente_id',         // FK de docente en pivot
             'asignatura_id'       // FK de asignatura en pivot
         );
+    }
+
+    public function dedicacion(): BelongsTo
+    {
+        return $this->belongsTo(Dedicacion::class);
     }
 }

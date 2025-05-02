@@ -17,13 +17,6 @@
                             </label>
                             <p id="modalCodigo" class="form-control-plaintext ps-4"></p>
                         </div>
-                        
-                        <div class="form-group mb-3">
-                            <label class="fw-bold">
-                                <i class="fas fa-building me-2"></i>Aula:
-                            </label>
-                            <p id="modalAula" class="form-control-plaintext ps-4"></p>
-                        </div>
                     </div>
 
                     <!-- Columna Derecha -->

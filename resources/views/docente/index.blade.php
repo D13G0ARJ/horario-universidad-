@@ -207,6 +207,7 @@
             modal.find('#modalName').text(button.data('name'));
             modal.find('#modalEmail').text(button.data('email'));
             modal.find('#modalTelefono').text(button.data('telefono'));
+            modal.find('#modalDedicacion').text(button.data('dedicacion'));
         });
 
         // Script para llenar el modal de edición
