@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('content')
@@ -11,7 +12,6 @@
         </div>
     </div>
 
-
     @if($errors->any())
     <div class="alert alert-danger" id="autoCloseAlert"> 
         @foreach($errors->all() as $error)
@@ -24,8 +24,7 @@
             document.getElementById('autoCloseAlert').style.display = 'none';
         }, 3000);
     </script>
-@endif
-
+    @endif
 
     <!-- Tabla de docentes -->
     <div class="row">
@@ -48,6 +47,7 @@
                                 <th style="text-align: center">Nombre</th>
                                 <th style="text-align: center">Correo</th>
                                 <th style="text-align: center">Teléfono</th>
+                                <th style="text-align: center">Dedicación</th>
                                 <th style="text-align: center">Acciones</th>
                             </tr>
                         </thead>
@@ -58,6 +58,7 @@
                                 <td>{{ $docente->name }}</td>
                                 <td>{{ $docente->email }}</td>
                                 <td>{{ $docente->telefono }}</td>
+                                <td style="text-align: center">{{ $docente->dedicacion->dedicacion ?? 'Sin dedicación' }}</td>
                                 <td style="text-align: center">
                                     <div class="d-flex justify-content-center gap-2">
                                         <!-- Botón para Mostrar -->
@@ -67,7 +68,8 @@
                                             data-cedula="{{ $docente->cedula_doc }}"
                                             data-name="{{ $docente->name }}"
                                             data-email="{{ $docente->email }}"
-                                            data-telefono="{{ $docente->telefono }}">
+                                            data-telefono="{{ $docente->telefono }}"
+                                            data-dedicacion="{{ $docente->dedicacion->dedicacion ?? 'Sin dedicación' }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
 
@@ -78,12 +80,13 @@
                                             data-cedula="{{ $docente->cedula_doc }}"
                                             data-name="{{ $docente->name }}"
                                             data-email="{{ $docente->email }}"
-                                            data-telefono="{{ $docente->telefono }}">
+                                            data-telefono="{{ $docente->telefono }}"
+                                            data-dedicacion="{{ $docente->dedicacion->dedicacion ?? '' }}">
                                             <i class="fas fa-pencil-alt"></i>
                                         </button>
 
                                         <!-- Botón para Eliminar -->
-                                            <button class="btn btn-danger btn-sm btn-eliminar"
+                                        <button class="btn btn-danger btn-sm btn-eliminar"
                                             data-id="{{ $docente->cedula_doc }}"
                                             data-name="{{ $docente->name }}">
                                             <i class="fas fa-trash"></i>
@@ -104,11 +107,6 @@
 @include('modals.docentes.create')
 @include('modals.docentes.show')
 @include('modals.docentes.edit')
-
-
-
-
-
 
 @push('scripts')
 <script>
@@ -171,8 +169,8 @@
             }]
         });
 
-          // Confirmación de eliminación con SweetAlert
-          $('.btn-eliminar').on('click', function() {
+        // Confirmación de eliminación con SweetAlert
+        $('.btn-eliminar').on('click', function() {
             const docenteId = $(this).data('id');
             const docenteName = $(this).data('name');
 
@@ -198,7 +196,6 @@
             });
         });
 
-
         // Script para llenar el modal de visualización
         $('#mostrarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
@@ -218,6 +215,7 @@
             modal.find('#name_editar').val(button.data('name'));
             modal.find('#email_editar').val(button.data('email'));
             modal.find('#telefono_editar').val(button.data('telefono'));
+            modal.find('#dedicacion_editar').val(button.data('dedicacion'));
             modal.find('#formEditar').attr('action', '/docentes/' + button.data('cedula'));
         });
     });
