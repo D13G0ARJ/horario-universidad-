@@ -134,10 +134,13 @@
 </div>
 
 <!-- Inclusión de modals -->
-@include('modals.asignaturas.create', [
-    'docentes' => $docentes,
-    'secciones' => $secciones
-])
+@isset($docentes) {{-- Verificar que la variable existe --}}
+    @include('modals.asignaturas.create', [
+        'docentes' => $docentes,
+        'secciones' => $secciones
+    ])
+@endisset
+
 @include('modals.asignaturas.show')
 @include('modals.asignaturas.edit')
 

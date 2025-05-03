@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Asignatura extends Model
 {
@@ -17,50 +16,44 @@ class Asignatura extends Model
      * @var array<string>
      */
     protected $fillable = [
-        'asignatura_id', // Nombre correcto del campo (coincide con migración)
-        'name',
+        'asignatura_id',
+        'name'
     ];
 
     /**
-     * La clave primaria personalizada.
-     *
-     * @var string
+     * Configuración personalizada de clave primaria
      */
     protected $primaryKey = 'asignatura_id';
-
-    /**
-     * Indica que la clave primaria no es autoincremental.
-     *
-     * @var bool
-     */
     public $incrementing = false;
-
-    /**
-     * El tipo de dato de la clave primaria.
-     *
-     * @var string
-     */
     protected $keyType = 'string';
 
     /**
-     * Relación muchos a muchos con Docente.
+     * Relación muchos a muchos con Docente
      */
     public function docentes(): BelongsToMany
     {
         return $this->belongsToMany(
             Docente::class,
-            'asignatura_docente', // Tabla pivot
-            'asignatura_id',      // FK de asignatura en pivot
-            'docente_id'          // FK de docente en pivot
+            'asignatura_docente',
+            'asignatura_id',  // FK en pivot para Asignatura
+            'docente_id'     // FK en pivot para Docente
         );
     }
 
     /**
-     * Relación uno a muchos con Seccion.
+     * Relación muchos a muchos con Seccion (CORREGIDO)
      */
-    public function secciones()
+    public function secciones(): BelongsToMany
     {
-        return $this->belongsToMany(Seccion::class, 'asignatura_seccion', 'asignatura_id', 'seccion_id')
-                    ->withPivot(['carrera_id', 'semestre_id', 'turno_id']);
+        return $this->belongsToMany(
+            Seccion::class,
+            'asignatura_seccion',
+            'asignatura_id',   // FK en pivot para Asignatura
+            'seccion_id'        // FK en pivot para Seccion (debe coincidir con codigo_seccion en tabla secciones)
+        )->withPivot([
+            'carrera_id',
+            'semestre_id',
+            'turno_id'
+        ]);
     }
 }

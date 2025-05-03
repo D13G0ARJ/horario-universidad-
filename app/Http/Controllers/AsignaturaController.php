@@ -17,60 +17,57 @@ class AsignaturaController extends Controller
     public function index()
     {
         $asignaturas = Asignatura::with(['docentes', 'secciones'])->get();
-        $docentes = Docente::all();
-        $secciones = Seccion::with(['carrera', 'semestre'])->get();
+        $docentes = Docente::all(); // Variable crítica para los modals
+        $secciones = Seccion::with(['carrera', 'semestre', 'turno'])->get(); // Carga completa
         $turnos = Turno::orderBy('nombre')->get();
         $carreras = Carrera::orderBy('name')->get();
         $semestres = Semestre::orderBy('numero')->get();
         
-        return view('asignatura.index', compact('asignaturas', 'docentes', 'secciones', 'turnos', 'carreras', 'semestres'));
+        return view('asignatura.index', compact(
+            'asignaturas',
+            'docentes',    // Asegurada su disponibilidad
+            'secciones',    // Asegurada su disponibilidad
+            'turnos',
+            'carreras',
+            'semestres'
+        ));
     }
 
     public function filtrar(Request $request)
     {
         $request->validate([
             'carrera_id' => 'required|exists:carreras,carrera_id',
-            'id_turno' => 'required|exists:turnos,id_turno',
-            'id_semestre' => 'required|exists:semestres,id_semestre',
+            'turno_id' => 'required|exists:turnos,id_turno',
+            'semestre_id' => 'required|exists:semestres,id_semestre',
         ]);
     
-        $asignaturas = Asignatura::with([
-            'docentes:cedula_doc,name', // Solo cargar los campos necesarios de docentes
-            'secciones:carrera_id,turno_id,semestre_id,codigo_seccion' // Solo campos necesarios
-        ])
-        ->whereHas('secciones', function($query) use ($request) {
-            $query->where('secciones.carrera_id', $request->carrera_id)
-                  ->where('secciones.turno_id', $request->id_turno) // Nota: turno_id en lugar de id_turno
-                  ->where('secciones.semestre_id', $request->id_semestre); // Nota: semestre_id en lugar de id_semestre
+        $asignaturas = Asignatura::whereHas('secciones', function($query) use ($request) {
+            $query->wherePivot('carrera_id', $request->carrera_id)
+                  ->wherePivot('turno_id', $request->turno_id)
+                  ->wherePivot('semestre_id', $request->semestre_id);
         })
-        ->orderBy('asignaturas.id', 'desc')
+        ->with(['docentes', 'secciones'])
+        ->orderBy('asignatura_id', 'desc')
         ->get()
         ->map(function($item) {
-            // Obtener el primer docente (si existe)
-            $docente = $item->docentes->first();
-            
-            // Obtener la primera sección (si existe)
-            $seccion = $item->secciones->first();
-            
             return [
                 '0' => $item->id,
                 '1' => $item->asignatura_id,
                 '2' => $item->name,
-                '3' => $seccion ? $seccion->codigo_seccion : null, // Usar codigo_section de la relación
-                '4' => $docente ? $docente->name : null, // Usar name del docente
+                '3' => $item->secciones->first()?->codigo_seccion,
+                '4' => $item->docentes->first()?->name,
                 'docentes' => $item->docentes->pluck('name')->toArray(),
                 'secciones' => $item->secciones->pluck('codigo_seccion')->toArray()
             ];
         });
 
-            return response()->json($asignaturas);
+        return response()->json($asignaturas);
     }
 
     public function create()
     {
-        $docentes = Docente::all();
-        $secciones = Seccion::with(['carrera', 'semestre'])->get();
-        return view('asignatura.create', compact('docentes', 'secciones'));
+        // Redundancia eliminada: Las variables ya vienen del index
+        return redirect()->route('asignatura.index');
     }
 
     public function store(Request $request)
@@ -79,20 +76,30 @@ class AsignaturaController extends Controller
             'asignatura_id' => 'required|unique:asignaturas,asignatura_id',
             'name' => 'required|string|max:255',
             'docentes' => 'required|array|min:1',
-            'secciones' => 'required|array|min:1'
+            'secciones' => 'required|array|min:1',
+            'carrera_id' => 'required|exists:carreras,carrera_id',
+            'semestre_id' => 'required|exists:semestres,id_semestre',
+            'turno_id' => 'required|exists:turnos,id_turno'
         ]);
 
         $asignatura = Asignatura::create($validated);
-
+        
+        // Sincronización optimizada
         $asignatura->docentes()->sync($validated['docentes']);
-        $asignatura->secciones()->sync($validated['secciones']);
+        $asignatura->secciones()->syncWithPivotValues(
+            $validated['secciones'],
+            [
+                'carrera_id' => $validated['carrera_id'],
+                'semestre_id' => $validated['semestre_id'],
+                'turno_id' => $validated['turno_id']
+            ]
+        );
 
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
             'accion' => 'ASIGNATURA CREADA: ' . $asignatura->name . 
-                       ' (ID: ' . $asignatura->asignatura_id . ') ' .
-                       'Docentes: ' . $asignatura->docentes()->count() .
-                       ' | Secciones: ' . $asignatura->secciones()->count()
+                       ' | Docentes: ' . count($validated['docentes']) .
+                       ' | Secciones: ' . count($validated['secciones'])
         ]);
 
         return redirect()->route('asignatura.index')->with('alert', [
@@ -105,25 +112,47 @@ class AsignaturaController extends Controller
     public function edit(Asignatura $asignatura)
     {
         $docentes = Docente::all();
-        $secciones = Seccion::with(['carrera', 'semestre'])->get();
-        return view('asignatura.edit', compact('asignatura', 'docentes', 'secciones'));
+        $secciones = Seccion::with(['carrera', 'semestre', 'turno'])->get();
+        $firstSection = $asignatura->secciones->first();
+        
+        return view('asignatura.edit', compact(
+            'asignatura',
+            'docentes',
+            'secciones',
+            'firstSection'
+        ));
     }
 
     public function update(Request $request, Asignatura $asignatura)
     {
-        $request->validate([
-            'asignatura_id' => 'required|unique:asignaturas,asignatura_id,'.$asignatura->id,
+        $validated = $request->validate([
+            'asignatura_id' => 'required|unique:asignaturas,asignatura_id,'.$asignatura->asignatura_id.',asignatura_id',
             'name' => 'required|string|max:255',
-            'docente' => 'required|string|exists:docentes,cedula_doc',
-            'seccion' => 'required|string|exists:secciones,codigo_seccion'
+            'docentes' => 'required|array|min:1',
+            'secciones' => 'required|array|min:1',
+            'carrera_id' => 'required|exists:carreras,carrera_id',
+            'semestre_id' => 'required|exists:semestres,id_semestre',
+            'turno_id' => 'required|exists:turnos,id_turno'
         ]);
-    
-        $asignatura->update($request->only('asignatura_id', 'name'));
-        
-        // Actualizar relaciones
-        $asignatura->docentes()->sync([$request->docente]);
-        $asignatura->secciones()->sync([$request->seccion]);
-    
+
+        $asignatura->update($validated);
+        $asignatura->docentes()->sync($validated['docentes']);
+        $asignatura->secciones()->syncWithPivotValues(
+            $validated['secciones'],
+            [
+                'carrera_id' => $validated['carrera_id'],
+                'semestre_id' => $validated['semestre_id'],
+                'turno_id' => $validated['turno_id']
+            ]
+        );
+
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name . 
+                       ' | Docentes: ' . count($validated['docentes']) .
+                       ' | Secciones: ' . count($validated['secciones'])
+        ]);
+
         return redirect()->route('asignatura.index')->with('alert', [
             'type' => 'success',
             'title' => 'Actualización Exitosa',

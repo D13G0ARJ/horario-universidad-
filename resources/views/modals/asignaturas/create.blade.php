@@ -8,7 +8,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="{{ route('asignatura.store') }}">
+                <form method="POST" action="{{ route('asignatura.store') }}" id="formAsignatura">
                     @csrf
 
                     <!-- Código de Asignatura -->
@@ -51,31 +51,29 @@
                     <!-- Selector de Docentes con buscador -->
                     <div class="form-group mb-3">
                         <label for="docentes" class="form-label">Docentes <span class="text-danger">*</span></label>
-
                         <div class="search-container mb-2">
                             <input type="text"
                                 class="form-control"
                                 id="buscarDocente"
-                                placeholder="Escribe para buscar docentes..."
+                                placeholder="Buscar docente..."
                                 onkeyup="filtrarOpciones('docentes', this.value)"
                                 autocomplete="off">
                             <div class="no-results" id="docentesNoResults" style="display: none;">
                                 <small class="text-muted">No se encontraron resultados</small>
                             </div>
                         </div>
-
                         <select name="docentes[]"
                             id="docentes"
                             class="form-select @error('docentes') is-invalid @enderror"
                             multiple
                             size="5"
                             required
-                            style="display: none;"> <!-- Ocultar inicialmente -->
+                            style="display: none;">
                             @foreach($docentes as $docente)
                             <option value="{{ $docente->cedula_doc }}"
                                 data-busqueda="{{ strtolower($docente->name) }} {{ $docente->cedula_doc }}"
                                 {{ in_array($docente->cedula_doc, old('docentes', [])) ? 'selected' : '' }}
-                                style="display: none;"> <!-- Ocultar inicialmente -->
+                                style="display: none;">
                                 {{ $docente->name }} - {{ $docente->cedula_doc }}
                             </option>
                             @endforeach
@@ -85,37 +83,40 @@
                         @enderror
                     </div>
 
-                    <!-- Selector de Secciones con buscador -->
+                    <!-- Selector de Secciones con datos embebidos -->
                     <div class="form-group mb-4">
                         <label for="secciones" class="form-label">Secciones <span class="text-danger">*</span></label>
-
                         <div class="search-container mb-2">
                             <input type="text"
                                 class="form-control"
                                 id="buscarSeccion"
-                                placeholder="Escribe para buscar secciones..."
+                                placeholder="Buscar sección..."
                                 onkeyup="filtrarOpciones('secciones', this.value)"
                                 autocomplete="off">
                             <div class="no-results" id="seccionesNoResults" style="display: none;">
                                 <small class="text-muted">No se encontraron resultados</small>
                             </div>
                         </div>
-
                         <select name="secciones[]"
                             id="secciones"
                             class="form-select @error('secciones') is-invalid @enderror"
                             multiple
                             size="5"
                             required
-                            style="display: none;"> <!-- Ocultar inicialmente -->
+                            style="display: none;"
+                            onchange="actualizarDatosSeccion()">
                             @foreach($secciones as $seccion)
                             <option value="{{ $seccion->codigo_seccion }}"
-                                data-busqueda="{{ strtolower($seccion->codigo_seccion) }} {{ strtolower($seccion->carrera->nombre) }} semestre{{ $seccion->semestre->nombre }}"
+                                data-carrera="{{ $seccion->carrera_id }}"
+                                data-semestre="{{ $seccion->semestre_id }}"
+                                data-turno="{{ $seccion->turno_id }}"
+                                data-busqueda="{{ strtolower($seccion->codigo_seccion) }} {{ strtolower($seccion->carrera->name) }} semestre{{ $seccion->semestre->numero }} {{ strtolower($seccion->turno->nombre) }}"
                                 {{ in_array($seccion->codigo_seccion, old('secciones', [])) ? 'selected' : '' }}
-                                style="display: none;"> <!-- Ocultar inicialmente -->
-                                {{ $seccion->codigo_seccion }} -
-                                {{ $seccion->carrera->nombre }} -
-                                Sem. {{ $seccion->semestre->nombre }}
+                                style="display: none;">
+                                {{ $seccion->codigo_seccion }} - 
+                                {{ $seccion->carrera->name }} - 
+                                Sem. {{ $seccion->semestre->numero }} - 
+                                {{ $seccion->turno->nombre }}
                             </option>
                             @endforeach
                         </select>
@@ -123,6 +124,11 @@
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
+
+                    <!-- Campos ocultos para datos de sección -->
+                    <input type="hidden" name="carrera_id" id="carrera_id">
+                    <input type="hidden" name="semestre_id" id="semestre_id">
+                    <input type="hidden" name="turno_id" id="turno_id">
 
                     <!-- Botón de envío -->
                     <div class="d-grid gap-2 mt-4">
@@ -132,21 +138,31 @@
                     </div>
 
                     <script>
+                        // Actualizar datos ocultos al seleccionar secciones
+                        function actualizarDatosSeccion() {
+                            const seccionesSelect = document.getElementById('secciones');
+                            const selectedOptions = Array.from(seccionesSelect.selectedOptions);
+                            
+                            if (selectedOptions.length > 0) {
+                                const primeraSeccion = selectedOptions[0];
+                                document.getElementById('carrera_id').value = primeraSeccion.dataset.carrera;
+                                document.getElementById('semestre_id').value = primeraSeccion.dataset.semestre;
+                                document.getElementById('turno_id').value = primeraSeccion.dataset.turno;
+                            }
+                        }
+
+                        // Función para filtrar opciones
                         function filtrarOpciones(selectId, busqueda) {
                             const select = document.getElementById(selectId);
-                            const input = document.getElementById(`buscar${selectId.charAt(0).toUpperCase() + selectId.slice(1)}`);
                             const noResults = document.getElementById(`${selectId}NoResults`);
                             const opciones = select.options;
                             let resultados = 0;
 
                             busqueda = busqueda.toLowerCase().trim();
-
-                            // Mostrar/ocultar select
                             select.style.display = busqueda ? 'block' : 'none';
 
                             for (let i = 0; i < opciones.length; i++) {
                                 const textoBusqueda = opciones[i].getAttribute('data-busqueda').toLowerCase();
-
                                 if (textoBusqueda.includes(busqueda)) {
                                     opciones[i].style.display = 'block';
                                     resultados++;
@@ -155,10 +171,7 @@
                                 }
                             }
 
-                            // Manejar mensaje de no resultados
                             noResults.style.display = resultados === 0 && busqueda !== '' ? 'block' : 'none';
-
-                            // Ajustar tamaño del select
                             select.size = resultados > 5 ? 5 : resultados === 0 ? 1 : resultados;
                         }
                     </script>
@@ -168,7 +181,6 @@
                             position: relative;
                             margin-bottom: 0.5rem;
                         }
-
                         .no-results {
                             position: absolute;
                             background: white;
@@ -178,21 +190,14 @@
                             border-top: none;
                             z-index: 2;
                         }
-
                         select[multiple] {
                             border-radius: 0.25rem;
                             width: 100%;
-                            transition: all 0.3s ease;
                         }
-
                         select[multiple] option {
                             padding: 0.5rem 1rem;
                             cursor: pointer;
                             border-bottom: 1px solid #f8f9fa;
-                        }
-
-                        select[multiple] option:last-child {
-                            border-bottom: none;
                         }
                     </style>
                 </form>

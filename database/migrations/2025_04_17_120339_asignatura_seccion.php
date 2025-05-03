@@ -6,69 +6,59 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
     {
         Schema::create('asignatura_seccion', function (Blueprint $table) {
-            // Claves foráneas básicas
+            // Campos base (ajustados a tipos correctos)
             $table->string('asignatura_id', 20);
             $table->string('seccion_id', 20);
             
-            // Campos adicionales necesarios para el filtrado
-            $table->string('carrera_id', 20);
-            $table->unsignedBigInteger('semestre_id');
-            $table->unsignedBigInteger('turno_id');
+            // Campos adicionales (verifica compatibilidad con tablas relacionadas)
+            $table->string('carrera_id', 20); // Debe coincidir con la tabla carreras.carrera_id
+            $table->unsignedBigInteger('semestre_id'); // Coincide con semestres.id_semestre
+            $table->unsignedBigInteger('turno_id'); // Coincide con turnos.id_turno
             
-            // Definición de claves foráneas
+            // Claves foráneas optimizadas
             $table->foreign('asignatura_id')
                 ->references('asignatura_id')
                 ->on('asignaturas')
-                ->onDelete('cascade');
-                
+                ->cascadeOnDelete();
+
             $table->foreign('seccion_id')
                 ->references('codigo_seccion')
                 ->on('secciones')
-                ->onDelete('cascade');
-                
+                ->cascadeOnDelete();
+
             $table->foreign('carrera_id')
                 ->references('carrera_id')
                 ->on('carreras')
-                ->onDelete('cascade');
-                
+                ->cascadeOnDelete();
+
             $table->foreign('semestre_id')
                 ->references('id_semestre')
                 ->on('semestres')
-                ->onDelete('cascade');
-                
+                ->cascadeOnDelete();
+
             $table->foreign('turno_id')
                 ->references('id_turno')
                 ->on('turnos')
-                ->onDelete('cascade');
-            
-            // Clave primaria compuesta
-            $table->primary(['asignatura_id', 'seccion_id', 'carrera_id', 'semestre_id', 'turno_id']);
-            
-            // Timestamps para control de cambios
+                ->cascadeOnDelete();
+
+            // Clave primaria compuesta (todos los campos son obligatorios)
+            $table->primary([
+                'asignatura_id', 
+                'seccion_id', 
+                'carrera_id', 
+                'semestre_id', 
+                'turno_id'
+            ]);
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down()
     {
-        // Eliminar las claves foráneas primero
-        Schema::table('asignatura_seccion', function (Blueprint $table) {
-            $table->dropForeign(['asignatura_id']);
-            $table->dropForeign(['seccion_id']);
-            $table->dropForeign(['carrera_id']);
-            $table->dropForeign(['semestre_id']);
-            $table->dropForeign(['turno_id']);
-        });
-        
         Schema::dropIfExists('asignatura_seccion');
     }
 };
