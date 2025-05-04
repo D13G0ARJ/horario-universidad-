@@ -37,14 +37,14 @@ class AsignaturaController extends Controller
     {
         $request->validate([
             'carrera_id' => 'required|exists:carreras,carrera_id',
-            'turno_id' => 'required|exists:turnos,id_turno',
-            'semestre_id' => 'required|exists:semestres,id_semestre',
+            'id_turno' => 'required|exists:turnos,id_turno',
+            'id_semestre' => 'required|exists:semestres,id_semestre',
         ]);
     
         $asignaturas = Asignatura::whereHas('secciones', function($query) use ($request) {
-            $query->wherePivot('carrera_id', $request->carrera_id)
-                  ->wherePivot('turno_id', $request->turno_id)
-                  ->wherePivot('semestre_id', $request->semestre_id);
+            $query->where('asignatura_seccion.carrera_id', $request['carrera_id'])
+                  ->where('asignatura_seccion.turno_id', $request['id_turno'])
+                  ->where('asignatura_seccion.semestre_id', $request['id_semestre']);
         })
         ->with(['docentes', 'secciones'])
         ->orderBy('asignatura_id', 'desc')
