@@ -17,3 +17,12 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/semestres-por-turno/{turnoId}', function($turnoId) {
+    $semestres = DB::table('semestres')
+        ->where('turno_id', $turnoId)
+        ->orderBy('numero')
+        ->get(['id_semestre as id', 'numero']);
+    
+    return response()->json($semestres);
+});

@@ -156,24 +156,42 @@
 
     turnoSelect.addEventListener('change', function() {
         const turnoId = this.value;
-        const turnoNombre = this.options[this.selectedIndex].text.toLowerCase();
         
         // Resetear semestre
         semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
         semestreSelect.disabled = true;
         if (!turnoId) return;
 
-        // Determinar máximo de semestres
-        const esNocturno = turnoNombre.includes('nocturno');
-        const maxSemestres = esNocturno ? 10 : 8;
-        
-        // Generar opciones
-        for (let i = 1; i <= maxSemestres; i++) {
-            const option = new Option(`Semestre ${i}`, i);
-            semestreSelect.add(option);
-        }
-        
-        semestreSelect.disabled = false;
+        // Mostrar carga
+        semestreSelect.disabled = true;
+        const loadingOption = new Option('Cargando semestres...', '');
+        loadingOption.disabled = true;
+        semestreSelect.add(loadingOption);
+
+        // Hacer petición AJAX
+        fetch(`/api/semestres-por-turno/${turnoId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Error al cargar semestres');
+                return response.json();
+            })
+            .then(data => {
+                // Limpiar select
+                semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
+                
+                // Agregar opciones
+                data.forEach(semestre => {
+                    const textoMostrado = `Semestre ${semestre.numero}`;
+                    const option = new Option(textoMostrado, semestre.id);
+                    semestreSelect.add(option);
+                });
+                
+                semestreSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                semestreSelect.innerHTML = '<option value="">Error al cargar</option>';
+                semestreSelect.disabled = false;
+            });
     });
 });
 </script>
