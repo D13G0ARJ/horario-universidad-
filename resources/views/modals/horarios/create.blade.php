@@ -155,22 +155,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // 1. Cargar semestres según turno seleccionado
     turnoSelect.addEventListener('change', function() {
         const turnoId = this.value;
-        const turnoNombre = this.options[this.selectedIndex].text.toLowerCase();
-        
-        semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
-        semestreSelect.disabled = !turnoId;
-        
-        if (turnoId) {
-            const esNocturno = turnoNombre.includes('nocturno');
-            const maxSemestres = esNocturno ? 10 : 8;
+            semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
+            semestreSelect.disabled = true;
             
-            for (let i = 1; i <= maxSemestres; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `Semestre ${i}`;
-                semestreSelect.appendChild(option);
-            }
-        }
+            if (!turnoId) return;
+
+            semestreSelect.disabled = true;
+            const loadingOption = new Option('Cargando semestres...', '');
+            loadingOption.disabled = true;
+            semestreSelect.add(loadingOption);
+
+            fetch(`/api/semestres-por-turno/${turnoId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al cargar semestres');
+                    return response.json();
+                })
+                .then(data => {
+                    semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
+                    data.forEach(semestre => {
+                        const option = new Option(`Semestre ${semestre.numero}`, semestre.id);
+                        semestreSelect.add(option);
+                    });
+                    semestreSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    semestreSelect.innerHTML = '<option value="">Error al cargar</option>';
+                    semestreSelect.disabled = false;
+                });
     });
     
     // 2. Función para cargar secciones según los filtros
