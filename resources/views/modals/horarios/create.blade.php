@@ -1,6 +1,6 @@
 <!-- Modal para agregar un nuevo horario -->
 <div class="modal fade" id="agregarHorarioModal" tabindex="-1" aria-labelledby="agregarHorarioModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white py-3">
                 <h2 class="modal-title fs-3" id="agregarHorarioModalLabel">Gestión de Horarios</h2>

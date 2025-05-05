@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DocenteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,3 +27,5 @@ Route::get('/semestres-por-turno/{turnoId}', function($turnoId) {
     
     return response()->json($semestres);
 });
+
+Route::get('/docentes/{id}/asignaturas', [DocenteController::class, 'getAsignaturasByDocente']);

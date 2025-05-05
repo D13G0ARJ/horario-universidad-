@@ -205,6 +205,27 @@
             modal.find('#modalEmail').text(button.data('email'));
             modal.find('#modalTelefono').text(button.data('telefono'));
             modal.find('#modalDedicacion').text(button.data('dedicacion'));
+
+            var docenteId = button.data('cedula');
+
+            $.get(`/api/docentes/${docenteId}/asignaturas`, function(response) {
+                const asignaturasContainer = $('#asignaturasContainer');
+        
+                    if (response.asignaturas && response.asignaturas.length > 0) {
+                        const listaAsignaturas = response.asignaturas
+                        .map(asig => 
+                            `<dt class="col-sm-4">${asig.asignatura_id}</dt>
+                            <dd class="col-sm-8">${asig.name}</dd>
+                            `
+                        )
+                        .join('');
+                        asignaturasContainer.html(`<ul class="list-group">${listaAsignaturas}</ul>`);
+                    } else {
+                        asignaturasContainer.html('<div class="alert alert-warning">No tiene asignaturas asociadas</div>');
+                    }
+                }).fail(function() {
+                    $('#asignaturasContainer').html('<div class="alert alert-danger">Error al cargar asignaturas</div>');
+                });
         });
 
         // Script para llenar el modal de edición

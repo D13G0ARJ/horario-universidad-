@@ -21,6 +21,20 @@ class DocenteController extends Controller
         return view('docente.index', compact('docentes', 'dedicaciones'));
     }
 
+    public function getAsignaturasByDocente($id)
+    {
+        // Obtener docente por cédula
+        $docente = Docente::where('cedula_doc', $id)
+            ->with(['asignaturas' => function ($query) {
+                $query->select('asignaturas.asignatura_id', 'asignaturas.name');
+            }])
+            ->firstOrFail();
+        
+        return response()->json([
+            'asignaturas' => $docente->asignaturas,
+        ]);
+    }
+
     /**
      * Guardar nuevo docente
      */
