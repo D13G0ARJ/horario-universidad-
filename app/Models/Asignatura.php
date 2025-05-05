@@ -24,6 +24,7 @@ class Asignatura extends Model
      * Configuración personalizada de clave primaria
      */
     protected $primaryKey = 'asignatura_id';
+    public function getRouteKeyName() { return 'asignatura_id'; }
     public $incrementing = false;
     protected $keyType = 'string';
 

@@ -137,6 +137,76 @@
                         </button>
                     </div>
 
+
+
+
+                                <!-- Scripts para manejar alerts -->
+            <script>
+                // Mostrar errores de validación
+                @if($errors->any())
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de validación',
+                            html: `@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach`,
+                            timer: 5000,
+                            timerProgressBar: true
+                        });
+                    });
+                @endif
+
+                // Mostrar éxito después de redirección
+                @if(session('success'))
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: "{{ session('success') }}",
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    });
+                @endif
+
+                // Auto-abrir modal si hay errores
+                @if($errors->any())
+                    document.addEventListener('DOMContentLoaded', function() {
+                        $('#registroModal').modal('show');
+                    });
+                @endif
+
+                // Confirmación antes de enviar el formulario
+                document.getElementById('formAsignatura').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const form = this;
+                    
+                    Swal.fire({
+                        title: '¿Registrar nueva asignatura?',
+                        text: "¡Verifique que los datos sean correctos!",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Sí, registrar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            </script>
+
+            <style>
+                /* Estilos personalizados para SweetAlert */
+                .swal2-popup {
+                    font-size: 1.6rem;
+                }
+                .swal2-title {
+                    font-size: 2.0rem;
+                }
+            </style>
+
                     <script>
                         // Actualizar datos ocultos al seleccionar secciones
                         function actualizarDatosSeccion() {

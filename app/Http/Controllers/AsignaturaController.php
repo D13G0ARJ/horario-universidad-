@@ -87,7 +87,6 @@ class AsignaturaController extends Controller
             'turno_id' => 'required|exists:turnos,id_turno'
         ]);
 
-        // Forzar coherencia entre turno y semestre
         $validated['turno_id'] = $semestre->turno_id;
 
         $asignatura = Asignatura::create($validated);
@@ -104,36 +103,34 @@ class AsignaturaController extends Controller
 
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'ASIGNATURA CREADA: ' . $asignatura->name . 
-                       ' | Docentes: ' . count($validated['docentes']) .
-                       ' | Secciones: ' . count($validated['secciones'])
+            'accion' => 'ASIGNATURA CREADA: ' . $asignatura->name . ' (ID: ' . $asignatura->asignatura_id . ')'
         ]);
 
         return redirect()->route('asignatura.index')->with('alert', [
-            'type' => 'success',
+            'icon' => 'success',
             'title' => 'Registro Exitoso',
-            'message' => 'Asignatura registrada con relaciones asociadas'
+            'text' => 'Asignatura registrada con relaciones asociadas'
         ]);
     }
 
     public function update(Request $request, Asignatura $asignatura)
-{
-    $semestre = Semestre::findOrFail($request->semestre_id);
-    
-    $validated = $request->validate([
-        'asignatura_id' => 'required|unique:asignaturas,asignatura_id,'.$asignatura->asignatura_id.',asignatura_id',
-        'name' => 'required|string|max:255',
-        'docentes' => 'required|array|min:1',
-        'secciones' => 'required|array|min:1',
-        'carrera_id' => 'required|exists:carreras,carrera_id',
-        'semestre_id' => [
-            'required',
-            Rule::exists('semestres', 'id_semestre')->where('turno_id', $semestre->turno_id)
-        ],
-        'turno_id' => 'required|exists:turnos,id_turno'
-    ]);
+    {
+        $semestre = Semestre::findOrFail($request->semestre_id);
+        
+        $validated = $request->validate([
+            'asignatura_id' => 'required|unique:asignaturas,asignatura_id,'.$asignatura->asignatura_id.',asignatura_id',
+            'name' => 'required|string|max:255',
+            'docentes' => 'required|array|min:1',
+            'secciones' => 'required|array|min:1',
+            'carrera_id' => 'required|exists:carreras,carrera_id',
+            'semestre_id' => [
+                'required',
+                Rule::exists('semestres', 'id_semestre')->where('turno_id', $semestre->turno_id)
+            ],
+            'turno_id' => 'required|exists:turnos,id_turno'
+        ]);
 
-    $validated['turno_id'] = $semestre->turno_id;
+        $validated['turno_id'] = $semestre->turno_id;
 
         $asignatura->update($validated);
         $asignatura->docentes()->sync($validated['docentes']);
@@ -148,13 +145,13 @@ class AsignaturaController extends Controller
 
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name 
+            'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name . ' (ID: ' . $asignatura->asignatura_id . ')'
         ]);
 
         return redirect()->route('asignatura.index')->with('alert', [
-            'type' => 'success',
+            'icon' => 'success',
             'title' => 'Actualización Exitosa',
-            'message' => 'Cambios guardados correctamente'
+            'text' => 'Cambios guardados correctamente'
         ]);
     }
 
@@ -165,16 +162,15 @@ class AsignaturaController extends Controller
         
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'ASIGNATURA ELIMINADA: ' . $asignatura->name .
-                       ' (ID: ' . $asignatura->asignatura_id . ')'
+            'accion' => 'ASIGNATURA ELIMINADA: ' . $asignatura->name . ' (ID: ' . $asignatura->asignatura_id . ')'
         ]);
 
         $asignatura->delete();
 
         return redirect()->route('asignatura.index')->with('alert', [
-            'type' => 'success',
+            'icon' => 'success',
             'title' => 'Eliminación Completa',
-            'message' => 'Asignatura y relaciones eliminadas permanentemente'
+            'text' => 'Asignatura y relaciones eliminadas permanentemente'
         ]);
     }
 }
