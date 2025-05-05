@@ -398,27 +398,6 @@
 
 
 
-        // Confirmación eliminación
-        $('.delete-form').on('submit', function(e) {
-            e.preventDefault();
-            const form = this;
-
-            Swal.fire({
-                title: '¿Eliminar Asignatura?',
-                text: "¡Se eliminarán todas las secciones y relaciones asociadas!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
-            });
-        });
 
         (session('alert'))
             Swal.fire({
@@ -513,25 +492,62 @@
 </script>
 
 <script>
-    $(document).on('click', '.btn-eliminar', function() {
+$(document).on('click', '.btn-eliminar', function() {
     const id = $(this).data('id');
-    if (confirm('¿Estás seguro de eliminar esta asignatura?')) {
-        $.ajax({
-            url: `/asignatura/${id}`,
-            method: 'POST',
-            data: {
-                _method: 'DELETE',
-                _token: $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function() {
-                table.ajax.reload(); // Recargar la tabla
-                toastr.success('Asignatura eliminada correctamente');
-            },
-            error: function() {
-                toastr.error('Error al eliminar la asignatura');
-            }
-        });
-    }
+    
+    Swal.fire({
+        title: '¿Eliminar Asignatura?',
+        text: "¡Esta acción no se puede deshacer!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/asignaturas/${id}`,
+                method: 'POST',
+                headers: { // Agregar encabezado CSRF
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    _method: 'DELETE'
+                },
+                success: function(response) {
+                    // Obtener los filtros actuales
+                    const carrera = $('#carrera').val();
+                    const turno = $('#turno').val();
+                    const semestre = $('#semestre').val();
+                    
+                    // Volver a cargar los datos con los mismos filtros
+                    if(carrera && turno && semestre) {
+                        cargarDatos(carrera, turno, semestre);
+                    } else {
+                        $('#tabla-asignaturas').DataTable().clear().draw();
+                    }
+                    
+                    // Mostrar notificación
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminado',
+                        text: response.message || 'Asignatura eliminada correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON.message || 'Error al eliminar la asignatura'
+                    });
+                }
+            });
+        }
+    });
 });
 </script>
 @endpush
