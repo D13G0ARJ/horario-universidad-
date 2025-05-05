@@ -46,9 +46,11 @@ Route::delete('/carreras/{carrera}', [CarreraController::class, 'destroy'])->nam
 // Rutas para asignaturas
 Route::get('/asignatura', [AsignaturaController::class, 'index'])->name('asignatura.index')->middleware('auth');
 Route::get('/asignatura/filtrar', [AsignaturaController::class, 'filtrar'])->name('asignatura.filtrar');
-Route::post('/asignaturas', [AsignaturaController::class, 'store'])->name('asignatura.store');
+Route::post('/asignatura', [AsignaturaController::class, 'store'])->name('asignatura.store');
 Route::put('/asignaturas/{asignatura}', [AsignaturaController::class, 'update'])->name('asignatura.update');
 Route::delete('/asignaturas/{asignatura}', [AsignaturaController::class, 'destroy'])->name('asignatura.destroy');
+
+
 
 // Rutas para docentes
 Route::get('/docente', [DocenteController::class, 'index'])->name('docente.index')->middleware('auth');
@@ -141,3 +143,6 @@ Route::get('/obtener-asignaturas/{seccion}', [HorarioController::class, 'getAsig
 
 Route::get('/secciones-filtradas', [HorarioController::class, 'getSeccionesFiltradas']);
 Route::get('/asignaturas-seccion/{seccion}', [HorarioController::class, 'getAsignaturasBySeccion']);
+
+Route::get('/get-semestres/{turnoId}', [AsignaturaController::class, 'getSemestresByTurno']);
+

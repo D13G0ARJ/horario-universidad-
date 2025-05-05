@@ -120,7 +120,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                           
+                        
                         </tbody>
                     </table>
                         <div id="mensaje-inicial" class="text-center py-5">
@@ -396,8 +396,7 @@
             order: [[1, 'asc']]
         });
 
-        // SweetAlerts para notificaciones
-      
+
 
         // Confirmación eliminación
         $('.delete-form').on('submit', function(e) {
