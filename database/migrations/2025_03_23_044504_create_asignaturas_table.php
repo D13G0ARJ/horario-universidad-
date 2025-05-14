@@ -16,7 +16,18 @@ class CreateAsignaturasTable extends Migration
             $table->string('name');
             $table->timestamps();
         });
+
+        // Nueva migración para Carga Horaria
+Schema::create('carga_horaria', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('asignatura_id')->constrained()->onDelete('cascade');
+    $table->enum('tipo', ['teorica', 'practica', 'laboratorio']);
+    $table->unsignedTinyInteger('horas_academicas'); // 1-6 horas
+    $table->timestamps();
+});
     }
+
+    
 
     /**
      * Reverse the migrations.
@@ -24,5 +35,6 @@ class CreateAsignaturasTable extends Migration
     public function down()
     {
         Schema::dropIfExists('asignaturas');
+        Schema::dropIfExists('carga_horaria');
     }
 }

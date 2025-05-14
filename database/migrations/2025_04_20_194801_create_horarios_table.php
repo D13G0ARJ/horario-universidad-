@@ -6,128 +6,109 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateHorariosTable extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
     {
         Schema::create('horarios', function (Blueprint $table) {
-            $table->id(); // Clave primaria autoincremental
+            $table->id();
 
-            // Relación con la tabla users (coordinadores)
+            // Relaciones
             $table->string('coordinador_cedula', 20);
             $table->foreign('coordinador_cedula')
-                  ->references('cedula')
-                  ->on('users')
-                  ->onDelete('cascade');
+                ->references('cedula')
+                ->on('users')
+                ->onDelete('cascade');
 
-            // Relación con la tabla periodos
             $table->unsignedBigInteger('periodo_id');
             $table->foreign('periodo_id')
-                  ->references('id')
-                  ->on('periodos')
-                  ->onDelete('cascade');
+                ->references('id')
+                ->on('periodos')
+                ->onDelete('cascade');
 
-            // Relación con la tabla asignaturas
             $table->string('asignatura_id', 20);
             $table->foreign('asignatura_id')
-                  ->references('asignatura_id')
-                  ->on('asignaturas')
-                  ->onDelete('cascade');
+                ->references('asignatura_id')
+                ->on('asignaturas')
+                ->onDelete('cascade');
 
-            // Relación con la tabla carreras
             $table->string('carrera_id', 20);
             $table->foreign('carrera_id')
-                  ->references('carrera_id')
-                  ->on('carreras')
-                  ->onDelete('cascade');
+                ->references('carrera_id')
+                ->on('carreras')
+                ->onDelete('cascade');
 
-            // Relación con la tabla docentes
             $table->string('docente_id', 20);
             $table->foreign('docente_id')
-                  ->references('cedula_doc')
-                  ->on('docentes')
-                  ->onDelete('cascade');
+                ->references('cedula_doc')
+                ->on('docentes')
+                ->onDelete('cascade');
 
-            // Relación con la tabla secciones
             $table->string('seccion_id', 20);
             $table->foreign('seccion_id')
-                  ->references('codigo_seccion')
-                  ->on('secciones')
-                  ->onDelete('cascade');
+                ->references('codigo_seccion')
+                ->on('secciones')
+                ->onDelete('cascade');
 
-            // Relación con la tabla turnos
             $table->unsignedBigInteger('turno_id');
             $table->foreign('turno_id')
-                  ->references('id_turno')
-                  ->on('turnos')
-                  ->onDelete('cascade');
+                ->references('id_turno')
+                ->on('turnos')
+                ->onDelete('cascade');
 
-            // Relación con la tabla semestres
             $table->unsignedBigInteger('semestre_id');
             $table->foreign('semestre_id')
-                  ->references('id_semestre')
-                  ->on('semestres')
-                  ->onDelete('cascade');
+                ->references('id_semestre')
+                ->on('semestres')
+                ->onDelete('cascade');
 
-            // Día de la semana (1=Lunes, 6=Sábado)
+            // Campos específicos del horario
             $table->tinyInteger('dia_semana')
-                  ->unsigned()
-                  ->comment('1: Lunes, 2: Martes, 3: Miércoles, 4: Jueves, 5: Viernes, 6: Sábado');
+                ->unsigned()
+                ->comment('1: Lunes, 2: Martes, 3: Miércoles, 4: Jueves, 5: Viernes, 6: Sábado');
 
-            // Fecha completa para el horario (opcional)
-            $table->date('fecha')
-                  ->nullable()
-                  ->comment('Fecha específica para horarios no recurrentes');
+            $table->date('fecha')->nullable()->comment('Fecha específica para horarios no recurrentes');
+            
+            $table->time('hora_inicio')->comment('Hora de inicio del bloque');
+            
+            $table->time('hora_fin')->comment('Hora de fin del bloque');
+            
+            $table->enum('tipo_horas', ['teorica', 'practica', 'laboratorio'])
+                ->comment('Tipo de horas académicas');
+                
+            $table->unsignedTinyInteger('bloques')
+                ->comment('Cantidad de bloques de 45 minutos');
 
-            // Bloques de tiempo
-            $table->time('hora_inicio')
-                  ->comment('Hora de inicio del bloque horario');
-                  
-            $table->time('hora_fin')
-                  ->comment('Hora de fin del bloque horario');
-
-            // Estado del horario (activo/inactivo)
-            $table->boolean('activo')
-                  ->default(true)
-                  ->comment('Indica si el horario está activo');
-
-            // Observaciones adicionales
-            $table->text('observaciones')
-                  ->nullable()
-                  ->comment('Notas adicionales sobre el horario');
+            $table->boolean('activo')->default(true)->comment('Estado del horario');
+            
+            $table->text('observaciones')->nullable()->comment('Notas adicionales');
 
             // Auditoría
             $table->timestamps();
             $table->softDeletes();
 
-            // Índices para mejorar el rendimiento de búsqueda
-            $table->index(['dia_semana', 'hora_inicio']);
-            $table->index(['seccion_id', 'dia_semana']);
-            $table->index(['docente_id', 'dia_semana']);
+            // Índices optimizados
+            $table->index(['seccion_id', 'periodo_id', 'activo']);
+            $table->index(['docente_id', 'dia_semana', 'hora_inicio']);
+            $table->index(['asignatura_id', 'tipo_horas', 'semestre_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down()
     {
         Schema::table('horarios', function (Blueprint $table) {
-            // Eliminar las claves foráneas primero
-            $table->dropForeign(['coordinador_cedula']);
-            $table->dropForeign(['periodo_id']);
-            $table->dropForeign(['asignatura_id']);
-            $table->dropForeign(['carrera_id']);
-            $table->dropForeign(['docente_id']);
-            $table->dropForeign(['seccion_id']);
-            $table->dropForeign(['turno_id']);
-            $table->dropForeign(['semestre_id']);
+            $table->dropForeign([
+                'coordinador_cedula',
+                'periodo_id',
+                'asignatura_id',
+                'carrera_id',
+                'docente_id',
+                'seccion_id',
+                'turno_id',
+                'semestre_id'
+            ]);
             
-            // Eliminar índices
-            $table->dropIndex(['dia_semana', 'hora_inicio']);
-            $table->dropIndex(['seccion_id', 'dia_semana']);
-            $table->dropIndex(['docente_id', 'dia_semana']);
+            $table->dropIndex(['seccion_id', 'periodo_id', 'activo']);
+            $table->dropIndex(['docente_id', 'dia_semana', 'hora_inicio']);
+            $table->dropIndex(['asignatura_id', 'tipo_horas', 'semestre_id']);
         });
 
         Schema::dropIfExists('horarios');

@@ -52,8 +52,8 @@ return new class extends Migration
                 'semestre_id', 
                 'turno_id'
             ]);
-
-            $table->timestamps();
+            // Timestamps opcionales
+             $table->timestamps(); // Descomentar si necesitas timestamps
         });
     }
 

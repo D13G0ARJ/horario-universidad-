@@ -1,5 +1,4 @@
 <?php
-// database/migrations/xxxx_xx_xx_xxxxxx_create_asignatura_docente_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -17,13 +16,16 @@ return new class extends Migration
                 ->on('asignaturas')
                 ->onDelete('cascade');
 
-            $table->string('docente_id'); // cedula_doc del docente
+            $table->string('docente_id');
             $table->foreign('docente_id')
                 ->references('cedula_doc')
                 ->on('docentes')
                 ->onDelete('cascade');
                 
-            $table->primary(['asignatura_id', 'docente_id']); // Clave primaria compuesta
+            $table->primary(['asignatura_id', 'docente_id']);
+
+            // Eliminar timestamps si no son necesarios
+             $table->timestamps(); // <-- Dejar comentado o eliminar
         });
     }
 

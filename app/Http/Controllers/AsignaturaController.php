@@ -9,6 +9,7 @@ use App\Models\Bitacora;
 use App\Models\Turno;
 use App\Models\Carrera;
 use App\Models\Semestre;
+use App\Models\CargaHoraria;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,9 +18,13 @@ class AsignaturaController extends Controller
 {
     public function index()
     {
-        $asignaturas = Asignatura::with(['docentes', 'secciones' => function($query) {
-            $query->with(['carrera', 'semestre', 'turno']);
-        }])->get();
+        $asignaturas = Asignatura::with([
+            'docentes', 
+            'secciones' => function($query) {
+                $query->with(['carrera', 'semestre', 'turno']);
+            },
+            'cargaHoraria'
+        ])->get();
         
         $docentes = Docente::all();
         $secciones = Seccion::with(['carrera', 'semestre', 'turno'])->get();
@@ -52,7 +57,7 @@ class AsignaturaController extends Controller
             $query->where('asignatura_seccion.carrera_id', $request->carrera_id)
                   ->where('asignatura_seccion.semestre_id', $request->id_semestre);
         })
-        ->with(['docentes', 'secciones'])
+        ->with(['docentes', 'secciones', 'cargaHoraria'])
         ->orderBy('asignatura_id', 'desc')
         ->get()
         ->map(function($item) {
@@ -63,7 +68,10 @@ class AsignaturaController extends Controller
                 '3' => $item->secciones->first()?->codigo_seccion,
                 '4' => $item->docentes->first()?->name,
                 'docentes' => $item->docentes->pluck('name')->toArray(),
-                'secciones' => $item->secciones->pluck('codigo_seccion')->toArray()
+                'secciones' => $item->secciones->pluck('codigo_seccion')->toArray(),
+                'carga_horaria' => $item->cargaHoraria->groupBy('tipo')->map(function($item) {
+                    return $item->sum('horas_academicas');
+                })
             ];
         });
 
@@ -84,33 +92,59 @@ class AsignaturaController extends Controller
                 'required',
                 Rule::exists('semestres', 'id_semestre')->where('turno_id', $semestre->turno_id)
             ],
-            'turno_id' => 'required|exists:turnos,id_turno'
+            'turno_id' => 'required|exists:turnos,id_turno',
+            'carga_horaria' => 'required|array|min:1',
+            'carga_horaria.*.tipo' => 'required|in:teorica,practica,laboratorio',
+            'carga_horaria.*.horas_academicas' => 'required|integer|min:1|max:6'
         ]);
 
-        $validated['turno_id'] = $semestre->turno_id;
+        try {
+            $validated['turno_id'] = $semestre->turno_id;
 
-        $asignatura = Asignatura::create($validated);
-        
-        $asignatura->docentes()->sync($validated['docentes']);
-        $asignatura->secciones()->syncWithPivotValues(
-            $validated['secciones'],
-            [
-                'carrera_id' => $validated['carrera_id'],
-                'semestre_id' => $validated['semestre_id'],
-                'turno_id' => $validated['turno_id']
-            ]
-        );
+            $asignatura = Asignatura::create($validated);
+            
+            // Guardar carga horaria
+            foreach ($request->carga_horaria as $carga) {
+                $asignatura->cargaHoraria()->create([
+                    'tipo' => $carga['tipo'],
+                    'horas_academicas' => $carga['horas_academicas']
+                ]);
+            }
 
-        Bitacora::create([
-            'cedula' => Auth::user()->cedula,
-            'accion' => 'ASIGNATURA CREADA: ' . $asignatura->name . ' (ID: ' . $asignatura->asignatura_id . ')'
-        ]);
+            // Sincronizar con timestamps
+            $asignatura->docentes()->sync($validated['docentes'], ['created_at' => now(), 'updated_at' => now()]);
+            
+            $asignatura->secciones()->syncWithPivotValues(
+                $validated['secciones'],
+                [
+                    'carrera_id' => $validated['carrera_id'],
+                    'semestre_id' => $validated['semestre_id'],
+                    'turno_id' => $validated['turno_id'],
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]
+            );
 
-        return redirect()->route('asignatura.index')->with('alert', [
-            'icon' => 'success',
-            'title' => 'Registro Exitoso',
-            'text' => 'Asignatura registrada con relaciones asociadas'
-        ]);
+            Bitacora::create([
+                'cedula' => Auth::user()->cedula,
+                'accion' => 'ASIGNATURA CREADA: ' . $asignatura->name . 
+                           ' (ID: ' . $asignatura->asignatura_id . ')' .
+                           ' CARGA: ' . json_encode($request->carga_horaria)
+            ]);
+
+            return redirect()->route('asignatura.index')->with('alert', [
+                'icon' => 'success',
+                'title' => 'Registro Exitoso',
+                'text' => 'Asignatura registrada con relaciones asociadas'
+            ]);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('alert', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'Ocurrió un error al guardar: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function update(Request $request, Asignatura $asignatura)
@@ -127,50 +161,87 @@ class AsignaturaController extends Controller
                 'required',
                 Rule::exists('semestres', 'id_semestre')->where('turno_id', $semestre->turno_id)
             ],
-            'turno_id' => 'required|exists:turnos,id_turno'
+            'turno_id' => 'required|exists:turnos,id_turno',
+            'carga_horaria' => 'required|array|min:1',
+            'carga_horaria.*.tipo' => 'required|in:teorica,practica,laboratorio',
+            'carga_horaria.*.horas_academicas' => 'required|integer|min:1|max:6'
         ]);
 
-        $validated['turno_id'] = $semestre->turno_id;
+        try {
+            $validated['turno_id'] = $semestre->turno_id;
 
-        $asignatura->update($validated);
-        $asignatura->docentes()->sync($validated['docentes']);
-        $asignatura->secciones()->syncWithPivotValues(
-            $validated['secciones'],
-            [
-                'carrera_id' => $validated['carrera_id'],
-                'semestre_id' => $validated['semestre_id'],
-                'turno_id' => $validated['turno_id']
-            ]
-        );
+            $asignatura->update($validated);
+            
+            // Actualizar carga horaria
+            $asignatura->cargaHoraria()->delete();
+            foreach ($request->carga_horaria as $carga) {
+                $asignatura->cargaHoraria()->create([
+                    'tipo' => $carga['tipo'],
+                    'horas_academicas' => $carga['horas_academicas']
+                ]);
+            }
 
-        Bitacora::create([
-            'cedula' => Auth::user()->cedula,
-            'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name . ' (ID: ' . $asignatura->asignatura_id . ')'
-        ]);
+            // Actualizar relaciones con timestamps
+            $asignatura->docentes()->sync($validated['docentes'], ['updated_at' => now()]);
+            $asignatura->secciones()->syncWithPivotValues(
+                $validated['secciones'],
+                [
+                    'carrera_id' => $validated['carrera_id'],
+                    'semestre_id' => $validated['semestre_id'],
+                    'turno_id' => $validated['turno_id'],
+                    'updated_at' => now()
+                ]
+            );
 
-        return redirect()->route('asignatura.index')->with('alert', [
-            'icon' => 'success',
-            'title' => 'Actualización Exitosa',
-            'text' => 'Cambios guardados correctamente'
-        ]);
+            Bitacora::create([
+                'cedula' => Auth::user()->cedula,
+                'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name . 
+                           ' (ID: ' . $asignatura->asignatura_id . ')' .
+                           ' CARGA: ' . json_encode($request->carga_horaria)
+            ]);
+
+            return redirect()->route('asignatura.index')->with('alert', [
+                'icon' => 'success',
+                'title' => 'Actualización Exitosa',
+                'text' => 'Cambios guardados correctamente'
+            ]);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('alert', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'Ocurrió un error al actualizar: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function destroy(Asignatura $asignatura)
     {
-        $asignatura->docentes()->detach();
-        $asignatura->secciones()->detach();
-        
-        Bitacora::create([
-            'cedula' => Auth::user()->cedula,
-            'accion' => 'ASIGNATURA ELIMINADA: ' . $asignatura->name . ' (ID: ' . $asignatura->asignatura_id . ')'
-        ]);
+        try {
+            $asignatura->docentes()->detach();
+            $asignatura->secciones()->detach();
+            $asignatura->cargaHoraria()->delete();
+            
+            Bitacora::create([
+                'cedula' => Auth::user()->cedula,
+                'accion' => 'ASIGNATURA ELIMINADA: ' . $asignatura->name . 
+                           ' (ID: ' . $asignatura->asignatura_id . ')'
+            ]);
 
-        $asignatura->delete();
+            $asignatura->delete();
 
-        return redirect()->route('asignatura.index')->with('alert', [
-            'icon' => 'success',
-            'title' => 'Eliminación Completa',
-            'text' => 'Asignatura y relaciones eliminadas permanentemente'
-        ]);
+            return redirect()->route('asignatura.index')->with('alert', [
+                'icon' => 'success',
+                'title' => 'Eliminación Completa',
+                'text' => 'Asignatura y relaciones eliminadas permanentemente'
+            ]);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('alert', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo eliminar la asignatura: ' . $e->getMessage()
+            ]);
+        }
     }
 }

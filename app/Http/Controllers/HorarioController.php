@@ -11,6 +11,7 @@ use App\Models\Turno;
 use App\Models\Semestre;
 use App\Models\Periodo;
 use App\Models\Carrera;
+use App\Models\CargaHoraria;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
@@ -44,7 +45,7 @@ class HorarioController extends Controller
     public function create()
     {
         return view('horario.create', [
-            'asignaturas' => Asignatura::all(),
+            'asignaturas' => Asignatura::with('cargaHoraria')->get(),
             'secciones' => Seccion::with(['asignaturas', 'turno'])->get(),
             'docentes' => Docente::all(),
             'turnos' => Turno::all(),
@@ -65,7 +66,7 @@ class HorarioController extends Controller
         }
 
         // Validación para horario simple
-        $request->validate([
+        $validated = $request->validate([
             'coordinador_cedula' => 'required|exists:users,cedula',
             'periodo_id' => 'required|exists:periodos,id',
             'carrera_id' => 'required|exists:carreras,carrera_id',
@@ -76,17 +77,40 @@ class HorarioController extends Controller
             'semestre_id' => 'required|exists:semestres,id_semestre',
             'dia_semana' => 'required|integer|between:1,6',
             'hora_inicio' => 'required|date_format:H:i',
-            'hora_fin' => 'required|date_format:H:i|after:hora_inicio',
+            'tipo_horas' => 'required|in:teorica,practica,laboratorio',
+            'bloques' => 'required|integer|min:1|max:6'
         ], [
             'coordinador_cedula.required' => 'El campo cédula del coordinador es obligatorio.',
             'periodo_id.exists' => 'El periodo seleccionado no es válido.',
             'carrera_id.exists' => 'La carrera seleccionada no es válida.',
             'hora_fin.after' => 'La hora de fin debe ser posterior a la hora de inicio.',
             'dia_semana.between' => 'El día de la semana debe ser entre 1 (Lunes) y 6 (Sábado).',
+            'bloques.max' => 'El número máximo de bloques por sesión es 6.',
         ]);
 
         try {
-            Horario::create($request->all());
+            // Calcular hora final
+            $horaFin = Carbon::createFromFormat('H:i', $validated['hora_inicio'])
+                ->addMinutes(45 * $validated['bloques'])
+                ->format('H:i');
+
+            Horario::create([
+                'coordinador_cedula' => $validated['coordinador_cedula'],
+                'periodo_id' => $validated['periodo_id'],
+                'carrera_id' => $validated['carrera_id'],
+                'asignatura_id' => $validated['asignatura_id'],
+                'docente_id' => $validated['docente_id'],
+                'seccion_id' => $validated['seccion_id'],
+                'turno_id' => $validated['turno_id'],
+                'semestre_id' => $validated['semestre_id'],
+                'dia_semana' => $validated['dia_semana'],
+                'hora_inicio' => $validated['hora_inicio'],
+                'hora_fin' => $horaFin,
+                'tipo_horas' => $validated['tipo_horas'],
+                'bloques' => $validated['bloques'],
+                'activo' => true
+            ]);
+
             return redirect()->route('horario.index')->with('success', 'Horario asignado correctamente.');
         } catch (\Exception $e) {
             Log::error('Error al asignar horario: ' . $e->getMessage());
@@ -99,7 +123,8 @@ class HorarioController extends Controller
      */
     protected function storeHorarioMultiple(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
+            'coordinador_cedula' => 'required|exists:users,cedula',
             'periodo_id' => 'required|exists:periodos,id',
             'carrera_id' => 'required|exists:carreras,carrera_id',
             'semestre_id' => 'required|exists:semestres,id_semestre',
@@ -113,32 +138,48 @@ class HorarioController extends Controller
             $bloques = [];
             
             foreach ($horarioData as $bloque) {
-                $horaFin = Carbon::createFromFormat('H:i', $bloque['hora'])->addMinutes(45)->format('H:i');
+                // Validar estructura de cada bloque
+                if (!isset($bloque['tipo_horas']) || !isset($bloque['bloques'])) {
+                    throw new \Exception('Estructura de datos del horario inválida');
+                }
+
+                $horaFin = Carbon::createFromFormat('H:i', $bloque['hora'])
+                    ->addMinutes(45 * $bloque['bloques'])
+                    ->format('H:i');
                 
                 $bloques[] = [
-                    'periodo_id' => $request->periodo_id,
-                    'carrera_id' => $request->carrera_id,
-                    'semestre_id' => $request->semestre_id,
-                    'turno_id' => $request->turno_id,
-                    'seccion_id' => $request->seccion_id,
+                    'coordinador_cedula' => $validated['coordinador_cedula'],
+                    'periodo_id' => $validated['periodo_id'],
+                    'carrera_id' => $validated['carrera_id'],
+                    'semestre_id' => $validated['semestre_id'],
+                    'turno_id' => $validated['turno_id'],
+                    'seccion_id' => $validated['seccion_id'],
                     'asignatura_id' => $bloque['asignatura_id'],
                     'docente_id' => $bloque['docente_id'] ?? null,
                     'dia_semana' => $bloque['dia'],
                     'hora_inicio' => $bloque['hora'],
                     'hora_fin' => $horaFin,
-                    'coordinador_cedula' => $request->coordinador_cedula ?? auth()->user()->cedula,
+                    'tipo_horas' => $bloque['tipo_horas'],
+                    'bloques' => $bloque['bloques'],
+                    'activo' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
             }
             
+            // Validar carga horaria máxima por tipo
+            $this->validarCargaHoraria($bloques);
+            
             // Insertar todos los bloques en una sola operación
             Horario::insert($bloques);
             
-            return redirect()->route('horario.index')->with('success', 'Horario guardado correctamente con ' . count($bloques) . ' bloques.');
+            return redirect()->route('horario.index')->with(
+                'success', 
+                'Horario guardado correctamente con ' . count($bloques) . ' bloques.'
+            );
         } catch (\Exception $e) {
             Log::error('Error al guardar horario múltiple: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Ocurrió un error al guardar el horario.');
+            return redirect()->back()->with('error', 'Ocurrió un error al guardar el horario: ' . $e->getMessage());
         }
     }
 
@@ -182,17 +223,52 @@ class HorarioController extends Controller
      * Obtiene las asignaturas de una sección específica
      */
     public function getAsignaturasBySeccion($seccionId)
-{
-    $seccion = Seccion::with('asignaturas')->findOrFail($seccionId);
-    
-    $asignaturas = $seccion->asignaturas->map(function($asignatura) {
-        return [
-            'asignatura_id' => $asignatura->asignatura_id,
-            'name' => $asignatura->name, // Asegúrate de usar 'name' aquí
-            'docentes' => $asignatura->docentes
-        ];
-    });
+    {
+        $seccion = Seccion::with(['asignaturas.cargaHoraria'])->findOrFail($seccionId);
+        
+        $asignaturas = $seccion->asignaturas->map(function($asignatura) {
+            return [
+                'asignatura_id' => $asignatura->asignatura_id,
+                'name' => $asignatura->name,
+                'carga_horaria' => $asignatura->cargaHoraria->map(function($carga) {
+                    return [
+                        'tipo' => $carga->tipo,
+                        'horas_academicas' => $carga->horas_academicas
+                    ];
+                }),
+                'docentes' => $asignatura->docentes
+            ];
+        });
 
-    return response()->json($asignaturas);
-}
+        return response()->json($asignaturas);
+    }
+
+    /**
+     * Valida la carga horaria máxima por tipo de horas
+     */
+    private function validarCargaHoraria($bloques)
+    {
+        $cargas = [];
+        foreach ($bloques as $bloque) {
+            $asignatura = Asignatura::with('cargaHoraria')
+                ->where('asignatura_id', $bloque['asignatura_id'])
+                ->firstOrFail();
+
+            $cargaMaxima = $asignatura->cargaHoraria
+                ->where('tipo', $bloque['tipo_horas'])
+                ->sum('horas_academicas');
+
+            $totalAsignado = collect($bloques)
+                ->where('asignatura_id', $bloque['asignatura_id'])
+                ->where('tipo_horas', $bloque['tipo_horas'])
+                ->sum('bloques');
+
+            if ($totalAsignado > $cargaMaxima) {
+                throw new \Exception(
+                    "La asignatura {$asignatura->name} excede la carga horaria máxima de " .
+                    "{$cargaMaxima} bloques para {$bloque['tipo_horas']}"
+                );
+            }
+        }
+    }
 }

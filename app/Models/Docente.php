@@ -56,7 +56,7 @@ class Docente extends Model
             'asignatura_docente', // Tabla pivot
             'docente_id',         // FK de docente en pivot
             'asignatura_id'       // FK de asignatura en pivot
-        );
+            )->withTimestamps(false);
     }
 
     public function dedicacion(): BelongsTo

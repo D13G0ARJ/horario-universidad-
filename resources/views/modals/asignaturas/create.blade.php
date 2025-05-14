@@ -125,10 +125,54 @@
                         @enderror
                     </div>
 
+                    <!-- Carga Horaria -->
+                    <div class="form-group mb-4">
+                        <label class="form-label">Carga Horaria <span class="text-danger">*</span></label>
+                        <div id="cargaHorariaContainer">
+                            @if(old('carga_horaria'))
+                                @foreach(old('carga_horaria') as $index => $carga)
+                                <div class="carga-horaria-block mb-3">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <select class="form-select tipo-select" name="carga_horaria[{{$index}}][tipo]" required>
+                                                <option value="">Seleccionar tipo...</option>
+                                                <option value="teorica" {{ $carga['tipo'] == 'teorica' ? 'selected' : '' }}>Horas Teóricas</option>
+                                                <option value="practica" {{ $carga['tipo'] == 'practica' ? 'selected' : '' }}>Horas Prácticas</option>
+                                                <option value="laboratorio" {{ $carga['tipo'] == 'laboratorio' ? 'selected' : '' }}>Horas Laboratorio</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select class="form-select horas-select" name="carga_horaria[{{$index}}][horas_academicas]" required>
+                                                <option value="">Horas...</option>
+                                                @for ($i = 1; $i <= 6; $i++)
+                                                <option value="{{ $i }}" {{ $carga['horas_academicas'] == $i ? 'selected' : '' }}>{{ $i }} hora(s)</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-danger btn-block" onclick="eliminarBloqueCarga(this)">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            @else
+                                <!-- Bloques dinámicos se agregarán aquí -->
+                            @endif
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="agregarBloqueCarga()">
+                            <i class="fas fa-plus me-1"></i> Agregar Tipo
+                        </button>
+                        @error('carga_horaria')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <!-- Campos ocultos para datos de sección -->
-                    <input type="hidden" name="carrera_id" id="carrera_id">
-                    <input type="hidden" name="semestre_id" id="semestre_id">
-                    <input type="hidden" name="turno_id" id="turno_id">
+                    <input type="hidden" name="carrera_id" id="carrera_id" value="{{ old('carrera_id') }}">
+                    <input type="hidden" name="semestre_id" id="semestre_id" value="{{ old('semestre_id') }}">
+                    <input type="hidden" name="turno_id" id="turno_id" value="{{ old('turno_id') }}">
 
                     <!-- Botón de envío -->
                     <div class="d-grid gap-2 mt-4">
@@ -137,78 +181,53 @@
                         </button>
                     </div>
 
+                    <!-- Template para carga horaria -->
+                    <template id="cargaHorariaTemplate">
+                        <div class="carga-horaria-block mb-3">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <select class="form-select tipo-select" name="carga_horaria[__INDEX__][tipo]" required>
+                                        <option value="">Seleccionar tipo...</option>
+                                        <option value="teorica">Horas Teóricas</option>
+                                        <option value="practica">Horas Prácticas</option>
+                                        <option value="laboratorio">Horas Laboratorio</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select horas-select" name="carga_horaria[__INDEX__][horas_academicas]" required>
+                                        <option value="">Horas...</option>
+                                        @for ($i = 1; $i <= 6; $i++)
+                                            <option value="{{ $i }}">{{ $i }} hora(s)</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-danger btn-block" onclick="eliminarBloqueCarga(this)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
 
-
-
-                                <!-- Scripts para manejar alerts -->
-            <script>
-                // Mostrar errores de validación
-                @if($errors->any())
-                    document.addEventListener('DOMContentLoaded', function() {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error de validación',
-                            html: `@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach`,
-                            timer: 5000,
-                            timerProgressBar: true
-                        });
-                    });
-                @endif
-
-                // Mostrar éxito después de redirección
-                @if(session('success'))
-                    document.addEventListener('DOMContentLoaded', function() {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Éxito',
-                            text: "{{ session('success') }}",
-                            timer: 3000,
-                            timerProgressBar: true
-                        });
-                    });
-                @endif
-
-                // Auto-abrir modal si hay errores
-                @if($errors->any())
-                    document.addEventListener('DOMContentLoaded', function() {
-                        $('#registroModal').modal('show');
-                    });
-                @endif
-
-                // Confirmación antes de enviar el formulario
-                document.getElementById('formAsignatura').addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const form = this;
-                    
-                    Swal.fire({
-                        title: '¿Registrar nueva asignatura?',
-                        text: "¡Verifique que los datos sean correctos!",
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Sí, registrar',
-                        cancelButtonText: 'Cancelar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            form.submit();
-                        }
-                    });
-                });
-            </script>
-
-            <style>
-                /* Estilos personalizados para SweetAlert */
-                .swal2-popup {
-                    font-size: 1.6rem;
-                }
-                .swal2-title {
-                    font-size: 2.0rem;
-                }
-            </style>
-
+                    <!-- Scripts -->
                     <script>
-                        // Actualizar datos ocultos al seleccionar secciones
+                        let bloqueIndex = {{ count(old('carga_horaria', [])) }};
+
+                        // Función para agregar bloques de carga horaria
+                        function agregarBloqueCarga() {
+                            const container = document.getElementById('cargaHorariaContainer');
+                            const template = document.getElementById('cargaHorariaTemplate').innerHTML;
+                            const html = template.replace(/__INDEX__/g, bloqueIndex++);
+                            container.insertAdjacentHTML('beforeend', html);
+                        }
+
+                        // Función para eliminar bloques
+                        function eliminarBloqueCarga(btn) {
+                            btn.closest('.carga-horaria-block').remove();
+                        }
+
+                        // Actualizar datos de sección
                         function actualizarDatosSeccion() {
                             const seccionesSelect = document.getElementById('secciones');
                             const selectedOptions = Array.from(seccionesSelect.selectedOptions);
@@ -244,9 +263,51 @@
                             noResults.style.display = resultados === 0 && busqueda !== '' ? 'block' : 'none';
                             select.size = resultados > 5 ? 5 : resultados === 0 ? 1 : resultados;
                         }
+
+                        // Validación del formulario
+                        document.getElementById('formAsignatura').addEventListener('submit', function(e) {
+                            let valid = true;
+                            const bloques = document.querySelectorAll('.carga-horaria-block');
+                            
+                            if (bloques.length === 0) {
+                                valid = false;
+                                Swal.fire('Error', 'Debe agregar al menos un bloque de carga horaria', 'error');
+                            }
+
+                            bloques.forEach(bloque => {
+                                const tipo = bloque.querySelector('.tipo-select').value;
+                                const horas = bloque.querySelector('.horas-select').value;
+                                
+                                if (!tipo || !horas) {
+                                    valid = false;
+                                    bloque.querySelector('.tipo-select').classList.add('is-invalid');
+                                    bloque.querySelector('.horas-select').classList.add('is-invalid');
+                                }
+                            });
+
+                            if (!valid) {
+                                e.preventDefault();
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Complete todos los campos requeridos'
+                                });
+                            }
+                        });
+
+                        // Inicializar bloques si hay datos antiguos
+                        @if(!old('carga_horaria'))
+                            document.addEventListener('DOMContentLoaded', agregarBloqueCarga);
+                        @endif
                     </script>
 
                     <style>
+                        .carga-horaria-block {
+                            background: #f8f9fa;
+                            padding: 10px;
+                            border-radius: 5px;
+                            border: 1px solid #dee2e6;
+                        }
                         .search-container {
                             position: relative;
                             margin-bottom: 0.5rem;
@@ -260,14 +321,9 @@
                             border-top: none;
                             z-index: 2;
                         }
-                        select[multiple] {
-                            border-radius: 0.25rem;
-                            width: 100%;
-                        }
-                        select[multiple] option {
-                            padding: 0.5rem 1rem;
-                            cursor: pointer;
-                            border-bottom: 1px solid #f8f9fa;
+                        .is-invalid {
+                            border-color: #dc3545 !important;
+                            box-shadow: 0 0 0 0.25rem rgba(220,53,69,.25);
                         }
                     </style>
                 </form>
