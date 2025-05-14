@@ -18,7 +18,7 @@ class CreateAsignaturasTable extends Migration
         });
 
         // Nueva migración para Carga Horaria
-Schema::create('carga_horaria', function (Blueprint $table) {
+Schema::create('carga_horarias', function (Blueprint $table) {
     $table->id();
     $table->foreignId('asignatura_id')->constrained()->onDelete('cascade');
     $table->enum('tipo', ['teorica', 'practica', 'laboratorio']);
