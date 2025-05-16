@@ -48,7 +48,7 @@
                         @enderror
                     </div>
 
-                    <!-- Selector de Docentes con buscador -->
+                    <!-- Selector de Docentes -->
                     <div class="form-group mb-3">
                         <label for="docentes" class="form-label">Docentes <span class="text-danger">*</span></label>
                         <div class="search-container mb-2">
@@ -83,7 +83,7 @@
                         @enderror
                     </div>
 
-                    <!-- Selector de Secciones con datos embebidos -->
+                    <!-- Selector de Secciones -->
                     <div class="form-group mb-4">
                         <label for="secciones" class="form-label">Secciones <span class="text-danger">*</span></label>
                         <div class="search-container mb-2">
@@ -103,13 +103,9 @@
                             multiple
                             size="5"
                             required
-                            style="display: none;"
-                            onchange="actualizarDatosSeccion()">
+                            style="display: none;">
                             @foreach($secciones as $seccion)
                             <option value="{{ $seccion->codigo_seccion }}"
-                                data-carrera="{{ $seccion->carrera_id }}"
-                                data-semestre="{{ $seccion->semestre_id }}"
-                                data-turno="{{ $seccion->turno_id }}"
                                 data-busqueda="{{ strtolower($seccion->codigo_seccion) }} {{ strtolower($seccion->carrera->name) }} semestre{{ $seccion->semestre->numero }} {{ strtolower($seccion->turno->nombre) }}"
                                 {{ in_array($seccion->codigo_seccion, old('secciones', [])) ? 'selected' : '' }}
                                 style="display: none;">
@@ -136,16 +132,16 @@
                                         <div class="col-md-6">
                                             <select class="form-select tipo-select" name="carga_horaria[{{$index}}][tipo]" required>
                                                 <option value="">Seleccionar tipo...</option>
-                                                <option value="teorica" {{ $carga['tipo'] == 'teorica' ? 'selected' : '' }}>Horas Teóricas</option>
-                                                <option value="practica" {{ $carga['tipo'] == 'practica' ? 'selected' : '' }}>Horas Prácticas</option>
-                                                <option value="laboratorio" {{ $carga['tipo'] == 'laboratorio' ? 'selected' : '' }}>Horas Laboratorio</option>
+                                                <option value="teorica" {{ $carga['tipo'] == 'teorica' ? 'selected' : '' }}>Teórica</option>
+                                                <option value="practica" {{ $carga['tipo'] == 'practica' ? 'selected' : '' }}>Práctica</option>
+                                                <option value="laboratorio" {{ $carga['tipo'] == 'laboratorio' ? 'selected' : '' }}>Laboratorio</option>
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <select class="form-select horas-select" name="carga_horaria[{{$index}}][horas_academicas]" required>
                                                 <option value="">Horas...</option>
                                                 @for ($i = 1; $i <= 6; $i++)
-                                                <option value="{{ $i }}" {{ $carga['horas_academicas'] == $i ? 'selected' : '' }}>{{ $i }} hora(s)</option>
+                                                <option value="{{ $i }}" {{ $carga['horas_academicas'] == $i ? 'selected' : '' }}>{{ $i }}h</option>
                                                 @endfor
                                             </select>
                                         </div>
@@ -157,8 +153,6 @@
                                     </div>
                                 </div>
                                 @endforeach
-                            @else
-                                <!-- Bloques dinámicos se agregarán aquí -->
                             @endif
                         </div>
                         <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="agregarBloqueCarga()">
@@ -169,14 +163,9 @@
                         @enderror
                     </div>
 
-                    <!-- Campos ocultos para datos de sección -->
-                    <input type="hidden" name="carrera_id" id="carrera_id" value="{{ old('carrera_id') }}">
-                    <input type="hidden" name="semestre_id" id="semestre_id" value="{{ old('semestre_id') }}">
-                    <input type="hidden" name="turno_id" id="turno_id" value="{{ old('turno_id') }}">
-
                     <!-- Botón de envío -->
                     <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitButton">
                             <i class="fas fa-save me-2"></i>Registrar Asignatura
                         </button>
                     </div>
@@ -188,16 +177,16 @@
                                 <div class="col-md-6">
                                     <select class="form-select tipo-select" name="carga_horaria[__INDEX__][tipo]" required>
                                         <option value="">Seleccionar tipo...</option>
-                                        <option value="teorica">Horas Teóricas</option>
-                                        <option value="practica">Horas Prácticas</option>
-                                        <option value="laboratorio">Horas Laboratorio</option>
+                                        <option value="teorica">Teórica</option>
+                                        <option value="practica">Práctica</option>
+                                        <option value="laboratorio">Laboratorio</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
                                     <select class="form-select horas-select" name="carga_horaria[__INDEX__][horas_academicas]" required>
                                         <option value="">Horas...</option>
                                         @for ($i = 1; $i <= 6; $i++)
-                                            <option value="{{ $i }}">{{ $i }} hora(s)</option>
+                                            <option value="{{ $i }}">{{ $i }}h</option>
                                         @endfor
                                     </select>
                                 </div>
@@ -209,125 +198,191 @@
                             </div>
                         </div>
                     </template>
-
-                    <!-- Scripts -->
-                    <script>
-                        let bloqueIndex = {{ count(old('carga_horaria', [])) }};
-
-                        // Función para agregar bloques de carga horaria
-                        function agregarBloqueCarga() {
-                            const container = document.getElementById('cargaHorariaContainer');
-                            const template = document.getElementById('cargaHorariaTemplate').innerHTML;
-                            const html = template.replace(/__INDEX__/g, bloqueIndex++);
-                            container.insertAdjacentHTML('beforeend', html);
-                        }
-
-                        // Función para eliminar bloques
-                        function eliminarBloqueCarga(btn) {
-                            btn.closest('.carga-horaria-block').remove();
-                        }
-
-                        // Actualizar datos de sección
-                        function actualizarDatosSeccion() {
-                            const seccionesSelect = document.getElementById('secciones');
-                            const selectedOptions = Array.from(seccionesSelect.selectedOptions);
-                            
-                            if (selectedOptions.length > 0) {
-                                const primeraSeccion = selectedOptions[0];
-                                document.getElementById('carrera_id').value = primeraSeccion.dataset.carrera;
-                                document.getElementById('semestre_id').value = primeraSeccion.dataset.semestre;
-                                document.getElementById('turno_id').value = primeraSeccion.dataset.turno;
-                            }
-                        }
-
-                        // Función para filtrar opciones
-                        function filtrarOpciones(selectId, busqueda) {
-                            const select = document.getElementById(selectId);
-                            const noResults = document.getElementById(`${selectId}NoResults`);
-                            const opciones = select.options;
-                            let resultados = 0;
-
-                            busqueda = busqueda.toLowerCase().trim();
-                            select.style.display = busqueda ? 'block' : 'none';
-
-                            for (let i = 0; i < opciones.length; i++) {
-                                const textoBusqueda = opciones[i].getAttribute('data-busqueda').toLowerCase();
-                                if (textoBusqueda.includes(busqueda)) {
-                                    opciones[i].style.display = 'block';
-                                    resultados++;
-                                } else {
-                                    opciones[i].style.display = 'none';
-                                }
-                            }
-
-                            noResults.style.display = resultados === 0 && busqueda !== '' ? 'block' : 'none';
-                            select.size = resultados > 5 ? 5 : resultados === 0 ? 1 : resultados;
-                        }
-
-                        // Validación del formulario
-                        document.getElementById('formAsignatura').addEventListener('submit', function(e) {
-                            let valid = true;
-                            const bloques = document.querySelectorAll('.carga-horaria-block');
-                            
-                            if (bloques.length === 0) {
-                                valid = false;
-                                Swal.fire('Error', 'Debe agregar al menos un bloque de carga horaria', 'error');
-                            }
-
-                            bloques.forEach(bloque => {
-                                const tipo = bloque.querySelector('.tipo-select').value;
-                                const horas = bloque.querySelector('.horas-select').value;
-                                
-                                if (!tipo || !horas) {
-                                    valid = false;
-                                    bloque.querySelector('.tipo-select').classList.add('is-invalid');
-                                    bloque.querySelector('.horas-select').classList.add('is-invalid');
-                                }
-                            });
-
-                            if (!valid) {
-                                e.preventDefault();
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'Complete todos los campos requeridos'
-                                });
-                            }
-                        });
-
-                        // Inicializar bloques si hay datos antiguos
-                        @if(!old('carga_horaria'))
-                            document.addEventListener('DOMContentLoaded', agregarBloqueCarga);
-                        @endif
-                    </script>
-
-                    <style>
-                        .carga-horaria-block {
-                            background: #f8f9fa;
-                            padding: 10px;
-                            border-radius: 5px;
-                            border: 1px solid #dee2e6;
-                        }
-                        .search-container {
-                            position: relative;
-                            margin-bottom: 0.5rem;
-                        }
-                        .no-results {
-                            position: absolute;
-                            background: white;
-                            width: 100%;
-                            padding: 0.5rem;
-                            border: 1px solid #dee2e6;
-                            border-top: none;
-                            z-index: 2;
-                        }
-                        .is-invalid {
-                            border-color: #dc3545 !important;
-                            box-shadow: 0 0 0 0.25rem rgba(220,53,69,.25);
-                        }
-                    </style>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<!-- JavaScript Completo Corregido -->
+<script>
+    let bloqueIndex = {{ is_array(old('carga_horaria')) ? count(old('carga_horaria')) : 0 }};
+    let initialLoad = true;
+
+    function agregarBloqueCarga() {
+        const container = document.getElementById('cargaHorariaContainer');
+        const template = document.getElementById('cargaHorariaTemplate').innerHTML;
+        const html = template.replace(/__INDEX__/g, bloqueIndex);
+        container.insertAdjacentHTML('beforeend', html);
+        bloqueIndex++;
+        
+        if (!initialLoad) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Nuevo bloque agregado',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+    }
+
+    function eliminarBloqueCarga(btn) {
+        const bloque = btn.closest('.carga-horaria-block');
+        const bloquesRestantes = document.querySelectorAll('.carga-horaria-block').length;
+        
+        if (bloquesRestantes <= 1) {
+            Swal.fire('Error', 'Debe mantener al menos un bloque de carga horaria', 'error');
+            return;
+        }
+        
+        bloque.remove();
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Bloque eliminado',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    }
+
+    function filtrarOpciones(selectId, busqueda) {
+        const select = document.getElementById(selectId);
+        const noResults = document.getElementById(`${selectId}NoResults`);
+        const opciones = select.options;
+        let resultados = 0;
+
+        busqueda = busqueda.toLowerCase().trim();
+        select.style.display = busqueda ? 'block' : 'none';
+
+        for (let i = 0; i < opciones.length; i++) {
+            const textoBusqueda = opciones[i].getAttribute('data-busqueda').toLowerCase();
+            if (textoBusqueda.includes(busqueda)) {
+                opciones[i].style.display = 'block';
+                resultados++;
+            } else {
+                opciones[i].style.display = 'none';
+            }
+        }
+
+        noResults.style.display = resultados === 0 && busqueda !== '' ? 'block' : 'none';
+        select.size = resultados > 5 ? 5 : resultados === 0 ? 1 : resultados;
+    }
+
+    document.getElementById('formAsignatura').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const submitButton = document.getElementById('submitButton');
+        const originalButtonText = submitButton.innerHTML;
+        
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
+        
+        let valid = true;
+        const errorMessages = [];
+        
+        // Validar al menos un bloque de carga horaria
+        const bloques = document.querySelectorAll('.carga-horaria-block');
+        if (bloques.length === 0) {
+            valid = false;
+            errorMessages.push('Debe agregar al menos un bloque de carga horaria');
+        }
+        
+        // Validar campos de carga horaria
+        bloques.forEach(bloque => {
+            const tipo = bloque.querySelector('.tipo-select').value;
+            const horas = bloque.querySelector('.horas-select').value;
+            
+            if (!tipo || !horas) {
+                valid = false;
+                bloque.querySelector('.tipo-select').classList.add('is-invalid');
+                bloque.querySelector('.horas-select').classList.add('is-invalid');
+                errorMessages.push('Complete todos los campos de carga horaria');
+            }
+        });
+        
+        // Validar selección de secciones
+        const seccionesSelect = document.getElementById('secciones');
+        if (seccionesSelect.selectedOptions.length === 0) {
+            valid = false;
+            errorMessages.push('Debe seleccionar al menos una sección');
+            seccionesSelect.classList.add('is-invalid');
+        }
+        
+        if (!valid) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en el formulario',
+                html: [...new Set(errorMessages)].join('<br>')
+            });
+            
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+            return;
+        }
+        
+        // Enviar formulario
+        form.submit();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Agregar primer bloque si no hay datos antiguos
+        if (!{{ is_array(old('carga_horaria')) && count(old('carga_horaria')) > 0 ? 'true' : 'false' }}) {
+            agregarBloqueCarga();
+        }
+        initialLoad = false;
+    });
+
+    // Mantener modal abierto si hay errores
+    @if ($errors->any() && session('open_modal'))
+        $(document).ready(function() {
+            $('#registroModal').modal('show');
+            
+            // Reindexar bloques si hay errores
+            @if(is_array(old('carga_horaria')))
+                bloqueIndex = {{ count(old('carga_horaria')) }};
+            @endif
+        });
+    @endif
+</script>
+
+<style>
+    .carga-horaria-block {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    .carga-horaria-block:hover {
+        background: #e9ecef;
+    }
+    .search-container {
+        position: relative;
+        margin-bottom: 0.5rem;
+    }
+    .no-results {
+        position: absolute;
+        background: white;
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        z-index: 2;
+    }
+    .is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.25rem rgba(220,53,69,.25);
+    }
+    select[multiple] {
+        min-height: 120px;
+    }
+    .btn-danger {
+        transition: all 0.2s ease;
+    }
+    .btn-danger:hover {
+        transform: scale(1.05);
+    }
+</style>
