@@ -54,26 +54,34 @@ class AsignaturaController extends Controller
                 Rule::exists('semestres', 'id_semestre')->where('turno_id', $request->id_turno)
             ],
         ]);
-    
+
         $asignaturas = Asignatura::whereHas('secciones', function($query) use ($request) {
-            $query->where('asignatura_seccion.carrera_id', $request->carrera_id)
-                  ->where('asignatura_seccion.semestre_id', $request->id_semestre);
+            $query->where('secciones.carrera_id', $request->carrera_id) // Asegúrate de calificar la columna si hay ambigüedad
+                  ->where('secciones.semestre_id', $request->id_semestre)
+                  ->where('secciones.turno_id', $request->id_turno); // Añadir filtro por turno también en la sección
         })
-        ->with(['docentes', 'secciones', 'cargaHoraria'])
+        ->with(['docentes', 'secciones.carrera', 'secciones.semestre', 'secciones.turno', 'cargaHoraria']) // Cargar relaciones necesarias
         ->orderBy('asignatura_id', 'desc')
         ->get()
-        ->map(function($item) {
+        ->map(function($item, $key) { // Añadir $key para el N°
             return [
-                '0' => $item->id,
-                '1' => $item->asignatura_id,
+                '0' => $key + 1, // N° de fila
+                '1' => $item->asignatura_id, // Código de la asignatura
                 '2' => $item->name,
-                '3' => $item->secciones->first()?->codigo_seccion,
-                '4' => $item->docentes->first()?->name,
-                'docentes' => $item->docentes->pluck('name')->toArray(),
-                'secciones' => $item->secciones->pluck('codigo_seccion')->toArray(),
-                'carga_horaria' => $item->cargaHoraria->groupBy('tipo')->map(function($item) {
-                    return $item->sum('horas_academicas');
-                })
+                '3' => $item->secciones->map(function($s) {
+                    return $s->codigo_seccion; // Solo el código para la tabla principal
+                })->implode(', ') ?: 'N/A',
+                '4' => $item->docentes->pluck('name')->implode(', ') ?: 'N/A',
+                // Datos completos para los modales
+                'docentes_data' => $item->docentes->pluck('cedula_doc')->toArray(),
+                'secciones_data' => $item->secciones->pluck('codigo_seccion')->toArray(),
+                'carga_horaria_data' => $item->cargaHoraria->map(function($ch) {
+                    return ['tipo' => $ch->tipo, 'horas_academicas' => (string)$ch->horas_academicas];
+                })->toArray(),
+                // Datos adicionales para el modal de visualización (si es necesario)
+                'secciones_detalle_data' => $item->secciones->map(function($s) {
+                    return "{$s->codigo_seccion} ({$s->carrera->name} - Sem. {$s->semestre->numero} - {$s->turno->nombre})";
+                })->toArray(),
             ];
         });
 
@@ -144,26 +152,20 @@ class AsignaturaController extends Controller
 
     public function update(Request $request, Asignatura $asignatura)
     {
-        // Validación inicial del semestre
-        $semestre = Semestre::findOrFail($request->semestre_id);
-        
         // Validación de datos
         $validated = $request->validate([
-            'asignatura_id' => 'required|unique:asignaturas,asignatura_id,'.$asignatura->asignatura_id.',asignatura_id',
+            'asignatura_id' => [
+                'required',
+                Rule::unique('asignaturas', 'asignatura_id')->ignore($asignatura->asignatura_id),
+            ],
             'name' => 'required|string|max:255',
             'docentes' => 'required|array|min:1',
             'docentes.*' => 'exists:docentes,cedula_doc',
             'secciones' => 'required|array|min:1',
             'secciones.*' => 'exists:secciones,codigo_seccion',
-            'carrera_id' => 'required|exists:carreras,carrera_id',
-            'semestre_id' => [
-                'required',
-                Rule::exists('semestres', 'id_semestre')->where('turno_id', $semestre->turno_id)
-            ],
-            'turno_id' => 'required|exists:turnos,id_turno',
             'carga_horaria' => 'required|array|min:1',
             'carga_horaria.*.tipo' => 'required|in:teorica,practica,laboratorio',
-            'carga_horaria.*.horas_academicas' => 'required|integer|min:1|max:6'
+            'carga_horaria.*.horas_academicas' => 'required|integer|min:1|max:6',
         ]);
 
         // Iniciar transacción
@@ -173,42 +175,29 @@ class AsignaturaController extends Controller
             // Actualizar la asignatura
             $asignatura->update([
                 'asignatura_id' => $validated['asignatura_id'],
-                'name' => $validated['name']
+                'name' => $validated['name'],
             ]);
 
-            // Eliminar y recrear la carga horaria
-            $asignatura->cargaHoraria()->delete();
+            // Sincronizar carga horaria (Optimized)
+            $asignatura->cargaHoraria()->delete(); // Remove all existing ones
+            $cargaHorariaData = [];
             foreach ($validated['carga_horaria'] as $carga) {
-                CargaHoraria::create([
-                    'asignatura_id' => $asignatura->asignatura_id,
-                    'tipo' => $carga['tipo'],
-                    'horas_academicas' => $carga['horas_academicas']
-                ]);
+                $cargaHorariaData[] = new CargaHoraria($carga);
             }
+            $asignatura->cargaHoraria()->saveMany($cargaHorariaData);
+
 
             // Sincronizar docentes
             $asignatura->docentes()->sync($validated['docentes']);
 
-            // Preparar datos para secciones
-            $seccionesData = [];
-            foreach ($validated['secciones'] as $seccionId) {
-                $seccionesData[$seccionId] = [
-                    'carrera_id' => $validated['carrera_id'],
-                    'semestre_id' => $validated['semestre_id'],
-                    'turno_id' => $validated['turno_id'],
-                    'updated_at' => now()
-                ];
-            }
-
             // Sincronizar secciones
-            $asignatura->secciones()->sync($seccionesData);
+            $asignatura->secciones()->sync($validated['secciones']);
 
             // Registrar en bitácora
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
-                'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name . 
-                           ' (ID: ' . $asignatura->asignatura_id . ')' .
-                           ' CARGA: ' . json_encode($validated['carga_horaria'])
+                'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name .
+                           ' (ID: ' . $asignatura->asignatura_id . ')',
             ]);
 
             // Confirmar transacción
@@ -217,17 +206,16 @@ class AsignaturaController extends Controller
             return redirect()->route('asignatura.index')->with('alert', [
                 'icon' => 'success',
                 'title' => 'Actualización Exitosa',
-                'text' => 'Cambios guardados correctamente'
+                'text' => 'Cambios guardados correctamente',
             ]);
-
         } catch (\Exception $e) {
             // Revertir transacción
             DB::rollBack();
-            
+
             Log::error('Error al actualizar asignatura: ' . $e->getMessage(), [
                 'exception' => $e,
                 'request_data' => $request->all(),
-                'asignatura_id' => $asignatura->asignatura_id
+                'asignatura_id' => $asignatura->asignatura_id,
             ]);
 
             return redirect()->back()
@@ -235,7 +223,7 @@ class AsignaturaController extends Controller
                 ->with('alert', [
                     'icon' => 'error',
                     'title' => 'Error',
-                    'text' => 'Ocurrió un error al actualizar: ' . $e->getMessage()
+                    'text' => 'Ocurrió un error al actualizar: ' . $e->getMessage(),
                 ]);
         }
     }
