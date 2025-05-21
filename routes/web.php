@@ -131,6 +131,9 @@ Route::prefix('horarios')->group(function () {
     Route::get('/create', [HorarioController::class, 'create'])->name('horario.create');
     Route::post('/', [HorarioController::class, 'store'])->name('horario.store');
     Route::delete('/{id}', [HorarioController::class, 'destroy'])->name('horario.destroy');
+
+    Route::get('horarios/create', [HorarioController::class, 'create'])->name('horarios.create');
+Route::post('horarios', [HorarioController::class, 'store'])->name('horarios.store');
     
     // Ruta para filtrado AJAX (opcional)
     Route::get('/secciones-filtradas', [HorarioController::class, 'getSeccionesFiltradas']);
