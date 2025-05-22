@@ -20,7 +20,7 @@
                 <h4 class="card-title mb-0">
                     <i class="fas fa-list-alt mr-2"></i>Horarios Registrados
                 </h4>
-                <a href="{{ route('horarios.create') }}" class="btn btn-success ms-auto text-white">
+                <a href="{{ route('horario.create') }}" class="btn btn-success ms-auto text-white">
     <i class="fas fa-plus mr-1"></i> Nuevo Horario
 </a>
             </div>

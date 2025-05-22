@@ -124,28 +124,33 @@ Route::prefix('respaldo')->middleware(['auth'])->group(function () {
 
 
 // Rutas para horarios
-Route::get('/horario', [HorarioController::class, 'index'])->name('horario.index')->middleware('auth');
+Route::prefix('horario')->middleware('auth')->group(function () {
 
-Route::prefix('horarios')->group(function () {
+    // Ruta principal para listar horarios: /horario
     Route::get('/', [HorarioController::class, 'index'])->name('horario.index');
+
+    // Ruta para mostrar el formulario de creación de horario: /horario/create
     Route::get('/create', [HorarioController::class, 'create'])->name('horario.create');
+
+    // Ruta para almacenar un nuevo horario (POST): /horario
     Route::post('/', [HorarioController::class, 'store'])->name('horario.store');
+
+    // Ruta para eliminar un horario específico (DELETE): /horario/{id}
     Route::delete('/{id}', [HorarioController::class, 'destroy'])->name('horario.destroy');
 
-    Route::get('horarios/create', [HorarioController::class, 'create'])->name('horarios.create');
-Route::post('horarios', [HorarioController::class, 'store'])->name('horarios.store');
-    
-    // Ruta para filtrado AJAX (opcional)
-    Route::get('/secciones-filtradas', [HorarioController::class, 'getSeccionesFiltradas']);
+    // Rutas AJAX para filtros dependientes:
+    // 1. Obtener semestres por turno: /horario/api/semestres-por-turno/{turnoId}
+    //    (Esta ruta se usa en el JS para cargar el select de semestres)
+    Route::get('/api/semestres-por-turno/{turnoId}', [HorarioController::class, 'getSemestresPorTurno'])->name('api.semestres.por.turno');
+
+    // 2. Obtener secciones filtradas por carrera, semestre y turno: /horario/obtener-secciones
+    //    (Esta ruta se usa en el JS para cargar el select de secciones)
+    Route::get('/obtener-secciones', [HorarioController::class, 'obtenerSecciones'])->name('api.obtener.secciones');
+
+    // 3. Obtener asignaturas filtradas por sección y otros parámetros: /horario/asignaturas
+    //    Esta es la ruta CRÍTICA para tu problema de filtrado.
+    //    Recibe todos los filtros como query parameters (e.g., ?seccion_id=X&carrera_id=Y...)
+    Route::get('/asignaturas', [HorarioController::class, 'getAsignaturasFiltradas'])->name('horario.asignaturas.filtradas');
+
 });
-
-
-Route::get('/obtener-secciones', [HorarioController::class, 'getSeccionesFiltradas']);
-Route::get('/obtener-asignaturas/{seccion}', [HorarioController::class, 'getAsignaturasBySeccion']);
-
-
-Route::get('/secciones-filtradas', [HorarioController::class, 'getSeccionesFiltradas']);
-Route::get('/asignaturas-seccion/{seccion}', [HorarioController::class, 'getAsignaturasBySeccion']);
-
-Route::get('/get-semestres/{turnoId}', [AsignaturaController::class, 'getSemestresByTurno']);
 
