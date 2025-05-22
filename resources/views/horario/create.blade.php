@@ -14,23 +14,12 @@
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.css') }}">
 
     <style>
-        /* Eliminar scrollbars globalmente */
-        ::-webkit-scrollbar {
-            display: none;
-        }
-
-        html {
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-            overflow: hidden;
-            height: 100%;
-        }
-
-        body {
-            overflow: hidden;
+        /* Permitir scroll globalmente */
+        html, body {
             height: 100%;
             margin: 0;
             padding: 0;
+            overflow: auto; /* Permitir scroll */
             display: flex;
             flex-direction: column;
         }
@@ -39,26 +28,25 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh; /* Asegurar que el wrapper sea al menos el alto de la ventana */
+            overflow: visible; /* Permitir que el contenido desborde si es necesario */
         }
 
         .content-wrapper {
             flex: 1;
-            overflow: hidden;
+            overflow: visible; /* Permitir scroll dentro del content-wrapper si es necesario */
             padding-bottom: 60px;
         }
 
         .main-sidebar {
             height: 100vh;
-            overflow-y: hidden;
+            overflow-y: hidden; /* Mantener oculto el scroll de la sidebar si no es relevante */
             position: fixed;
         }
 
         .content {
             margin-top: 60px;
-            height: calc(100vh - 120px);
-            overflow: hidden;
+            overflow: visible; /* Permitir scroll dentro del content */
         }
 
         .asignatura-item.dragging {
@@ -71,10 +59,14 @@
             border: 2px dashed #007bff !important;
         }
         
-        /* MODIFICADO: Bloques de horario con altura reducida */
+        /* MODIFICADO: Bloques de horario con posicionamiento absoluto */
         .bloque-horario {
-            position: relative;
-            /* La altura se calculará dinámicamente, pero ajustamos padding y fuente */
+            position: absolute; /* Posicionamiento absoluto */
+            top: 0;
+            left: 0;
+            width: 100%; /* Ocupar el ancho de la celda */
+            height: auto; /* La altura será definida por JS */
+            z-index: 10; /* Asegurar que esté por encima de las celdas */
             padding: 3px 5px; /* Reducir padding interno */
             font-size: 0.7rem; /* Reducir tamaño de fuente */
             color: white;
@@ -82,12 +74,9 @@
             overflow: hidden;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
             transition: all 0.2s;
-            margin: 1px 0; /* Margen pequeño */
             display: flex; 
             flex-direction: column;
             justify-content: space-between;
-            height: 100%; /* El div debe llenar la celda TD que lo contiene */
-            width: 100%;
         }
         
         .bloque-horario .btn {
@@ -103,6 +92,7 @@
         .bg-asignatura-6 { background: linear-gradient(135deg, #858796, #6c6e7e); }
         .bg-asignatura-7 { background: linear-gradient(135deg, #5a5c69, #484a58); }
         
+        /* Scrollbars personalizados para elementos específicos */
         .card-body::-webkit-scrollbar { width: 8px; }
         .card-body::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         .card-body::-webkit-scrollbar-thumb { background: #b0b0b0; border-radius: 10px; }
@@ -112,13 +102,14 @@
         #horarioTable thead th, #horarioTable tbody td, #horarioTable tbody th {
             vertical-align: top; 
             padding: 4px; /* Padding reducido */
-            height: 40px; /* Altura base de la celda reducida */
+            height: 40px; /* Altura base de la celda reducida, coincidir con BASE_CELL_HEIGHT en JS */
             box-sizing: border-box; 
+            position: relative; /* Necesario para el posicionamiento absoluto de .bloque-horario */
         }
 
         #horarioTable tbody {
             display: block;
-            overflow-y: auto;
+            overflow-y: auto; /* Permitir scroll en el cuerpo de la tabla */
         }
         
         #horarioTable thead, #horarioTable tbody tr {
@@ -136,11 +127,11 @@
 
         #asignaturasContainer {
             flex-grow: 1; 
-            overflow-y: auto;
+            overflow-y: auto; /* Permitir scroll en el contenedor de asignaturas */
         }
         .card-body.p-0 > .table-responsive {
             flex-grow: 1; 
-            overflow-y: auto;
+            overflow-y: auto; /* Permitir scroll en el contenedor de la tabla */
         }
 
         .row.g-3 { height: auto; }
@@ -179,6 +170,11 @@
              width: 18px !important; /* Botón más pequeño */
              height: 18px !important; /* Botón más pequeño */
              font-size: 0.6rem !important; /* Icono más pequeño */
+        }
+
+        /* Clase para celdas ocultas por rowspan (no usada con el nuevo enfoque, pero se mantiene por si acaso) */
+        .hidden-cell {
+            /* display: none; */ /* Ya no ocultamos celdas */
         }
     </style> 
 </head>
@@ -332,8 +328,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Variables globales
-            const BASE_CELL_HEIGHT = 40; // MODIFICADO: Altura base de la celda en px, debe coincidir con CSS
+            // Global variables
+            const BASE_CELL_HEIGHT = 40; // Base cell height in px, must match CSS
             
             const periodoSelect = document.getElementById('periodo_id');
             const turnoSelect = document.getElementById('turno_id');
@@ -345,10 +341,13 @@
             const horarioBody = document.getElementById('horarioBody');
             const guardarBtn = document.getElementById('guardarHorario');
 
-            // NUEVO: Objeto para rastrear horas asignadas por asignatura y tipo
-            let assignedHoursPerSubject = {}; // Ej: { "asignaturaId_Teórica": 2, "asignaturaId_Práctica": 1 }
+            // Object to track assigned hours per subject and type
+            let assignedHoursPerSubject = {}; // Example: { "asignaturaId_Teórica": 2, "asignaturaId_Práctica": 1 }
 
-            // 1. Cargar semestres según turno seleccionado
+            // Global variable to track occupied cells (rowIndex, colIndex)
+            let scheduleGrid = []; // scheduleGrid[rowIndex][dayIndex] = { blockElementRef } or null
+
+            // 1. Load semesters based on selected shift
             turnoSelect.addEventListener('change', function() {
                 const turnoId = this.value;
                 semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
@@ -357,7 +356,7 @@
                 seccionSelect.disabled = true;
 
                 if (!turnoId) return;
-                // ... (resto de la función sin cambios)
+                
                 fetch(`{{ url('/horario/api/semestres-por-turno/') }}/${turnoId}`)
                     .then(response => response.json())
                     .then(data => {
@@ -369,14 +368,13 @@
                         semestreSelect.disabled = false;
                     })
                     .catch(error => {
-                        console.error('Error al cargar semestres:', error);
+                        console.error('Error loading semesters:', error);
                         semestreSelect.innerHTML = '<option value="">Error al cargar</option>';
                     });
             });
             
-            // 2. Función para cargar secciones
+            // 2. Function to load sections
             async function cargarSecciones() {
-                // ... (función sin cambios significativos, solo asegurar que se llama correctamente)
                 const carreraId = carreraSelect.value;
                 const semestreId = semestreSelect.value;
                 const turnoId = turnoSelect.value;
@@ -394,7 +392,7 @@
                     url.searchParams.append('semestre_id', semestreId);
                     url.searchParams.append('turno_id', turnoId);
                     const response = await fetch(url);
-                    if (!response.ok) throw new Error(`Error al obtener secciones: ${response.status}`);
+                    if (!response.ok) throw new Error(`Error getting sections: ${response.status}`);
                     const data = await response.json();
                     seccionSelect.innerHTML = '<option value="">Seleccione sección</option>'; 
                     if (data.length > 0) {
@@ -416,9 +414,8 @@
             carreraSelect.addEventListener('change', cargarSecciones);
             semestreSelect.addEventListener('change', cargarSecciones);
 
-            // 4. Función principal al hacer clic en Buscar
+            // 4. Main function when clicking Search
             buscarBtn.addEventListener('click', async function() {
-                // ... (validación de filtros)
                 const periodoId = periodoSelect.value;
                 const carreraId = carreraSelect.value;
                 const turnoId = turnoSelect.value;
@@ -430,10 +427,10 @@
                     return;
                 }
 
-                // NUEVO: Resetear contador de horas asignadas
+                // Reset assigned hours counter and schedule grid
                 assignedHoursPerSubject = {};
+                scheduleGrid = []; // Clear the grid on new search
                 
-                // ... (código para mostrar carga y fetch de asignaturas)
                 listaAsignaturas.innerHTML = `<div class="text-center py-4"><div class="spinner-border text-primary"></div><p>Cargando...</p></div>`;
                 horarioBody.innerHTML = `<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div><p>Preparando...</p></td></tr>`;
 
@@ -446,16 +443,16 @@
                     url.searchParams.append('periodo_id', periodoId);
 
                     const response = await fetch(url);
-                    if (!response.ok) throw new Error(`Error al obtener asignaturas: ${response.status}`);
+                    if (!response.ok) throw new Error(`Error getting subjects: ${response.status}`);
                     const asignaturas = await response.json();
                     
                     if (asignaturas.length > 0) {
                         listaAsignaturas.innerHTML = asignaturas.map((asignatura, index) => {
                             const colorClass = `bg-asignatura-${(index % 7) + 1}`;
-                            // MODIFICADO: Mostrar carga horaria más clara
+                            // Display clearer hour load
                             let cargaHorariaText = 'No definida';
                             if (asignatura.carga_horaria && asignatura.carga_horaria.length > 0) {
-                                cargaHorariaText = asignatura.carga_horaria.map(c => `${c.tipo.substring(0,1)}:${c.horas_academicas}b`).join(', '); // Ej: T:4b, P:2b
+                                cargaHorariaText = asignatura.carga_horaria.map(c => `${c.tipo.substring(0,1)}:${c.horas_academicas}b`).join(', '); // Example: T:4b, P:2b
                             }
 
                             return `
@@ -478,24 +475,22 @@
                     }
                     generarHorario();
                 } catch (error) {
-                    // ... (manejo de error)
-                    console.error('Error en Buscar Asignaturas:', error);
+                    console.error('Error in Search Subjects:', error);
                     Swal.fire('Error', `Ocurrió un error al cargar: ${error.message}`, 'error');
                     listaAsignaturas.innerHTML = `<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error al cargar.</div>`;
                     horarioBody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">Error.</td></tr>`;
                 }
             });
             
-            // 5. Configurar drag and drop
+            // 5. Configure drag and drop
             function configurarDragAndDrop() {
-                // ... (sin cambios significativos)
                  document.querySelectorAll('.asignatura-item').forEach(item => {
                     item.addEventListener('dragstart', function(e) {
                         e.dataTransfer.setData('text/plain', JSON.stringify({
                             asignatura_id: this.dataset.asignaturaId,
                             name: this.dataset.asignaturaName,
                             docentes: JSON.parse(this.dataset.docentes),
-                            cargaHoraria: JSON.parse(this.dataset.cargaHoraria), // Array de objetos {tipo, horas_academicas}
+                            cargaHoraria: JSON.parse(this.dataset.cargaHoraria), // Array of objects {tipo, horas_academicas}
                             colorClass: Array.from(this.classList).find(cls => cls.startsWith('bg-asignatura-'))
                         }));
                         this.classList.add('dragging');
@@ -504,38 +499,51 @@
                 });
             }
             
-            // 6. Generar estructura del horario
+            // Function to convert time string to row index
+            function getTimeRowIndex(timeStr) {
+                const horaInicioTable = 7; // Matches the loop in generarHorario
+                const [h, m] = timeStr.split(':').map(Number);
+                return ((h - horaInicioTable) * 2) + (m === 45 ? 1 : 0);
+            }
+
+            // 6. Generate schedule structure
             function generarHorario() {
-                // ... (sin cambios significativos en la lógica de generación de filas y celdas base)
                 horarioBody.innerHTML = '';
                 const horaInicio = 7;
                 const horaFin = 21; 
+                const numTimeSlots = (horaFin - horaInicio + 1) * 2; // Each hour has 2 slots (00 and 45)
+                const numDays = 7; // 0 for time, 1-6 for days (Lunes-Sábado)
 
+                // Initialize scheduleGrid
+                scheduleGrid = Array(numTimeSlots).fill(null).map(() => Array(numDays).fill(null));
+
+                let rowIndex = 0;
                 for (let h = horaInicio; h <= horaFin; h++) {
                     let horaFormato = `${h.toString().padStart(2, '0')}:00`;
                     let fila = document.createElement('tr');
                     fila.innerHTML = `
-                        <th class="time-slot" data-time="${horaFormato}">${horaFormato}</th>
-                        ${[1,2,3,4,5,6].map(dia => `<td class="drop-zone" data-hora="${horaFormato}" data-dia="${dia}"></td>`).join('')}
+                        <th class="time-slot" data-time="${horaFormato}" data-row-index="${rowIndex}">${horaFormato}</th>
+                        ${[1,2,3,4,5,6].map(dia => `<td class="drop-zone" data-hora="${horaFormato}" data-dia="${dia}" data-row-index="${rowIndex}" data-col-index="${dia}"></td>`).join('')}
                     `;
                     horarioBody.appendChild(fila);
+                    rowIndex++;
 
                     if (h < horaFin) {
                         horaFormato = `${h.toString().padStart(2, '0')}:45`;
                         fila = document.createElement('tr');
                         fila.innerHTML = `
-                            <th class="time-slot" data-time="${horaFormato}">${horaFormato}</th>
-                             ${[1,2,3,4,5,6].map(dia => `<td class="drop-zone" data-hora="${horaFormato}" data-dia="${dia}"></td>`).join('')}
+                            <th class="time-slot" data-time="${horaFormato}" data-row-index="${rowIndex}">${horaFormato}</th>
+                             ${[1,2,3,4,5,6].map(dia => `<td class="drop-zone" data-hora="${horaFormato}" data-dia="${dia}" data-row-index="${rowIndex}" data-col-index="${dia}"></td>`).join('')}
                         `;
                         horarioBody.appendChild(fila);
+                        rowIndex++;
                     }
                 }
                 configurarCeldasHorario();
             }
             
-            // 7. Configurar celdas del horario
+            // 7. Configure schedule cells
             function configurarCeldasHorario() {
-                // ... (sin cambios)
                 document.querySelectorAll('.drop-zone').forEach(celda => {
                     celda.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('hover-cell'); });
                     celda.addEventListener('dragleave', function() { this.classList.remove('hover-cell'); });
@@ -543,7 +551,7 @@
                 });
             }
             
-            // 8. MODIFICADO: Manejar drop con validación de horas
+            // 8. Handle drop with hour validation
             async function handleDrop(e) {
                 e.preventDefault();
                 this.classList.remove('hover-cell');
@@ -553,20 +561,17 @@
 
                 const dia = this.dataset.dia;
                 const horaInicio = this.dataset.hora;
+                const inicioRowIndex = parseInt(this.dataset.rowIndex);
+                const diaInt = parseInt(dia);
                 
-                if (this.querySelector('.bloque-horario')) {
-                    Swal.fire('Advertencia', 'Ya existe un bloque en esta celda.', 'warning');
-                    return;
-                }
-
-                // NUEVO: Preparar opciones de tipo de hora y validar disponibilidad general
+                // Prepare hour type options and validate general availability
                 let tipoOptionsHtml = '';
                 let tieneHorasDisponibles = false;
                 if (cargaHorariaData && cargaHorariaData.length > 0) {
                     cargaHorariaData.forEach(carga => {
                         const subjectTypeKey = `${asignatura_id}_${carga.tipo}`;
                         const horasYaAsignadas = assignedHoursPerSubject[subjectTypeKey] || 0;
-                        // Asumimos que horas_academicas es el número de bloques de 45min
+                        // Assuming horas_academicas is the number of 45min blocks
                         const horasMaximasParaTipo = parseInt(carga.horas_academicas); 
                         const horasRestantesParaTipo = horasMaximasParaTipo - horasYaAsignadas;
 
@@ -577,9 +582,9 @@
                             tipoOptionsHtml += `<option value="${carga.tipo}" disabled>${carga.tipo} (Límite alcanzado)</option>`;
                         }
                     });
-                } else { // Si no hay carga horaria definida, se asume un tipo genérico sin límite (o podrías prohibirlo)
+                } else { // If no hour load is defined, assume a generic type without limit (or you could prohibit it)
                     tipoOptionsHtml = `<option value="Clase">Clase (carga no definida)</option>`;
-                    tieneHorasDisponibles = true; // Permite agregar si no hay carga definida
+                    tieneHorasDisponibles = true; // Allow adding if no defined load
                 }
 
                 if (!tieneHorasDisponibles && cargaHorariaData && cargaHorariaData.length > 0) {
@@ -619,7 +624,7 @@
                         if (isNaN(bloques) || bloques < 1) { Swal.showValidationMessage('Número de bloques inválido.'); return false; }
                         if (!docenteSeleccionado && docentesData && docentesData.length > 0) { Swal.showValidationMessage('Seleccione un docente.'); return false; }
 
-                        // NUEVO: Validación final de horas antes de confirmar
+                        // Final validation of hours before confirming
                         if (cargaHorariaData && cargaHorariaData.length > 0) {
                             const cargaEspecifica = cargaHorariaData.find(c => c.tipo === tipo);
                             if (cargaEspecifica) {
@@ -633,6 +638,16 @@
                                 }
                             }
                         }
+
+                        // Check if the selected cells are available in scheduleGrid
+                        for (let i = 0; i < bloques; i++) {
+                            const currentRowIndex = inicioRowIndex + i;
+                            if (currentRowIndex >= scheduleGrid.length || scheduleGrid[currentRowIndex][diaInt] !== null) {
+                                Swal.showValidationMessage('Algunas de las celdas seleccionadas ya están ocupadas o no están disponibles.');
+                                return false;
+                            }
+                        }
+
                         return { tipo, bloques, docenteSeleccionado };
                     }
                 });
@@ -641,25 +656,25 @@
                     const { tipo, bloques, docenteSeleccionado } = formValues;
                     const horaFin = calcularHoraFinSimple(horaInicio, bloques);
                     
-                    // NUEVO: Actualizar contador de horas asignadas
+                    // Update assigned hours counter
                     const subjectTypeKey = `${asignatura_id}_${tipo}`;
                     assignedHoursPerSubject[subjectTypeKey] = (assignedHoursPerSubject[subjectTypeKey] || 0) + bloques;
 
-                    crearBloqueVisual(this, asignatura_id, asignaturaName, dia, horaInicio, horaFin, bloques, tipo, docenteSeleccionado, colorClass, docentesData);
-                    actualizarTablaHorario(dia, horaInicio, bloques); // Solo necesita horaInicio y bloques para rowspan
+                    crearBloqueVisual(this, asignatura_id, asignaturaName, dia, horaInicio, horaFin, bloques, tipo, docenteSeleccionado, colorClass, docentesData, inicioRowIndex, diaInt);
+                    // No need to call actualizarTablaHorario for rowspan anymore
                 }
             }
             
-            // 9. MODIFICADO: Crear el bloque visual en la tabla
-            function crearBloqueVisual(cell, asignaturaId, asignaturaName, dia, horaInicio, horaFin, bloques, tipoHoras, docenteId, colorClass, docentesData) {
+            // 9. Create the visual block in the table
+            function crearBloqueVisual(targetCell, asignaturaId, asignaturaName, dia, horaInicio, horaFin, bloques, tipoHoras, docenteId, colorClass, docentesData, rowIndex, colIndex) {
                 const bloque = document.createElement('div');
-                bloque.classList.add('bloque-horario', colorClass); // Clases base
+                bloque.classList.add('bloque-horario', colorClass); 
                 
-                // El CSS se encarga de height: 100% del TD padre.
-                // El TD padre tendrá su altura ajustada por rowspan y BASE_CELL_HEIGHT.
+                // Set the height of the block based on the number of slots it covers
+                bloque.style.height = `${bloques * BASE_CELL_HEIGHT}px`;
 
                 const docenteObj = docentesData.find(d => d.cedula_doc == docenteId);
-                const docenteName = docenteObj ? docenteObj.name.split(' ')[0] : 'N/A'; // Solo primer nombre
+                const docenteName = docenteObj ? docenteObj.name.split(' ')[0] : 'N/A'; // Only first name
 
                 bloque.innerHTML = `
                     <div class="bloque-contenido">
@@ -670,18 +685,20 @@
                             </button>
                         </div>
                         <div class="asignatura-details mt-auto">
-                            <div title="${tipoHoras} - ${bloques} bloques">${tipoHoras.substring(0,4)}. (${bloques}b)</div>
+                            <div title="${tipoHoras} - ${bloques} bloques">${tipoHoras} (${bloques}b)</div>
                             <div title="Docente: ${docenteObj ? docenteObj.name : 'N/A'}">Doc: ${docenteName}</div>
                             <div>${horaInicio} - ${horaFin}</div>
                         </div>
                     </div>
                 `;
                 
-                // Guardar todos los datos necesarios en el elemento
+                // Save all necessary data in the element
                 Object.assign(bloque.dataset, {
                     asignaturaId, asignaturaName, dia, horaInicio, horaFin, bloques, tipoHoras, docenteId,
                     periodoId: periodoSelect.value, carreraId: carreraSelect.value,
-                    semestreId: semestreSelect.value, turnoId: turnoSelect.value, seccionId: seccionSelect.value
+                    semestreId: semestreSelect.value, turnoId: turnoSelect.value, seccionId: seccionSelect.value,
+                    rowIndex: rowIndex, // Store row index
+                    colIndex: colIndex  // Store col index
                 });
                 
                 bloque.querySelector('.delete-btn').addEventListener('click', function(e) {
@@ -689,61 +706,43 @@
                     eliminarBloque(bloque);
                 });
                 
-                cell.innerHTML = ''; 
-                cell.appendChild(bloque);
+                // Append the block to the target cell
+                targetCell.appendChild(bloque);
+
+                // Mark the cells as occupied in scheduleGrid
+                for (let i = 0; i < bloques; i++) {
+                    scheduleGrid[rowIndex + i][colIndex] = { blockElement: bloque }; // Store reference to the block element
+                }
+
                 actualizarBotonGuardar();
             }
             
-            // 10. Calcular hora de fin
+            // 10. Calculate end time
             function calcularHoraFinSimple(horaInicioStr, bloques) {
-                // ... (sin cambios)
                 const [h, m] = horaInicioStr.split(':').map(Number);
                 let totalMinutosFin = (h * 60 + m) + (bloques * 45);
-                let horasFin = Math.floor(totalMinutosFin / 60) % 24; // Asegurar que no pase de 23
+                let horasFin = Math.floor(totalMinutosFin / 60) % 24; 
                 let minutosFin = totalMinutosFin % 60;
                 return `${String(horasFin).padStart(2, '0')}:${String(minutosFin).padStart(2, '0')}`;
             }
             
-            // 11. MODIFICADO: Actualizar tabla (rowspan y celdas ocultas)
-            function actualizarTablaHorario(dia, horaInicio, bloques) {
-                const tabla = document.getElementById('horarioTable');
-                const filas = Array.from(tabla.rows); // Convertir HTMLCollection a Array para .findIndex
-                
-                const inicioIdx = filas.findIndex(row => row.cells[0] && row.cells[0].dataset.time === horaInicio);
+            // 11. This function is no longer needed for rowspan logic
+            // function actualizarTablaHorario(dia, horaInicio, bloques) { }
 
-                if (inicioIdx === -1 || !filas[inicioIdx]) return; // Fila de inicio no encontrada
-
-                const celdaInicial = filas[inicioIdx].cells[parseInt(dia)];
-                if (!celdaInicial) return;
-
-                celdaInicial.rowSpan = bloques;
-                // La altura de la celda se define por el número de bloques * BASE_CELL_HEIGHT
-                // Esto se aplica a la celda TD, y el div.bloque-horario interno toma height: 100%
-                celdaInicial.style.height = `${bloques * BASE_CELL_HEIGHT}px`; 
-                celdaInicial.classList.add('expanded-block');
-                
-                // Ocultar celdas subsiguientes que son cubiertas por el rowspan
-                for (let i = 1; i < bloques; i++) {
-                    const siguienteFilaIdx = inicioIdx + i;
-                    if (siguienteFilaIdx < filas.length && filas[siguienteFilaIdx]) {
-                        const celdaAOcultar = filas[siguienteFilaIdx].cells[parseInt(dia)];
-                        if (celdaAOcultar) {
-                            celdaAOcultar.style.display = 'none';
-                            celdaAOcultar.classList.add('hidden-cell'); 
-                        }
-                    }
-                }
+            // 12. Convert day number to text
+            function convertirDiaNumeroATexto(diaNumero) { 
+                const dias = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+                return dias[parseInt(diaNumero)];
             }
-
-            // 12. Convertir número de día a texto
-            function convertirDiaNumeroATexto(diaNumero) { /* ... (sin cambios) ... */ return ['','Lun','Mar','Mié','Jue','Vie','Sáb'][parseInt(diaNumero)]; }
             
-            // 13. MODIFICADO: Eliminar bloque y restaurar celdas
+            // 13. Delete block and restore cells
             function eliminarBloque(bloqueElement) {
-                const { asignaturaId, tipoHoras, dia, horaInicio, bloques: numBloquesStr } = bloqueElement.dataset;
+                const { asignaturaId, tipoHoras, dia, horaInicio, bloques: numBloquesStr, rowIndex: rowIndexStr, colIndex: colIndexStr } = bloqueElement.dataset;
                 const numBloques = parseInt(numBloquesStr);
+                const rowIndex = parseInt(rowIndexStr);
+                const colIndex = parseInt(colIndexStr);
 
-                // NUEVO: Actualizar contador de horas asignadas
+                // Update assigned hours counter
                 const subjectTypeKey = `${asignaturaId}_${tipoHoras}`;
                 if (assignedHoursPerSubject[subjectTypeKey]) {
                     assignedHoursPerSubject[subjectTypeKey] -= numBloques;
@@ -752,43 +751,28 @@
                     }
                 }
 
-                const tabla = document.getElementById('horarioTable');
-                const filas = Array.from(tabla.rows);
-                const inicioIdx = filas.findIndex(row => row.cells[0] && row.cells[0].dataset.time === horaInicio);
+                // Remove the block element from the DOM
+                bloqueElement.remove();
 
-                if (inicioIdx === -1 || !filas[inicioIdx]) return;
-
-                const celdaInicial = filas[inicioIdx].cells[parseInt(dia)];
-                if (celdaInicial) {
-                    celdaInicial.rowSpan = 1;
-                    celdaInicial.style.height = `${BASE_CELL_HEIGHT}px`; // Restaurar altura base
-                    celdaInicial.classList.remove('expanded-block');
-                    // celdaInicial.innerHTML = ''; // Limpiar la celda si es necesario, pero el remove() de abajo lo hace
-                }
-
-                for (let i = 1; i < numBloques; i++) {
-                    const siguienteFilaIdx = inicioIdx + i;
-                    if (siguienteFilaIdx < filas.length && filas[siguienteFilaIdx]) {
-                        const celdaAMostrar = filas[siguienteFilaIdx].cells[parseInt(dia)];
-                        if (celdaAMostrar) {
-                            celdaAMostrar.style.display = ''; 
-                            celdaAMostrar.classList.remove('hidden-cell');
-                        }
+                // Clear the scheduleGrid entries for the cells this block occupied
+                for (let i = 0; i < numBloques; i++) {
+                    if (rowIndex + i < scheduleGrid.length) { // Ensure index is within bounds
+                        scheduleGrid[rowIndex + i][colIndex] = null; // Mark as empty
                     }
                 }
                 
-                bloqueElement.parentElement.innerHTML = ''; // Limpia la celda que contenía el bloque
-                // bloqueElement.remove(); // Esto elimina solo el div, pero queremos limpiar la celda
                 actualizarBotonGuardar();
             }
             
-            // 14. Actualizar botón guardar
-            function actualizarBotonGuardar() { /* ... (sin cambios) ... */ guardarBtn.disabled = document.querySelectorAll('.bloque-horario').length === 0; }
+            // 14. Update save button
+            function actualizarBotonGuardar() { 
+                guardarBtn.disabled = document.querySelectorAll('.bloque-horario').length === 0; 
+            }
             
-            // 15. Enviar formulario
+            // 15. Submit form
             document.getElementById('horarioForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                // ... (recolección de datos de bloques sin cambios significativos)
+                
                 const bloques = Array.from(document.querySelectorAll('.bloque-horario')).map(b => ({
                     asignatura_id: b.dataset.asignaturaId,
                     dia_semana: parseInt(b.dataset.dia),
@@ -799,12 +783,25 @@
                     docente_id: b.dataset.docenteId,
                 }));
 
-                if (bloques.length === 0) { /* ... */ return; }
-                // ... (validación de filtros principales)
+                if (bloques.length === 0) { 
+                    Swal.fire('Advertencia', 'No hay bloques de horario para guardar.', 'warning');
+                    return; 
+                }
+                
+                const periodoId = periodoSelect.value;
+                const turnoId = turnoSelect.value;
+                const carreraId = carreraSelect.value;
+                const semestreId = semestreSelect.value;
+                const seccionId = seccionSelect.value;
+
+                if (!periodoId || !carreraId || !turnoId || !semestreId || !seccionId) {
+                    Swal.fire('Advertencia', 'Por favor, complete todos los filtros antes de guardar el horario.', 'warning');
+                    return;
+                }
 
                 const formData = {
-                    periodo_id: periodoSelect.value, turno_id: turnoSelect.value, carrera_id: carreraSelect.value,
-                    semestre_id: semestreSelect.value, seccion_id: seccionSelect.value, horarios: bloques 
+                    periodo_id: periodoId, turno_id: turnoId, carrera_id: carreraId,
+                    semestre_id: semestreId, seccion_id: seccionId, horarios: bloques 
                 };
 
                 try {
@@ -813,12 +810,12 @@
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') },
                         body: JSON.stringify(formData)
                     });
-                    // ... (manejo de respuesta sin cambios)
+                    
                     const responseText = await response.text();
                     if (!response.ok) {
                         let errorMessage = 'Error al guardar.';
                         try { const errorData = JSON.parse(responseText); errorMessage = errorData.message || errorData.error || errorMessage; } 
-                        catch (parseError) { errorMessage = responseText.substring(0, 200); } // Evitar mensajes muy largos
+                        catch (parseError) { errorMessage = responseText.substring(0, 200); } // Avoid very long messages
                         throw new Error(errorMessage);
                     }
                     const data = JSON.parse(responseText);
@@ -828,7 +825,7 @@
                         Swal.fire('Error', data.message || 'No se pudo guardar.', 'error');
                     }
                 } catch (error) {
-                    console.error('Error al enviar:', error);
+                    console.error('Error sending:', error);
                     Swal.fire('Error', `Ocurrió un error: ${error.message}`, 'error');
                 }
             });
@@ -836,5 +833,3 @@
     </script>
 </body>
 </html>
-```
-
