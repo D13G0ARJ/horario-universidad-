@@ -80,8 +80,8 @@ class Horario extends Model
      */
     public function semestre()
     {
-        return $this->belongsTo(Semestre::class, 'semestre_id', 'id_semestre')
-            ->with('carrera');
+        return $this->belongsTo(Semestre::class, 'semestre_id', 'id_semestre');
+            // ->with('carrera');
     }
 
     /**
@@ -98,8 +98,8 @@ class Horario extends Model
      */
     public function carrera()
     {
-        return $this->belongsTo(Carrera::class, 'carrera_id', 'carrera_id')
-            ->with('semestres');
+        return $this->belongsTo(Carrera::class, 'carrera_id', 'carrera_id');
+            // ->with('semestres');
     }
 
     /**
@@ -117,7 +117,7 @@ class Horario extends Model
     public function coordinador()
     {
         return $this->belongsTo(User::class, 'coordinador_cedula', 'cedula')
-            ->select('cedula', 'nombre', 'apellido');
+            ->select('cedula', 'name');
     }
 
     /**
@@ -154,5 +154,12 @@ class Horario extends Model
             $this->hora_fin->format('H:i'),
             $this->bloques
         );
+    }
+
+    public function bloquesRelacionados()
+    {
+        return $this->hasMany(Horario::class, 'seccion_id', 'seccion_id')
+            ->where('periodo_id', $this->periodo_id)
+            ->with(['asignatura', 'docente']);
     }
 }

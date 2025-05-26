@@ -13,6 +13,7 @@ use App\Models\Periodo;
 use App\Models\Carrera;
 use App\Models\CargaHoraria; // Asegúrate de importar CargaHoraria
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException; // Importar para manejar errores 404
 
@@ -23,20 +24,28 @@ class HorarioController extends Controller
      */
     public function index()
     {
-        $horarios = Horario::with(['asignatura', 'carrera', 'docente', 'turno', 'semestre', 'periodo', 'seccion'])
-                          ->orderBy('dia_semana')
-                          ->orderBy('hora_inicio')
-                          ->get();
+        // Agrupa por periodo y sección, obteniendo los primeros registros como representantes
+        $horarios = Horario::with(['periodo', 'seccion', 'carrera', 'semestre', 'turno'])
+            ->selectRaw('
+                periodo_id,
+                seccion_id,
+                carrera_id,
+                semestre_id,
+                turno_id,
+                MIN(id) as id,
+                COUNT(*) as total_bloques
+            ')
+            ->groupBy(['periodo_id', 'seccion_id', 'carrera_id', 'semestre_id', 'turno_id'])
+            ->orderBy('periodo_id', 'desc')
+            ->orderBy('seccion_id')
+            ->get();
 
         return view('horario.index', [
             'horarios' => $horarios,
-            'asignaturas' => Asignatura::all(),
-            'secciones' => Seccion::with(['asignaturas', 'turno'])->get(),
-            'docentes' => Docente::all(),
-            'turnos' => Turno::all(),
-            'semestres' => Semestre::all(),
             'periodos' => Periodo::all(),
             'carreras' => Carrera::all(),
+            'semestres' => Semestre::all(),
+            'turnos' => Turno::all()
         ]);
     }
 
@@ -182,17 +191,35 @@ class HorarioController extends Controller
 
         try {
             $formData = $request->json()->all();
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Usuario no autenticado.'], 401);
+            }
 
             $seccionId = $formData['seccion_id'];
             $carreraId = $formData['carrera_id'];
             $semestreId = $formData['semestre_id'];
             $turnoId = $formData['turno_id'];
             $periodoId = $formData['periodo_id'];
-            $coordinadorCedula = $formData['coordinador_cedula'];
+            $coordinadorCedula = $user->cedula;
             $horariosBloques = $formData['horarios'];
 
             if (empty($horariosBloques)) {
                 return response()->json(['success' => false, 'message' => 'No se han arrastrado bloques al horario.'], 400);
+            }
+
+                    foreach ($formData['horarios'] as $bloque) {
+            // Obtener el primer docente asociado a la asignatura
+            $docenteAsignado = DB::table('asignatura_docente')
+                                ->where('asignatura_id', $bloque['asignatura_id'])
+                                ->first();
+
+            } if (!$docenteAsignado) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "La asignatura {$bloque['asignatura_id']} no tiene docentes asignados."
+                ], 400);
             }
 
             // Validar la carga horaria máxima antes de guardar
@@ -218,7 +245,7 @@ class HorarioController extends Controller
                     'periodo_id' => $periodoId,
                     'asignatura_id' => $bloque['asignatura_id'],
                     'carrera_id' => $carreraId,
-                    'docente_id' => $docenteIdParaHorario,
+                    'docente_id' => $docenteAsignado->docente_id,
                     'seccion_id' => $seccionId,
                     'turno_id' => $turnoId,
                     'semestre_id' => $semestreId,
@@ -289,5 +316,48 @@ class HorarioController extends Controller
                 );
             }
         }
+    }
+
+    public function show($id)
+    {
+        // Obtener el horario base (puede ser cualquier registro del grupo)
+        $horario = Horario::with([
+            'periodo',
+            'carrera',
+            'semestre',
+            'turno',
+            'seccion',
+            'coordinador'
+        ])->findOrFail($id);
+
+        // Obtener TODOS los bloques del mismo grupo horario
+        $bloques = Horario::where('seccion_id', $horario->seccion_id)
+            ->where('periodo_id', $horario->periodo_id)
+            ->where('carrera_id', $horario->carrera_id)
+            ->where('semestre_id', $horario->semestre_id)
+            ->where('turno_id', $horario->turno_id)
+            ->with(['asignatura', 'docente'])
+            ->orderBy('dia_semana')
+            ->orderBy('hora_inicio')
+            ->get();
+
+        // Generar franjas horarias
+        $horas = [];
+        $current = strtotime('07:00');
+        $end = strtotime('21:00');
+        
+        while ($current < $end) {
+            $horas[] = [
+                'inicio' => date('H:i', $current),
+                'fin' => date('H:i', $current + 2700), // 45 minutos en segundos
+            ];
+            $current += 2700;
+        }
+
+        return view('horario.show', [
+            'horario' => $horario,
+            'bloques' => $bloques,
+            'horas' => $horas
+        ]);
     }
 }
