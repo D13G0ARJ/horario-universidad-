@@ -20,10 +20,9 @@
                 <h4 class="card-title mb-0">
                     <i class="fas fa-list-alt mr-2"></i>Horarios Registrados
                 </h4>
-                <a href="#" class="btn btn-success ms-auto text-white"
-                    data-bs-toggle="modal" data-bs-target="#agregarHorarioModal">
-                    <i class="fas fa-plus mr-1"></i>Nuevo Horario
-                </a>
+                <a href="{{ route('horario.create') }}" class="btn btn-success ms-auto text-white">
+    <i class="fas fa-plus mr-1"></i> Nuevo Horario
+</a>
             </div>
                 <div class="card-body">
                     <table id="tabla-horarios" class="table table-bordered table-hover">
@@ -32,8 +31,9 @@
                                 <th>Periodo</th>
                                 <th>Carrera</th>
                                 <th>Semestre</th>
-                                <th>Sección</th>
                                 <th>Turno</th>
+                                <th>Sección</th>
+                                <th>Bloques</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -41,24 +41,17 @@
                             @foreach($horarios as $horario)
                             <tr>
                                 <td>{{ $horario->periodo->nombre ?? 'Sin periodo' }}</td>
-                                <td>{{ $horario->carrera->nombre ?? 'Sin carrera' }}</td>
+                                <td>{{ $horario->carrera->name ?? 'Sin carrera' }}</td>
                                 <td>{{ $horario->semestre->numero ?? 'Sin semestre' }}</td>
                                 <td>{{ $horario->turno->nombre ?? 'Sin turno' }}</td>
                                 <td>{{ $horario->seccion->codigo_seccion ?? 'Sin sección' }}</td>
+                                <td>{{ $horario->total_bloques }}</td>
                                 <td style="text-align: center">
                                     <div class="d-flex justify-content-center gap-2">
                                         <!-- Botón para Ver -->
-                                        <button class="btn btn-info btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#verHorarioModal"
-                                            data-id="{{ $horario->id }}"
-                                            data-periodo="{{ $horario->periodo->nombre ?? 'Sin periodo' }}"
-                                            data-carrera="{{ $horario->carrera->nombre ?? 'Sin carrera' }}"
-                                            data-semestre="{{ $horario->semestre->numero ?? 'Sin semestre' }}"
-                                            data-turno="{{ $horario->turno->nombre ?? 'Sin turno' }}"
-                                            data-seccion="{{ $horario->seccion->codigo_seccion ?? 'Sin sección' }}">
+                                        <a href="{{ route('horario.show', $horario->id) }}" class="btn btn-info btn-sm">
                                             <i class="fas fa-eye"></i>
-                                        </button>
+                                        </a>
 
                                         <!-- Botón para Editar -->
                                         <button class="btn btn-success btn-sm"

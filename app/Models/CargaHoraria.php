@@ -10,45 +10,125 @@ class CargaHoraria extends Model
 {
     use HasFactory;
 
-    // 1. Nombre de tabla explícito (coincide con migración)
+    /**
+     * El nombre de la tabla asociada al modelo.
+     * Por convención, Laravel inferirá 'carga_horarias' si el modelo es CargaHoraria,
+     * pero es buena práctica especificarlo para mayor claridad.
+     *
+     * @var string
+     */
     protected $table = 'carga_horarias';
 
-    // 2. Configuración de clave primaria
+    /**
+     * La clave primaria asociada a la tabla.
+     * Por defecto, Laravel asume 'id' y que es autoincremental.
+     *
+     * @var string
+     */
     protected $primaryKey = 'id';
+
+    /**
+     * Indica si la clave primaria es autoincremental.
+     *
+     * @var bool
+     */
     public $incrementing = true;
+
+    /**
+     * El tipo de dato de la clave primaria.
+     *
+     * @var string
+     */
     protected $keyType = 'int';
 
-    // 3. Atributos asignables masivamente
+    /**
+     * Los atributos que se pueden asignar de forma masiva.
+     *
+     * @var array<string>
+     */
     protected $fillable = [
-        'asignatura_id', 
+        'asignatura_id',
         'tipo',
         'horas_academicas'
     ];
 
-    // 4. Casting de tipos
+    /**
+     * Los atributos que deben ser convertidos a tipos nativos.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
-        'horas_academicas' => 'integer'
+        'horas_academicas' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    // 5. Relación con Asignatura (mejorada)
+    /**
+     * Relación con el modelo Asignatura.
+     * Una carga horaria pertenece a una asignatura.
+     *
+     * @return BelongsTo
+     */
     public function asignatura(): BelongsTo
     {
         return $this->belongsTo(
             Asignatura::class,
-            'asignatura_id', // FK en carga_horarias
-            'asignatura_id'  // PK en asignaturas
-        )->withDefault(); // Evita null si se elimina la asignatura
+            'asignatura_id', // Clave foránea en la tabla 'carga_horarias'
+            'asignatura_id'  // Clave local en la tabla 'asignaturas'
+        )->withDefault(); // Esto permite que si la asignatura no existe, no devuelva null y use valores por defecto
     }
 
-    // 6. Validación de tipos permitidos
+    /**
+     * Obtiene una lista de los tipos de carga horaria permitidos.
+     * Útil para validaciones o enumeraciones en el frontend.
+     *
+     * @return array<string>
+     */
     public static function tiposPermitidos(): array
     {
         return ['teorica', 'practica', 'laboratorio'];
     }
 
-    // 7. Scope para consultas comunes
+    /**
+     * Scope para filtrar cargas horarias por tipo.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  string  $tipo El tipo de hora (ej. 'teorica', 'practica').
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
     public function scopeTipo($query, string $tipo)
     {
         return $query->where('tipo', $tipo);
+    }
+
+    /**
+     * Scope para filtrar cargas horarias por asignatura.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  string  $asignaturaId El ID de la asignatura.
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePorAsignatura($query, string $asignaturaId)
+    {
+        return $query->where('asignatura_id', $asignaturaId);
+    }
+
+    /**
+     * Scope para filtrar cargas horarias por un rango de horas académicas.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  int|null  $minHoras El mínimo de horas académicas.
+     * @param  int|null  $maxHoras El máximo de horas académicas.
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeRangoHorasAcademicas($query, ?int $minHoras = null, ?int $maxHoras = null)
+    {
+        if (!is_null($minHoras)) {
+            $query->where('horas_academicas', '>=', $minHoras);
+        }
+        if (!is_null($maxHoras)) {
+            $query->where('horas_academicas', '<=', $maxHoras);
+        }
+        return $query;
     }
 }

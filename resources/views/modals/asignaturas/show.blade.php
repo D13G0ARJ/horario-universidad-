@@ -28,6 +28,7 @@
                         <div class="card mb-3 border-secondary shadow-sm">
                             <div class="card-header bg-secondary text-white">
                                 <i class="fas fa-hourglass-half me-2"></i>Carga Horaria
+                                <span id="totalHoras" class="badge bg-light text-dark fs-6">Total: 0 hr(s)</span>
                             </div>
                             <div class="card-body">
                                 <ul class="list-group list-group-flush" id="modalShowCargaHoraria">
@@ -90,10 +91,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Actualizar Carga Horaria
             const cargaHorariaList = document.getElementById('modalShowCargaHoraria');
+            const totalHorasElement = document.getElementById('totalHoras');
             cargaHorariaList.innerHTML = ''; // Limpiar contenido previo
+
+            let totalHoras = 0;
+
             if (Object.keys(cargaHorariaData).length > 0) {
                 for (const tipo in cargaHorariaData) {
                     if (cargaHorariaData.hasOwnProperty(tipo) && cargaHorariaData[tipo] > 0) {
+                        const horas = parseInt(cargaHorariaData[tipo]);
+                        totalHoras += horas;
+                        
                         const li = document.createElement('li');
                         li.className = 'list-group-item d-flex justify-content-between align-items-center';
                         
@@ -104,12 +112,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         li.innerHTML = `
                             <span class="text-capitalize"><i class="far fa-clock me-2"></i>${tipoText}</span>
-                            <span class="badge bg-primary rounded-pill">${cargaHorariaData[tipo]} hr(s)</span>
+                            <span class="badge bg-primary rounded-pill">${horas} hr(s)</span>
                         `;
                         cargaHorariaList.appendChild(li);
                     }
                 }
+                
+                // Mostrar el total solo si hay al menos un tipo de horas
+                if (totalHoras > 0) {
+                    totalHorasElement.textContent = `Total: ${totalHoras} hr(s)`;
+                } else {
+                    totalHorasElement.textContent = 'Total: 0 hr(s)';
+                }
             } else {
+                totalHorasElement.textContent = 'Total: 0 hr(s)';
                 const li = document.createElement('li');
                 li.className = 'list-group-item text-muted';
                 li.textContent = 'No hay carga horaria especificada.';

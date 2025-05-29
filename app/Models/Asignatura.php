@@ -12,7 +12,7 @@ class Asignatura extends Model
     use HasFactory;
 
     /**
-     * The attributes that are mass assignable.
+     * Los atributos que se pueden asignar de forma masiva.
      *
      * @var array<string>
      */
@@ -22,57 +22,91 @@ class Asignatura extends Model
     ];
 
     /**
-     * Configuración personalizada de clave primaria
+     * Configuración personalizada de la clave primaria.
+     *
+     * @var string
      */
     protected $primaryKey = 'asignatura_id';
-    public function getRouteKeyName() { return 'asignatura_id'; }
+
+    /**
+     * Define la clave de ruta para la resolución de modelos implícita.
+     *
+     * @return string
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'asignatura_id';
+    }
+
+    /**
+     * Indica si la clave primaria es autoincremental.
+     *
+     * @var bool
+     */
     public $incrementing = false;
+
+    /**
+     * El tipo de dato de la clave primaria.
+     *
+     * @var string
+     */
     protected $keyType = 'string';
 
     /**
-     * Relación muchos a muchos con Docente (CORREGIDO)
+     * Relación muchos a muchos con Docente.
+     * Una asignatura puede ser impartida por varios docentes.
+     *
+     * @return BelongsToMany
      */
     public function docentes(): BelongsToMany
     {
         return $this->belongsToMany(
             Docente::class,
-            'asignatura_docente',
-            'asignatura_id',
-            'docente_id'
-        )->withTimestamps(false); // Desactivar timestamps
+            'asignatura_docente', // Nombre de la tabla pivote
+            'asignatura_id',      // Clave foránea del modelo actual (Asignatura) en la tabla pivote
+            'docente_id'          // Clave foránea del modelo relacionado (Docente) en la tabla pivote
+        )->withTimestamps(false); // Desactivar timestamps si no se usan en la tabla pivote
     }
 
     /**
-     * Relación muchos a muchos con Seccion (CORREGIDO)
+     * Relación muchos a muchos con Seccion.
+     * Una asignatura puede ser parte de varias secciones.
+     *
+     * @return BelongsToMany
      */
     public function secciones(): BelongsToMany
     {
         return $this->belongsToMany(
             Seccion::class,
-            'asignatura_seccion',
-            'asignatura_id',
-            'seccion_id'
+            'asignatura_seccion', // Nombre de la tabla pivote
+            'asignatura_id',      // Clave foránea del modelo actual (Asignatura) en la tabla pivote
+            'seccion_id'          // Clave foránea del modelo relacionado (Seccion) en la tabla pivote
         )->withPivot([
             'carrera_id',
             'semestre_id',
             'turno_id'
-        ])->withTimestamps(false); // ¡Cambiado a false!
+        ])->withTimestamps(false); // Desactivar timestamps si no se usan en la tabla pivote
     }
 
     /**
-     * Relación uno a muchos con CargaHoraria
+     * Relación uno a muchos con CargaHoraria.
+     * Una asignatura puede tener varias cargas horarias definidas (teóricas, prácticas, laboratorio).
+     *
+     * @return HasMany
      */
     public function cargaHoraria(): HasMany
     {
         return $this->hasMany(
             CargaHoraria::class,
-            'asignatura_id',
-            'asignatura_id'
+            'asignatura_id', // Clave foránea en la tabla 'carga_horarias'
+            'asignatura_id'  // Clave local en la tabla 'asignaturas'
         );
     }
 
     /**
-     * Obtiene las horas disponibles agrupadas por tipo (NUEVO)
+     * Obtiene las horas disponibles agrupadas por tipo de horas (teóricas, prácticas, laboratorio).
+     *
+     * @return array
      */
     public function getHorasDisponiblesAttribute(): array
     {
@@ -85,7 +119,9 @@ class Asignatura extends Model
     }
 
     /**
-     * Obtiene la carga horaria total (NUEVO)
+     * Obtiene la carga horaria total sumando todas las horas académicas de la asignatura.
+     *
+     * @return int
      */
     public function getCargaHorariaTotalAttribute(): int
     {
@@ -93,9 +129,12 @@ class Asignatura extends Model
     }
 
     /**
-     * Verifica si tiene carga horaria de un tipo específico (NUEVO)
+     * Verifica si la asignatura tiene carga horaria de un tipo específico.
+     *
+     * @param string $tipo El tipo de hora a verificar (teorica, practica, laboratorio).
+     * @return bool
      */
-    public function tieneCargaHoraria(string $tipo): bool
+    public function hasCargaHorariaTipo(string $tipo): bool
     {
         return $this->cargaHoraria()->where('tipo', $tipo)->exists();
     }
