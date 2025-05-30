@@ -65,13 +65,26 @@ Route::put('/periodos/{periodo}', [PeriodoController::class, 'update'])->name('p
 Route::delete('/periodos/{periodo}', [PeriodoController::class, 'destroy'])->name('periodo.destroy');
 
 
-// Rutas para la gestión de horarios
-Route::middleware(['auth'])->group(function () {
-    Route::get('/horarios', [HorarioController::class, 'index'])->name('horario.index'); // Mostrar el calendario
-    Route::post('/horarios', [HorarioController::class, 'store'])->name('horario.store'); // Crear un nuevo horario
-    Route::get('horario/create', [HorarioController::class, 'create'])->name('horario.create');
-    Route::put('/horarios/{horario}', [HorarioController::class, 'update'])->name('horario.update'); // Actualizar un horario
-    Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->name('horario.destroy'); // Eliminar un horario
+// Rutas para la gestión de horarios (CRUD y dependientes)
+Route::prefix('horario')->middleware('auth')->group(function () {
+    // Listar horarios
+    Route::get('/', [HorarioController::class, 'index'])->name('horario.index');
+    // Formulario de creación
+    Route::get('/create', [HorarioController::class, 'create'])->name('horario.create');
+    // Rutas API para dependientes y filtros
+    Route::get('/api/semestres-por-turno/{turnoId}', [HorarioController::class, 'getSemestresPorTurno'])->name('api.semestres.por.turno');
+    Route::get('/obtener-secciones', [HorarioController::class, 'obtenerSecciones'])->name('api.obtener.secciones');
+    Route::get('/asignaturas', [HorarioController::class, 'getAsignaturasFiltradas'])->name('horario.asignaturas.filtradas');
+    // Guardar nuevo horario
+    Route::post('/', [HorarioController::class, 'store'])->name('horario.store');
+    // Mostrar detalle de horario
+    Route::get('/{horario}', [HorarioController::class, 'show'])->where('horario', '[0-9]+')->name('horario.show');
+    // Formulario de edición de horario
+    Route::get('/{horario}/edit', [HorarioController::class, 'edit'])->where('horario', '[0-9]+')->name('horario.edit');
+    // Actualizar horario
+    Route::put('/{horario}', [HorarioController::class, 'update'])->where('horario', '[0-9]+')->name('horario.update');
+    // Eliminar horario
+    Route::delete('/{horario}', [HorarioController::class, 'destroy'])->where('horario', '[0-9]+')->name('horario.destroy');
 });
 
 // Rutas para secciones
@@ -121,35 +134,5 @@ Route::prefix('respaldo')->middleware(['auth'])->group(function () {
 
     // Ruta para eliminar un respaldo específico
     Route::delete('/delete/{id}', [RespaldoController::class, 'destroy'])->name('respaldo.destroy');
-});
-
-
-Route::prefix('horario')->middleware('auth')->group(function () {
-    // Ruta principal para listar horarios
-    Route::get('/', [HorarioController::class, 'index'])->name('horario.index');
-    
-    // Ruta para creación de horario
-    Route::get('/create', [HorarioController::class, 'create'])->name('horario.create');
-    
-    // Rutas API para filtros (deben ir ANTES de las rutas comodín)
-    Route::get('/api/semestres-por-turno/{turnoId}', [HorarioController::class, 'getSemestresPorTurno'])
-        ->name('api.semestres.por.turno');
-    
-    Route::get('/obtener-secciones', [HorarioController::class, 'obtenerSecciones'])
-        ->name('api.obtener.secciones');
-    
-    Route::get('/asignaturas', [HorarioController::class, 'getAsignaturasFiltradas'])
-        ->name('horario.asignaturas.filtradas');
-    
-    // Ruta para almacenar nuevo horario
-    Route::post('/', [HorarioController::class, 'store'])->name('horario.store');
-    
-    // Ruta para mostrar detalles (DEBE IR DESPUÉS de las rutas específicas)
-    Route::get('/{horario}', [HorarioController::class, 'show'])
-        ->where('horario', '[0-9]+') // Asegura que sea numérico
-        ->name('horario.show');
-    
-    // Ruta para eliminar
-    Route::delete('/{id}', [HorarioController::class, 'destroy'])->name('horario.destroy');
 });
 

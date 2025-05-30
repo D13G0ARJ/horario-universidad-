@@ -1,4 +1,3 @@
-
 @extends('layouts.admin')
 
 @section('content')
@@ -54,17 +53,9 @@
                                         </a>
 
                                         <!-- Botón para Editar -->
-                                        <button class="btn btn-success btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editarHorarioModal"
-                                            data-id="{{ $horario->id }}"
-                                            data-periodo="{{ $horario->periodo->id ?? '' }}"
-                                            data-carrera="{{ $horario->carrera->id ?? '' }}"
-                                            data-semestre="{{ $horario->semestre->id_semestre ?? '' }}"
-                                            data-turno="{{ $horario->turno->id_turno ?? '' }}"
-                                            data-seccion="{{ $horario->seccion->codigo_seccion ?? '' }}">
+                                        <a href="{{ route('horario.edit', $horario->id) }}" class="btn btn-success btn-sm">
                                             <i class="fas fa-pencil-alt"></i>
-                                        </button>
+                                        </a>
 
                                         <!-- Botón para Eliminar -->
                                         <button class="btn btn-danger btn-sm btn-eliminar"

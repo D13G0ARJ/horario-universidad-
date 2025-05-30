@@ -318,6 +318,9 @@ class HorarioController extends Controller
         }
     }
 
+    /**
+     * Muestra el detalle de un horario con sus bloques (solo visualización).
+     */
     public function show($id)
     {
         // Obtener el horario base (puede ser cualquier registro del grupo)
@@ -345,7 +348,6 @@ class HorarioController extends Controller
         $horas = [];
         $current = strtotime('07:00');
         $end = strtotime('21:00');
-        
         while ($current < $end) {
             $horas[] = [
                 'inicio' => date('H:i', $current),
@@ -358,6 +360,73 @@ class HorarioController extends Controller
             'horario' => $horario,
             'bloques' => $bloques,
             'horas' => $horas
+        ]);
+    }
+
+    /**
+     * Elimina todos los bloques de un horario (grupo).
+     */
+    public function destroy($id)
+    {
+        $horario = Horario::findOrFail($id);
+
+        Horario::where('seccion_id', $horario->seccion_id)
+            ->where('periodo_id', $horario->periodo_id)
+            ->where('carrera_id', $horario->carrera_id)
+            ->where('semestre_id', $horario->semestre_id)
+            ->where('turno_id', $horario->turno_id)
+            ->delete();
+
+        return redirect()->route('horario.index')
+            ->with('success', 'Horario eliminado correctamente.');
+    }
+
+    /**
+     * Muestra el formulario de edición de horario con asignaturas precargadas.
+     */
+    public function edit($id)
+    {
+        $horario = Horario::with([
+            'periodo',
+            'carrera',
+            'semestre',
+            'turno',
+            'seccion',
+            'coordinador'
+        ])->findOrFail($id);
+
+        $bloques = Horario::where('seccion_id', $horario->seccion_id)
+            ->where('periodo_id', $horario->periodo_id)
+            ->where('carrera_id', $horario->carrera_id)
+            ->where('semestre_id', $horario->semestre_id)
+            ->where('turno_id', $horario->turno_id)
+            ->with(['asignatura', 'docente'])
+            ->orderBy('dia_semana')
+            ->orderBy('hora_inicio')
+            ->get();
+
+        $horas = [];
+        $current = strtotime('07:00');
+        $end = strtotime('21:00');
+        while ($current < $end) {
+            $horas[] = [
+                'inicio' => date('H:i', $current),
+                'fin' => date('H:i', $current + 2700),
+            ];
+            $current += 2700;
+        }
+
+        return view('horario.edit', [
+            'horario' => $horario,
+            'bloques' => $bloques,
+            'horas' => $horas,
+            'periodos' => Periodo::all(),
+            'carreras' => Carrera::all(),
+            'semestres' => Semestre::all(),
+            'turnos' => Turno::all(),
+            'secciones' => Seccion::all(),
+            'asignaturas' => Asignatura::all(),
+            'docentes' => Docente::all(),
         ]);
     }
 }
