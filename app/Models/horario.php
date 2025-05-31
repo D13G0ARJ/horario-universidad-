@@ -19,6 +19,7 @@ class Horario extends Model
         'coordinador_cedula',
         'periodo_id',
         'asignatura_id',
+        'asignatura_compartida_id',
         'carrera_id',
         'docente_id',
         'seccion_id',

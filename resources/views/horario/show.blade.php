@@ -7,207 +7,379 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=swap">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.css') }}">
     <style>
         html, body { height: 100%; margin: 0; padding: 0; overflow: auto; }
+        .content-wrapper { padding: 20px; } /* Añadir padding al content-wrapper */
         .bloque-horario {
             position: absolute; top: 0; left: 0; width: calc(100% - 8px); z-index: 10;
             padding: 3px 5px; font-size: 0.7rem; color: white; overflow: hidden;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; flex-direction: column;
             justify-content: space-between; margin: 2px; border-radius: 4px;
+            cursor: pointer; /* Para indicar que es clickeable si hay futuras interacciones */
         }
-        .bg-asignatura-1 { background: linear-gradient(135deg, #4e73df, #3a56c8); }
-        .bg-asignatura-2 { background: linear-gradient(135deg, #1cc88a, #17a673); }
-        .bg-asignatura-3 { background: linear-gradient(135deg, #36b9cc, #2a96a5); }
-        .bg-asignatura-4 { background: linear-gradient(135deg, #f6c23e, #e0b12d); }
-        .bg-asignatura-5 { background: linear-gradient(135deg, #e74a3b, #d62c1a); }
-        .bg-asignatura-6 { background: linear-gradient(135deg, #858796, #6c6e7e); }
-        .bg-asignatura-7 { background: linear-gradient(135deg, #5a5c69, #484a58); }
-        #horarioTable thead th, #horarioTable tbody td, #horarioTable tbody th {
-            vertical-align: top; padding: 4px; height: 40px; box-sizing: border-box; position: relative;
+        .bloque-contenido {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
         }
-        #horarioTable tbody { display: block; overflow-y: auto; }
-        #horarioTable thead, #horarioTable tbody tr { display: table; width: 100%; table-layout: fixed; }
-        .time-slot { background-color: #f8f9fa; position: sticky; left: 0; z-index: 1; width: 80px; }
-        .bloque-contenido { display: flex; flex-direction: column; justify-content: space-between; height: 100%; overflow: hidden; }
-        .bloque-contenido .asignatura-nombre { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.75rem; }
-        .bloque-contenido .asignatura-details { font-size: 0.65rem; line-height: 1.2; }
+        .asignatura-nombre {
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+        .asignatura-details {
+            font-size: 0.65rem;
+            line-height: 1.2;
+        }
+        .table-horario th, .table-horario td {
+            text-align: center;
+            vertical-align: middle;
+            position: relative; /* Para posicionar los bloques absolutos */
+            padding: 0; /* Eliminar padding para que el bloque ocupe todo el espacio */
+            height: 45px; /* Altura base para un bloque */
+            min-width: 100px; /* Ancho mínimo para las celdas de días */
+        }
+        .table-horario thead th {
+            background-color: #343a40;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+        .table-horario tbody th { /* Horas */
+            background-color: #495057;
+            color: white;
+            position: sticky;
+            left: 0;
+            z-index: 15;
+            min-width: 80px; /* Ancho para la columna de horas */
+        }
+        .table-horario td:first-child { /* Fix for first cell (corner) */
+            z-index: 25;
+        }
+
+        /* Colores para bloques (ejemplos, puedes ajustarlos) */
+        .color-0 { background-color: #e67e22; } /* Naranja */
+        .color-1 { background-color: #28a745; } /* Verde éxito */
+        .color-2 { background-color: #007bff; } /* Azul primario */
+        .color-3 { background-color: #6f42c1; } /* Púrpura */
+        .color-4 { background-color: #dc3545; } /* Rojo peligro */
+        .color-5 { background-color: #17a2b8; } /* Cian información */
+        .color-6 { background-color: #fd7e14; } /* Naranja oscuro */
+        .color-7 { background-color: #20c997; } /* Teal */
+        .color-8 { background-color: #6610f2; } /* Indigo */
+        .color-9 { background-color: #e83e8c; } /* Rosa */
+        .color-10 { background-color: #6c757d; } /* Gris */
+
+        /* Estilos para la nueva sección de Datos Generales */
+        .info-card .card-body {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .info-item {
+            font-size: 0.95rem;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #f8f9fa; /* Light background for each item */
+            border: 1px solid #e9ecef;
+        }
+        .info-item strong {
+            display: block;
+            margin-bottom: 2px;
+            color: #343a40;
+        }
+        .info-item span {
+            color: #6c757d;
+        }
+
+        /* Estilos para el apartado de Coordinador */
+        .coordinador-card .card-body {
+            padding: 10px 15px; /* Reduce padding */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+        }
+        .coordinador-info {
+            font-size: 0.9rem; /* Smaller font size */
+            margin: 0; /* Remove default paragraph margin */
+        }
+        .coordinador-info strong {
+            color: #343a40;
+        }
+        .coordinador-info span {
+            color: #6c757d;
+        }
     </style>
 </head>
-<body>
-    <div class="container-fluid">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h1 class="h3 text-primary">
-                    <i class="fas fa-calendar-alt mr-2"></i>Detalle de Horario
-                </h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.index') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('horario.index') }}">Horarios</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Detalle</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-        <div class="card border-0 shadow-lg">
-            <div class="card-header bg-primary text-white py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h2 class="h5 mb-0">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        Horario: {{ $horario->seccion->codigo_seccion ?? 'N/A' }} - 
-                        {{ $horario->periodo->nombre ?? 'N/A' }}
-                    </h2>
-                    <a href="{{ route('horario.index') }}" class="btn btn-light btn-sm">
-                        <i class="fas fa-arrow-left mr-1"></i> Volver
-                    </a>
-                </div>
-            </div>
-            <div class="card-body p-4">
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <p><strong>Carrera:</strong> {{ $horario->carrera->name ?? 'N/A' }}</p>
-                    </div>
-                    <div class="col-md-3">
-                        <p><strong>Semestre:</strong> {{ $horario->semestre->numero ?? 'N/A' }}°</p>
-                    </div>
-                    <div class="col-md-3">
-                        <p><strong>Turno:</strong> {{ $horario->turno->nombre ?? 'N/A' }}</p>
-                    </div>
-                    <div class="col-md-3">
-                        <p><strong>Coordinador:</strong> {{ $horario->coordinador->name ?? 'N/A' }}</p>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-9">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover mb-0" id="horarioTable">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="text-center time-slot">Hora</th>
-                                        <th class="text-center">Lunes</th>
-                                        <th class="text-center">Martes</th>
-                                        <th class="text-center">Miércoles</th>
-                                        <th class="text-center">Jueves</th>
-                                        <th class="text-center">Viernes</th>
-                                        <th class="text-center">Sábado</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="horarioBody">
-                                    @foreach($horas as $hora)
-                                        <tr>
-                                            <th class="time-slot">{{ $hora['inicio'] }}</th>
-                                            @for($dia = 1; $dia <= 6; $dia++)
-                                                <td data-hora="{{ $hora['inicio'] }}" data-dia="{{ $dia }}" style="height: 40px; position: relative;"></td>
-                                            @endfor
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+<body class="hold-transition sidebar-mini">
+    <div class="wrapper">
+        <div class="content-wrapper" style="margin-left: 0 !important;">
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h3 class="text-primary mt-4">
+                                <i class="fas fa-calendar-check mr-2"></i>Detalle de Horario
+                            </h3>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="{{ route('admin.index') }}">Dashboard</a></li>
+                                    <li class="breadcrumb-item"><a href="{{ route('horario.index') }}">Horarios</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Detalle</li>
+                                </ol>
+                            </nav>
+                            <hr>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card mb-3">
-                            <div class="card-header bg-secondary text-white py-2">
-                                <i class="fas fa-book me-1"></i> Detalles de Materias Inscritas
-                            </div>
-                            <div class="card-body p-2" style="max-height: 400px; overflow-y: auto;">
-                                @php
-                                    $materias = collect($bloques)
-                                        ->groupBy(function($b) { return $b['asignatura']['asignatura_id'] ?? 'N/A'; });
-                                @endphp
-                                @forelse($materias as $asignaturaId => $bloquesMateria)
-                                    @php
-                                        $asignatura = $bloquesMateria[0]['asignatura'] ?? null;
-                                        $docente = $bloquesMateria[0]['docente'] ?? null;
-                                    @endphp
-                                    <div class="mb-3 border-bottom pb-2">
-                                        <div class="fw-bold text-primary">{{ $asignatura['name'] ?? 'Materia N/A' }}</div>
-                                        <div class="small text-muted mb-1">Código: {{ $asignatura['codigo'] ?? 'N/A' }}</div>
-                                        <div class="mb-1">
-                                            <span class="fw-semibold">Docente:</span> {{ $docente['name'] ?? 'N/A' }}
-                                        </div>
-                                        <div class="mb-1">
-                                            <span class="fw-semibold">Cédula:</span> {{ $docente['cedula_doc'] ?? 'N/A' }}
-                                        </div>
-                                        <div class="mb-1">
-                                            <span class="fw-semibold">Correo:</span> {{ $docente['email'] ?? 'N/A' }}
-                                        </div>
-                                        <div class="mb-1">
-                                            <span class="fw-semibold">Teléfono:</span> {{ $docente['telefono'] ?? 'N/A' }}
-                                        </div>
-                                        <div class="mb-1">
-                                            <span class="fw-semibold">Dedicación:</span> {{ $docente['dedicacion']['nombre'] ?? 'N/A' }}
-                                        </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-8"> {{-- Aumentado a md-8 para más espacio en datos generales --}}
+                            <div class="card card-primary card-outline info-card">
+                                <div class="card-header">
+                                    <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>Datos Generales del Horario</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="info-item">
+                                        <strong>Periodo:</strong>
+                                        <span>{{ $horario->periodo->nombre }}</span>
                                     </div>
-                                @empty
-                                    <div class="text-muted">No hay materias inscritas.</div>
-                                @endforelse
+                                    <div class="info-item">
+                                        <strong>Carrera:</strong>
+                                        <span>{{ $horario->carrera->name }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <strong>Semestre:</strong>
+                                        <span>{{ $horario->semestre->numero }}º Semestre</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <strong>Turno:</strong>
+                                        <span>{{ $horario->turno->nombre }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <strong>Sección:</strong>
+                                        <span>{{ $horario->seccion->codigo_seccion }}</span>
+                                    </div>
+                                    {{-- Si tienes asignatura_compartida_id y quieres mostrarla --}}
+                                    @if ($horario->asignatura_compartida_id)
+                                        <div class="info-item">
+                                            <strong>Asignatura Compartida:</strong>
+                                            <span>{{ $horario->asignatura_compartida_id }}</span> {{-- Aquí podrías mostrar el nombre de la asignatura si cargas su relación --}}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4"> {{-- Reducido a md-4 para el coordinador --}}
+                            <div class="card card-secondary card-outline coordinador-card">
+                                <div class="card-header">
+                                    <h3 class="card-title"><i class="fas fa-user-tie mr-2"></i>Coordinador</h3>
+                                </div>
+                                <div class="card-body">
+                                    <p class="coordinador-info mb-0">
+                                        <strong>Cédula:</strong> {{ $horario->coordinador->cedula }} -
+                                        <strong>Nombre:</strong> {{ $horario->coordinador->name }}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-success text-white">
+                                    <h4 class="card-title mb-0">
+                                        <i class="fas fa-calendar-day mr-2"></i>Malla de Horario
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                                        <table class="table table-bordered table-horario">
+                                            <thead>
+                                                <tr>
+                                                    <th>Hora</th>
+                                                    @foreach ($diasSemana as $dia)
+                                                        <th>{{ $dia }}</th>
+                                                    @endforeach
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($horas as $hora)
+                                                    <tr>
+                                                        <th>{{ $hora['inicio'] }} - {{ $hora['fin'] }}</th>
+                                                        @foreach ($diasSemana as $indexDia => $dia)
+                                                            <td id="celda-{{ $indexDia + 1 }}-{{ str_replace(':', '', $hora['inicio']) }}"
+                                                                data-dia="{{ $indexDia + 1 }}"
+                                                                data-hora-inicio="{{ $hora['inicio'] }}">
+                                                                </td>
+                                                        @endforeach
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-secondary text-white">
+                                    <h4 class="card-title mb-0">
+                                        <i class="fas fa-chalkboard-teacher mr-2"></i>Docentes y Asignaturas en este Horario
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-bordered table-striped" id="asignaturas-docentes-table">
+                                        <thead class="thead-dark">
+                                            <tr>
+                                                <th>Código Asignatura</th>
+                                                <th>Nombre Asignatura</th>
+                                                <th>Docente</th>
+                                                <th>Teléfono Docente</th>
+                                                <th>Correo Docente</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div></section>
         </div>
     </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('dist/js/adminlte.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        const bloques = @json($bloques);
-        document.addEventListener('DOMContentLoaded', function() {
-            const BASE_CELL_HEIGHT = 40;
-            bloques.forEach(function(bloque, idx) {
-                const dia = bloque.dia_semana;
-                const horaInicio = bloque.hora_inicio;
+        $(document).ready(function() {
+            const BASE_CELL_HEIGHT = 45; // Altura base de una celda en píxeles
+
+            // Diccionario para asignar colores consistentes a las asignaturas
+            const asignaturaColors = {};
+            let colorIndex = 0;
+            const colors = [
+                'color-0', 'color-1', 'color-2', 'color-3', 'color-4',
+                'color-5', 'color-6', 'color-7', 'color-8', 'color-9', 'color-10'
+            ];
+
+            // Datos de los bloques de horario pasados desde el controlador
+            const bloquesData = @json($bloques);
+
+            // Objeto para almacenar asignaturas y docentes únicos
+            const asignaturasDocentesUnicos = {};
+
+            bloquesData.forEach(bloque => {
+                const diaSemana = bloque.dia_semana;
+                const horaInicio = bloque.hora_inicio.substring(0, 5); // HH:MM
                 const bloquesCount = bloque.bloques;
+                const tipoHoras = bloque.tipo_horas;
+
+                const asignaturaId = bloque.asignatura ? bloque.asignatura.asignatura_id : 'N/A';
+                const asignaturaName = bloque.asignatura ? bloque.asignatura.name : 'Asignatura Desconocida';
+                const docenteName = bloque.docente ? bloque.docente.name : 'Docente Desconocido';
+                const docenteTelefono = bloque.docente ? bloque.docente.telefono : 'N/A';
+                const docenteCorreo = bloque.docente ? bloque.docente.email : 'N/A';
+                const docenteCedula = bloque.docente ? bloque.docente.cedula_doc : 'N/A';
+
+
+                // Asignar un color a la asignatura si no tiene uno
+                if (!asignaturaColors[asignaturaId]) {
+                    asignaturaColors[asignaturaId] = colors[colorIndex % colors.length];
+                    colorIndex++;
+                }
+                const colorClass = asignaturaColors[asignaturaId];
+
+                // Calcular hora fin
                 const horaFin = calcularHoraFin(horaInicio, bloquesCount);
-                const filas = document.querySelectorAll('#horarioBody tr');
-                let filaInicio = null;
-                let rowIndex = -1;
-                filas.forEach((fila, index) => {
-                    const horaFila = fila.querySelector('.time-slot').textContent.trim();
-                    if (horaFila === horaInicio) {
-                        filaInicio = fila;
-                        rowIndex = index;
-                    }
-                });
-                if (filaInicio) {
-                    const celda = filaInicio.querySelector(`td[data-dia="${dia}"]`);
-                    if (celda) {
-                        crearBloqueVisual(
-                            celda,
-                            bloque.asignatura ? bloque.asignatura.asignatura_id : '',
-                            bloque.asignatura ? bloque.asignatura.name : '',
-                            dia,
-                            horaInicio,
-                            horaFin,
-                            bloquesCount,
-                            bloque.tipo_horas,
-                            bloque.docente ? bloque.docente.name : '',
-                            'bg-asignatura-' + ((idx % 7) + 1),
-                            rowIndex,
-                            dia
-                        );
+
+                // Obtener la celda donde se insertará el bloque
+                const cellId = `celda-${diaSemana}-${horaInicio.replace(':', '')}`;
+                const targetCell = document.getElementById(cellId);
+
+                if (targetCell) {
+                    crearBloqueVisual(
+                        targetCell,
+                        asignaturaId,
+                        asignaturaName,
+                        diaSemana,
+                        horaInicio,
+                        horaFin,
+                        bloquesCount,
+                        tipoHoras,
+                        docenteName,
+                        colorClass,
+                        targetCell.rowIndex,
+                        targetCell.cellIndex
+                    );
+                } else {
+                    console.warn(`Celda no encontrada: ${cellId}`);
+                }
+
+                // Almacenar datos de asignaturas y docentes para la nueva tabla
+                if (bloque.asignatura && bloque.docente) {
+                    const key = `${asignaturaId}-${docenteCedula}`; // Clave única por asignatura y docente
+                    if (!asignaturasDocentesUnicos[key]) {
+                        asignaturasDocentesUnicos[key] = {
+                            asignatura_codigo: asignaturaId,
+                            asignatura_nombre: asignaturaName,
+                            docente_nombre: docenteName,
+                            docente_telefono: docenteTelefono,
+                            docente_correo: docenteCorreo
+                        };
                     }
                 }
             });
+
+            // Rellenar la tabla de asignaturas y docentes
+            const tablaAsignaturasDocentesBody = $('#asignaturas-docentes-table tbody');
+            Object.values(asignaturasDocentesUnicos).forEach(item => {
+                const row = `
+                    <tr>
+                        <td>${item.asignatura_codigo}</td>
+                        <td>${item.asignatura_nombre}</td>
+                        <td>${item.docente_nombre}</td>
+                        <td>${item.docente_telefono}</td>
+                        <td>${item.docente_correo}</td>
+                    </tr>
+                `;
+                tablaAsignaturasDocentesBody.append(row);
+            });
+
+
+            // Función para calcular la hora de fin
             function calcularHoraFin(horaInicio, bloques) {
                 const [h, m] = horaInicio.split(':').map(Number);
                 let totalMinutosFin = (h * 60 + m) + (bloques * 45);
-                let horasFin = Math.floor(totalMinutosFin / 60) % 24; 
+                let horasFin = Math.floor(totalMinutosFin / 60) % 24; // Asegura que las horas no excedan 23
                 let minutosFin = totalMinutosFin % 60;
                 return `${String(horasFin).padStart(2, '0')}:${String(minutosFin).padStart(2, '0')}`;
             }
+
+            // Función para crear y añadir el bloque visual al horario
             function crearBloqueVisual(celda, asignaturaId, asignaturaName, dia, horaInicio, horaFin, bloques, tipoHoras, docenteName, colorClass, rowIndex, colIndex) {
                 const bloque = document.createElement('div');
                 bloque.classList.add('bloque-horario', colorClass);
                 bloque.style.height = `${bloques * BASE_CELL_HEIGHT}px`;
                 bloque.innerHTML = `
-                    <div class=\"bloque-contenido\">
-                        <div class=\"asignatura-nombre\" title=\"${asignaturaName}\">${asignaturaName}</div>
-                        <div class=\"asignatura-details\">
-                            <div title=\"${tipoHoras} - ${bloques} bloques\">${tipoHoras} (${bloques}b)</div>
-                            <div title=\"Docente\">Doc: ${docenteName}</div>
+                    <div class="bloque-contenido">
+                        <div class="asignatura-nombre" title="${asignaturaName}">${asignaturaName}</div>
+                        <div class="asignatura-details">
+                            <div title="${tipoHoras} - ${bloques} bloques">${tipoHoras} (${bloques}b)</div>
+                            <div title="Docente">Doc: ${docenteName}</div>
                             <div>${horaInicio} - ${horaFin}</div>
                         </div>
                     </div>

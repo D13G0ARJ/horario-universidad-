@@ -204,23 +204,19 @@ class HorarioController extends Controller
             $periodoId = $formData['periodo_id'];
             $coordinadorCedula = $user->cedula;
             $horariosBloques = $formData['horarios'];
+            // Captura la asignatura_compartida_id del formData
+            $asignaturaCompartidaId = $formData['asignatura_compartida_id'] ?? null;
+
 
             if (empty($horariosBloques)) {
                 return response()->json(['success' => false, 'message' => 'No se han arrastrado bloques al horario.'], 400);
             }
 
-                    foreach ($formData['horarios'] as $bloque) {
-            // Obtener el primer docente asociado a la asignatura
-            $docenteAsignado = DB::table('asignatura_docente')
-                                ->where('asignatura_id', $bloque['asignatura_id'])
-                                ->first();
-
-            } if (!$docenteAsignado) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "La asignatura {$bloque['asignatura_id']} no tiene docentes asignados."
-                ], 400);
-            }
+            // Se movió la validación del docente asignado para cada bloque
+            // y se asegura que el docente_id venga en cada bloque.
+            // Si la lógica es que cada asignatura debe tener al menos UN docente,
+            // esta validación debería hacerse al cargar las asignaturas o al arrastrar.
+            // Aquí, se asume que cada bloque ya tiene un docente_id válido.
 
             // Validar la carga horaria máxima antes de guardar
             // $this->validarCargaHoraria($horariosBloques); // Descomentar si la lógica de validación es crítica
@@ -235,17 +231,24 @@ class HorarioController extends Controller
                    ->delete(); // Usar delete() para eliminar físicamente o softDelete() si lo tienes
 
             foreach ($horariosBloques as $bloque) {
-                // Si la tabla 'horarios' tiene un solo docente_id, tomamos el primero del array.
-                // Si necesitas registrar múltiples docentes para un mismo bloque, deberías ajustar
-                // la estructura de tu base de datos o usar una tabla pivote para horarios_docentes.
-                $docenteIdParaHorario = !empty($bloque['docente_ids']) ? $bloque['docente_ids'][0] : null;
+                // Si la tabla 'horarios' tiene un solo docente_id, tomamos el que viene en el bloque.
+                $docenteIdParaHorario = $bloque['docente_id'] ?? null; // Asegura que el docente_id se obtenga del bloque
+
+                // Validar que el docente exista si es requerido
+                if (!$docenteIdParaHorario) {
+                     Log::error("Docente ID no proporcionado para la asignatura {$bloque['asignatura_id']}.");
+                     return response()->json([
+                         'success' => false,
+                         'message' => "Docente no asignado para la asignatura {$bloque['asignatura_id']} en un bloque."
+                     ], 400);
+                }
 
                 Horario::create([
                     'coordinador_cedula' => $coordinadorCedula,
                     'periodo_id' => $periodoId,
                     'asignatura_id' => $bloque['asignatura_id'],
                     'carrera_id' => $carreraId,
-                    'docente_id' => $docenteAsignado->docente_id,
+                    'docente_id' => $docenteIdParaHorario, // Usar el docente_id del bloque
                     'seccion_id' => $seccionId,
                     'turno_id' => $turnoId,
                     'semestre_id' => $semestreId,
@@ -254,6 +257,7 @@ class HorarioController extends Controller
                     'hora_fin' => $bloque['hora_fin'],
                     'tipo_horas' => $bloque['tipo_horas'],
                     'bloques' => $bloque['bloques'],
+                    'asignatura_compartida_id' => $asignaturaCompartidaId, // ¡Nuevo campo!
                     // Otros campos como 'activo', 'observaciones' si los manejas aquí
                 ]);
             }
@@ -344,22 +348,36 @@ class HorarioController extends Controller
             ->orderBy('hora_inicio')
             ->get();
 
-        // Generar franjas horarias
+        // Definir los días de la semana para la tabla
+        $diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+        // Generar franjas horarias de 45 minutos
         $horas = [];
-        $current = strtotime('07:00');
-        $end = strtotime('21:00');
-        while ($current < $end) {
+        $currentMinutes = 7 * 60; // Iniciar a las 7:00 AM en minutos
+        $endMinutes = 21 * 60;   // Terminar a las 21:00 PM en minutos
+
+        while ($currentMinutes < $endMinutes) {
+            $hours = floor($currentMinutes / 60);
+            $minutes = $currentMinutes % 60;
+            $horaInicioFormato = sprintf('%02d:%02d', $hours, $minutes);
+
+            $nextMinutes = $currentMinutes + 45;
+            $nextHours = floor($nextMinutes / 60);
+            $nextMinutesMod = $nextMinutes % 60;
+            $horaFinFormato = sprintf('%02d:%02d', $nextHours, $nextMinutesMod);
+
             $horas[] = [
-                'inicio' => date('H:i', $current),
-                'fin' => date('H:i', $current + 2700), // 45 minutos en segundos
+                'inicio' => $horaInicioFormato,
+                'fin' => $horaFinFormato,
             ];
-            $current += 2700;
+            $currentMinutes += 45; // Avanzar 45 minutos
         }
 
         return view('horario.show', [
             'horario' => $horario,
             'bloques' => $bloques,
-            'horas' => $horas
+            'horas' => $horas,
+            'diasSemana' => $diasSemana // Pasar los días de la semana a la vista
         ]);
     }
 
@@ -430,3 +448,4 @@ class HorarioController extends Controller
         ]);
     }
 }
+
