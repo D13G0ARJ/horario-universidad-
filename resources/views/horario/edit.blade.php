@@ -181,14 +181,15 @@
     const bloquesGuardados = @json($bloques);
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Render asignaturas disponibles (igual que en crear)
+    // Render asignaturas disponibles (igual que in crear)
     const listaAsignaturas = document.getElementById('listaAsignaturas');
     if (asignaturas.length > 0) {
         listaAsignaturas.innerHTML = asignaturas.map((asignatura, index) => {
             const colorClass = `bg-asignatura-${(index % 7) + 1}`;
+            // Display clearer hour load
             let cargaHorariaText = 'No definida';
             if (asignatura.carga_horaria && asignatura.carga_horaria.length > 0) {
-                cargaHorariaText = asignatura.carga_horaria.map(c => `${c.tipo.substring(0,1)}:${c.horas_academicas}b`).join(', ');
+                cargaHorariaText = asignatura.carga_horaria.map(c => `${c.tipo.substring(0,1)}:${c.horas_academicas}b`).join(', '); // Example: T:4b, P:2b
             }
             return `
                 <div class="list-group-item asignatura-item ${colorClass} text-white mb-2 py-2 px-3" 
@@ -205,19 +206,28 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }).join('');
     } else {
-        listaAsignaturas.innerHTML = `<div class="text-center py-4 text-muted"><i class="fas fa-exclamation-circle me-2"></i>No hay asignaturas.</div>`;
+        listaAsignaturas.innerHTML = `<div class=\"text-center py-4 text-muted\"><i class=\"fas fa-exclamation-circle me-2\"></i>No hay asignaturas.</div>`;
     }
 
     // Drag and drop para asignaturas (igual que en crear)
     document.querySelectorAll('.asignatura-item').forEach(item => {
         item.addEventListener('dragstart', function(e) {
-            e.dataTransfer.setData('text/plain', JSON.stringify({
-                asignatura_id: this.dataset.asignaturaId,
-                name: this.dataset.asignaturaName,
-                docentes: JSON.parse(this.dataset.docentes),
-                cargaHoraria: JSON.parse(this.dataset.cargaHoraria),
+            // Usar los atributos data- para obtener los datos
+            let docentes, cargaHoraria;
+            try {
+                docentes = JSON.parse(this.getAttribute('data-docentes'));
+            } catch (err) { docentes = []; }
+            try {
+                cargaHoraria = JSON.parse(this.getAttribute('data-carga-horaria'));
+            } catch (err) { cargaHoraria = []; }
+            const dataObj = {
+                asignatura_id: this.getAttribute('data-asignatura-id'),
+                name: this.getAttribute('data-asignatura-name'),
+                docentes: docentes,
+                cargaHoraria: cargaHoraria,
                 colorClass: Array.from(this.classList).find(cls => cls.startsWith('bg-asignatura-'))
-            }));
+            };
+            e.dataTransfer.setData('text/plain', JSON.stringify(dataObj));
             this.classList.add('dragging');
         });
         item.addEventListener('dragend', function() { this.classList.remove('dragging'); });
@@ -245,7 +255,98 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.drop-zone').forEach(celda => {
         celda.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('hover-cell'); });
         celda.addEventListener('dragleave', function() { this.classList.remove('hover-cell'); });
-        celda.addEventListener('drop', handleDrop);
+        celda.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('hover-cell');
+            let data;
+            try {
+                data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            } catch (err) {
+                Swal.fire('Error', 'No se pudo leer la información de la asignatura.', 'error');
+                return;
+            }
+            // Compatibilidad: soportar tanto array de docentes como objeto
+            let docentesData = Array.isArray(data.docentes) ? data.docentes : Object.values(data.docentes || {});
+            let cargaHorariaData = Array.isArray(data.cargaHoraria) ? data.cargaHoraria : Object.values(data.cargaHoraria || {});
+            const asignatura_id = data.asignatura_id;
+            const asignaturaName = data.name;
+            const colorClass = data.colorClass || '';
+            const dia = this.dataset.dia;
+            const horaInicio = this.dataset.hora;
+            // Modal tipo create para configurar bloque
+            let tipoOptionsHtml = '';
+            if (cargaHorariaData && cargaHorariaData.length > 0) {
+                cargaHorariaData.forEach(carga => {
+                    if (carga.tipo && carga.horas_academicas) {
+                        tipoOptionsHtml += `<option value="${carga.tipo}">${carga.tipo} (${carga.horas_academicas} bloques)</option>`;
+                    }
+                });
+            } else {
+                tipoOptionsHtml = `<option value="Clase">Clase (carga no definida)</option>`;
+            }
+            let docenteOptionsHtml = docentesData && docentesData.length > 0
+                ? docentesData.map(d => `<option value="${d.cedula_doc}">${d.name}</option>`).join('')
+                : '<option value="">Sin docentes</option>';
+            Swal.fire({
+                title: 'Configurar Bloque',
+                html: `
+                    <p class='text-start mb-1'>Asignatura: <strong>${asignaturaName}</strong></p>
+                    <p class='text-start mb-1'>Día: <strong>${convertirDiaNumeroATexto(dia)}</strong>, Hora inicio: <strong>${horaInicio}</strong></p>
+                    <hr class='my-2'>
+                    <div class='mb-2 text-start'>
+                        <label for='swal-tipo' class='form-label'>Tipo de Horas:</label>
+                        <select id='swal-tipo' class='swal2-input form-control form-control-sm'>${tipoOptionsHtml}</select>
+                    </div>
+                    <div class='mb-2 text-start'>
+                        <label for='swal-bloques' class='form-label'>Bloques (45 min c/u):</label>
+                        <input type='number' id='swal-bloques' class='swal2-input form-control form-control-sm' value='1' min='1' max='8'>
+                    </div>
+                    <div class='mb-2 text-start'>
+                        <label for='swal-docente' class='form-label'>Docente:</label>
+                        <select id='swal-docente' class='swal2-input form-control form-control-sm'>${docenteOptionsHtml}</select>
+                    </div>`,
+                focusConfirm: false,
+                preConfirm: () => {
+                    const tipo = Swal.getPopup().querySelector('#swal-tipo').value;
+                    const bloques = parseInt(Swal.getPopup().querySelector('#swal-bloques').value);
+                    const docenteSeleccionado = Swal.getPopup().querySelector('#swal-docente').value;
+                    if (!tipo) { Swal.showValidationMessage('Seleccione un tipo de horas.'); return false; }
+                    if (isNaN(bloques) || bloques < 1) { Swal.showValidationMessage('Número de bloques inválido.'); return false; }
+                    if (!docenteSeleccionado && docentesData && docentesData.length > 0) { Swal.showValidationMessage('Seleccione un docente.'); return false; }
+                    return { tipo, bloques, docenteSeleccionado };
+                }
+            }).then(result => {
+                if (result.isConfirmed) {
+                    const { tipo, bloques, docenteSeleccionado } = result.value;
+                    const horaFin = calcularHoraFin(horaInicio, bloques);
+                    const bloqueDiv = document.createElement('div');
+                    bloqueDiv.classList.add('bloque-horario', colorClass);
+                    bloqueDiv.style.height = `${bloques * 40}px`;
+                    bloqueDiv.innerHTML = `
+                        <button type="button" class="btn btn-danger btn-xs btn-bloque-editar" title="Eliminar bloque" onclick="this.closest('.bloque-horario').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="bloque-contenido">
+                            <div class="asignatura-nombre" title="${asignaturaName}">${asignaturaName}</div>
+                            <div class="asignatura-details">
+                                <div title="${tipo} - ${bloques} bloques">${tipo} (${bloques}b)</div>
+                                <div title="Docente">Doc: ${docenteSeleccionado}</div>
+                                <div>${horaInicio} - ${horaFin}</div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="bloques_nuevos[][asignatura_id]" value="${asignatura_id}">
+                        <input type="hidden" name="bloques_nuevos[][dia]" value="${dia}">
+                        <input type="hidden" name="bloques_nuevos[][hora_inicio]" value="${horaInicio}">
+                        <input type="hidden" name="bloques_nuevos[][bloques]" value="${bloques}">
+                        <input type="hidden" name="bloques_nuevos[][tipo_horas]" value="${tipo}">
+                        <input type="hidden" name="bloques_nuevos[][docente_id]" value="${docenteSeleccionado}">
+                    `;
+                    // Elimina bloque anterior si existe en la celda
+                    this.innerHTML = '';
+                    this.appendChild(bloqueDiv);
+                }
+            });
+        });
     });
 
     // Renderizar bloques guardados
@@ -260,8 +361,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const celda = filaInicio.querySelector(`td[data-dia="${bloque.dia_semana}"]`);
             if (celda) {
                 const colorClass = `bg-asignatura-${(idx % 7) + 1}`;
-                const asignaturaName = bloque.asignatura ? bloque.asignatura.name : '';
-                const docenteName = bloque.docente ? bloque.docente.name : '';
+                const asignaturaName = bloque.asignatura_name || (bloque.asignatura ? bloque.asignatura.name : bloque.asignatura_id);
+                const docenteName = bloque.docente_name || (bloque.docente ? bloque.docente.name : (bloque.docente_id || ''));
                 const horaFin = calcularHoraFin(bloque.hora_inicio, bloque.bloques);
                 const bloqueDiv = document.createElement('div');
                 bloqueDiv.classList.add('bloque-horario', colorClass);
@@ -299,37 +400,85 @@ function handleDrop(e) {
     const { asignatura_id, name: asignaturaName, docentes: docentesData, cargaHoraria: cargaHorariaData, colorClass } = data;
     const dia = this.dataset.dia;
     const horaInicio = this.dataset.hora;
-    // Por defecto 1 bloque, tipo y docente el primero disponible
-    let tipo = (cargaHorariaData && cargaHorariaData.length > 0) ? cargaHorariaData[0].tipo : 'Clase';
-    let docenteId = (docentesData && docentesData.length > 0) ? docentesData[0].cedula_doc : '';
-    let bloques = 1;
-    const horaFin = calcularHoraFin(horaInicio, bloques);
-    // Visualmente igual que en crear
-    const bloqueDiv = document.createElement('div');
-    bloqueDiv.classList.add('bloque-horario', colorClass);
-    bloqueDiv.style.height = `${bloques * 40}px`;
-    bloqueDiv.innerHTML = `
-        <button type="button" class="btn btn-danger btn-xs btn-bloque-editar" title="Eliminar bloque" onclick="this.closest('.bloque-horario').remove()">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="bloque-contenido">
-            <div class="asignatura-nombre" title="${asignaturaName}">${asignaturaName}</div>
-            <div class="asignatura-details">
-                <div title="${tipo} - ${bloques} bloques">${tipo} (${bloques}b)</div>
-                <div title="Docente">Doc: ${docenteId}</div>
-                <div>${horaInicio} - ${horaFin}</div>
+    // Modal tipo create para configurar bloque
+    let tipoOptionsHtml = '';
+    let tieneHorasDisponibles = false;
+    if (cargaHorariaData && cargaHorariaData.length > 0) {
+        cargaHorariaData.forEach(carga => {
+            tipoOptionsHtml += `<option value="${carga.tipo}">${carga.tipo} (${carga.horas_academicas} bloques)</option>`;
+            tieneHorasDisponibles = true;
+        });
+    } else {
+        tipoOptionsHtml = `<option value="Clase">Clase (carga no definida)</option>`;
+        tieneHorasDisponibles = true;
+    }
+    let docenteOptionsHtml = docentesData && docentesData.length > 0
+        ? docentesData.map(d => `<option value="${d.cedula_doc}">${d.name}</option>`).join('')
+        : '<option value="">Sin docentes</option>';
+    Swal.fire({
+        title: 'Configurar Bloque',
+        html: `
+            <p class='text-start mb-1'>Asignatura: <strong>${asignaturaName}</strong></p>
+            <p class='text-start mb-1'>Día: <strong>${convertirDiaNumeroATexto(dia)}</strong>, Hora inicio: <strong>${horaInicio}</strong></p>
+            <hr class='my-2'>
+            <div class='mb-2 text-start'>
+                <label for='swal-tipo' class='form-label'>Tipo de Horas:</label>
+                <select id='swal-tipo' class='swal2-input form-control form-control-sm'>${tipoOptionsHtml}</select>
             </div>
-        </div>
-        <input type="hidden" name="bloques_nuevos[][asignatura_id]" value="${asignatura_id}">
-        <input type="hidden" name="bloques_nuevos[][dia]" value="${dia}">
-        <input type="hidden" name="bloques_nuevos[][hora_inicio]" value="${horaInicio}">
-        <input type="hidden" name="bloques_nuevos[][bloques]" value="${bloques}">
-        <input type="hidden" name="bloques_nuevos[][tipo_horas]" value="${tipo}">
-        <input type="hidden" name="bloques_nuevos[][docente_id]" value="${docenteId}">
-    `;
-    this.appendChild(bloqueDiv);
+            <div class='mb-2 text-start'>
+                <label for='swal-bloques' class='form-label'>Bloques (45 min c/u):</label>
+                <input type='number' id='swal-bloques' class='swal2-input form-control form-control-sm' value='1' min='1' max='8'>
+            </div>
+            <div class='mb-2 text-start'>
+                <label for='swal-docente' class='form-label'>Docente:</label>
+                <select id='swal-docente' class='swal2-input form-control form-control-sm'>${docenteOptionsHtml}</select>
+            </div>`,
+        focusConfirm: false,
+        preConfirm: () => {
+            const tipo = Swal.getPopup().querySelector('#swal-tipo').value;
+            const bloques = parseInt(Swal.getPopup().querySelector('#swal-bloques').value);
+            const docenteSeleccionado = Swal.getPopup().querySelector('#swal-docente').value;
+            if (!tipo) { Swal.showValidationMessage('Seleccione un tipo de horas.'); return false; }
+            if (isNaN(bloques) || bloques < 1) { Swal.showValidationMessage('Número de bloques inválido.'); return false; }
+            if (!docenteSeleccionado && docentesData && docentesData.length > 0) { Swal.showValidationMessage('Seleccione un docente.'); return false; }
+            return { tipo, bloques, docenteSeleccionado };
+        }
+    }).then(result => {
+        if (result.isConfirmed) {
+            const { tipo, bloques, docenteSeleccionado } = result.value;
+            const horaFin = calcularHoraFin(horaInicio, bloques);
+            const bloqueDiv = document.createElement('div');
+            bloqueDiv.classList.add('bloque-horario', colorClass);
+            bloqueDiv.style.height = `${bloques * 40}px`;
+            bloqueDiv.innerHTML = `
+                <button type="button" class="btn btn-danger btn-xs btn-bloque-editar" title="Eliminar bloque" onclick="this.closest('.bloque-horario').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="bloque-contenido">
+                    <div class="asignatura-nombre" title="${asignaturaName}">${asignaturaName}</div>
+                    <div class="asignatura-details">
+                        <div title="${tipo} - ${bloques} bloques">${tipo} (${bloques}b)</div>
+                        <div title="Docente">Doc: ${docenteSeleccionado}</div>
+                        <div>${horaInicio} - ${horaFin}</div>
+                    </div>
+                </div>
+                <input type="hidden" name="bloques_nuevos[][asignatura_id]" value="${asignatura_id}">
+                <input type="hidden" name="bloques_nuevos[][dia]" value="${dia}">
+                <input type="hidden" name="bloques_nuevos[][hora_inicio]" value="${horaInicio}">
+                <input type="hidden" name="bloques_nuevos[][bloques]" value="${bloques}">
+                <input type="hidden" name="bloques_nuevos[][tipo_horas]" value="${tipo}">
+                <input type="hidden" name="bloques_nuevos[][docente_id]" value="${docenteSeleccionado}">
+            `;
+            // Elimina bloque anterior si existe en la celda
+            this.innerHTML = '';
+            this.appendChild(bloqueDiv);
+        }
+    });
 }
-
+function convertirDiaNumeroATexto(diaNumero) {
+    const dias = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    return dias[parseInt(diaNumero)];
+}
 function calcularHoraFin(horaInicio, bloques) {
     const [h, m] = horaInicio.split(':').map(Number);
     let totalMinutosFin = (h * 60 + m) + (bloques * 45);

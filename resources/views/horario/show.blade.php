@@ -78,30 +78,74 @@
                         <p><strong>Coordinador:</strong> {{ $horario->coordinador->name ?? 'N/A' }}</p>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover mb-0" id="horarioTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center time-slot">Hora</th>
-                                <th class="text-center">Lunes</th>
-                                <th class="text-center">Martes</th>
-                                <th class="text-center">Miércoles</th>
-                                <th class="text-center">Jueves</th>
-                                <th class="text-center">Viernes</th>
-                                <th class="text-center">Sábado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="horarioBody">
-                            @foreach($horas as $hora)
-                                <tr>
-                                    <th class="time-slot">{{ $hora['inicio'] }}</th>
-                                    @for($dia = 1; $dia <= 6; $dia++)
-                                        <td data-hora="{{ $hora['inicio'] }}" data-dia="{{ $dia }}" style="height: 40px; position: relative;"></td>
-                                    @endfor
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <div class="row">
+                    <div class="col-md-9">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover mb-0" id="horarioTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center time-slot">Hora</th>
+                                        <th class="text-center">Lunes</th>
+                                        <th class="text-center">Martes</th>
+                                        <th class="text-center">Miércoles</th>
+                                        <th class="text-center">Jueves</th>
+                                        <th class="text-center">Viernes</th>
+                                        <th class="text-center">Sábado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="horarioBody">
+                                    @foreach($horas as $hora)
+                                        <tr>
+                                            <th class="time-slot">{{ $hora['inicio'] }}</th>
+                                            @for($dia = 1; $dia <= 6; $dia++)
+                                                <td data-hora="{{ $hora['inicio'] }}" data-dia="{{ $dia }}" style="height: 40px; position: relative;"></td>
+                                            @endfor
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card mb-3">
+                            <div class="card-header bg-secondary text-white py-2">
+                                <i class="fas fa-book me-1"></i> Detalles de Materias Inscritas
+                            </div>
+                            <div class="card-body p-2" style="max-height: 400px; overflow-y: auto;">
+                                @php
+                                    $materias = collect($bloques)
+                                        ->groupBy(function($b) { return $b['asignatura']['asignatura_id'] ?? 'N/A'; });
+                                @endphp
+                                @forelse($materias as $asignaturaId => $bloquesMateria)
+                                    @php
+                                        $asignatura = $bloquesMateria[0]['asignatura'] ?? null;
+                                        $docente = $bloquesMateria[0]['docente'] ?? null;
+                                    @endphp
+                                    <div class="mb-3 border-bottom pb-2">
+                                        <div class="fw-bold text-primary">{{ $asignatura['name'] ?? 'Materia N/A' }}</div>
+                                        <div class="small text-muted mb-1">Código: {{ $asignatura['codigo'] ?? 'N/A' }}</div>
+                                        <div class="mb-1">
+                                            <span class="fw-semibold">Docente:</span> {{ $docente['name'] ?? 'N/A' }}
+                                        </div>
+                                        <div class="mb-1">
+                                            <span class="fw-semibold">Cédula:</span> {{ $docente['cedula_doc'] ?? 'N/A' }}
+                                        </div>
+                                        <div class="mb-1">
+                                            <span class="fw-semibold">Correo:</span> {{ $docente['email'] ?? 'N/A' }}
+                                        </div>
+                                        <div class="mb-1">
+                                            <span class="fw-semibold">Teléfono:</span> {{ $docente['telefono'] ?? 'N/A' }}
+                                        </div>
+                                        <div class="mb-1">
+                                            <span class="fw-semibold">Dedicación:</span> {{ $docente['dedicacion']['nombre'] ?? 'N/A' }}
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-muted">No hay materias inscritas.</div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
