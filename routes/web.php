@@ -71,9 +71,11 @@ Route::prefix('horario')->middleware('auth')->group(function () {
     // Formulario de creación
     Route::get('/create', [HorarioController::class, 'create'])->name('horario.create');
     // Rutas API para dependientes y filtros
+
     Route::get('/api/semestres-por-turno/{turnoId}', [HorarioController::class, 'getSemestresPorTurno'])->name('api.semestres.por.turno');
     Route::get('/obtener-secciones', [HorarioController::class, 'obtenerSecciones'])->name('api.obtener.secciones');
     Route::get('/asignaturas', [HorarioController::class, 'getAsignaturasFiltradas'])->name('horario.asignaturas.filtradas');
+
     // Guardar nuevo horario
     Route::post('/', [HorarioController::class, 'store'])->name('horario.store');
     // Mostrar detalle de horario
@@ -84,6 +86,7 @@ Route::prefix('horario')->middleware('auth')->group(function () {
     Route::put('/{horario}', [HorarioController::class, 'update'])->where('horario', '[0-9]+')->name('horario.update');
     // Eliminar horario
 Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->where('horario', '[0-9]+')->name('horario.destroy');
+
 });
 
 // Rutas para secciones

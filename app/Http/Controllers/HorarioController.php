@@ -11,11 +11,14 @@ use App\Models\Turno;
 use App\Models\Semestre;
 use App\Models\Periodo;
 use App\Models\Carrera;
-use App\Models\CargaHoraria; // Asegúrate de importar CargaHoraria
+use App\Models\CargaHoraria;
+use App\Models\Aula; // Importar el modelo Aula
+use App\Models\User; // Asumiendo que los coordinadores son usuarios
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\ModelNotFoundException; // Importar para manejar errores 404
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth; // Importar la fachada Auth
 
 class HorarioController extends Controller
 {
@@ -54,14 +57,15 @@ class HorarioController extends Controller
      */
     public function create()
     {
+        // Se pasan las variables directamente a la vista para la carga inicial de los selectores
+        // en caso de que el JavaScript falle o para compatibilidad.
+        // Sin embargo, la lógica de la vista 'create.blade.php' que usa fetch()
+        // debería hacer que estos datos sean redundantes si el JS funciona correctamente.
         return view('horario.create', [
             'periodos' => Periodo::all(),
             'carreras' => Carrera::all(),
             'turnos' => Turno::all(),
-            // No cargamos semestres, secciones o asignaturas aquí, se cargarán dinámicamente
-            // 'semestres' => Semestre::all(), // Ya no se carga aquí
-            // 'secciones' => Seccion::all(),   // Ya no se carga aquí
-            // 'asignaturas' => Asignatura::all(), // Ya no se carga aquí
+            // 'coordinadores' => User::all(), // Este ya no es necesario pasarlo a la vista
         ]);
     }
 
@@ -180,6 +184,62 @@ class HorarioController extends Controller
         }
     }
 
+    /**
+     * Obtiene una lista de todas las aulas.
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAulas()
+    {
+        try {
+            $aulas = Aula::all();
+            return response()->json($aulas);
+        } catch (\Exception $e) {
+            Log::error("Error al obtener aulas: " . $e->getMessage());
+            return response()->json(['error' => 'Error al cargar las aulas.'], 500);
+        }
+    }
+
+    /**
+     * NUEVO: Obtiene todos los periodos para API.
+     */
+    public function getPeriodosApi()
+    {
+        try {
+            $periodos = Periodo::all();
+            return response()->json($periodos);
+        } catch (\Exception $e) {
+            Log::error("Error al obtener periodos (API): " . $e->getMessage());
+            return response()->json(['error' => 'Error interno del servidor al cargar periodos.'], 500);
+        }
+    }
+
+    /**
+     * NUEVO: Obtiene todas las carreras para API.
+     */
+    public function getCarrerasApi()
+    {
+        try {
+            $carreras = Carrera::all();
+            return response()->json($carreras);
+        } catch (\Exception $e) {
+            Log::error("Error al obtener carreras (API): " . $e->getMessage());
+            return response()->json(['error' => 'Error interno del servidor al cargar carreras.'], 500);
+        }
+    }
+
+    /**
+     * NUEVO: Obtiene todos los turnos para API.
+     */
+    public function getTurnosApi()
+    {
+        try {
+            $turnos = Turno::all();
+            return response()->json($turnos);
+        } catch (\Exception $e) {
+            Log::error("Error al obtener turnos (API): " . $e->getMessage());
+            return response()->json(['error' => 'Error interno del servidor al cargar turnos.'], 500);
+        }
+    }
 
     /**
      * Almacena un nuevo horario.
@@ -197,14 +257,28 @@ class HorarioController extends Controller
                 return response()->json(['success' => false, 'message' => 'Usuario no autenticado.'], 401);
             }
 
+            // Obtener la cédula del coordinador autenticado
+            // Se asume que el usuario autenticado tiene una propiedad 'cedula'
+            $coordinadorCedula = $user->cedula;
+
+            // Validar los datos principales del formulario
+            $request->validate([
+                'periodo_id' => 'required|exists:periodos,id',
+                'carrera_id' => 'required|exists:carreras,carrera_id',
+                'turno_id' => 'required|exists:turnos,id_turno',
+                'semestre_id' => 'required|exists:semestres,id_semestre',
+                'seccion_id' => 'required|exists:secciones,codigo_seccion',
+                // 'coordinador_cedula' => 'required|exists:users,cedula', // ELIMINADO: Ya no se valida desde el request
+                'asignatura_compartida_id' => 'nullable|exists:asignaturas,asignatura_id',
+                'bloques_horario' => 'required|array|min:1',
+            ]);
+
             $seccionId = $formData['seccion_id'];
             $carreraId = $formData['carrera_id'];
             $semestreId = $formData['semestre_id'];
             $turnoId = $formData['turno_id'];
             $periodoId = $formData['periodo_id'];
-            $coordinadorCedula = $user->cedula;
-            $horariosBloques = $formData['horarios'];
-            // Captura la asignatura_compartida_id del formData
+            $horariosBloques = $formData['bloques_horario'];
             $asignaturaCompartidaId = $formData['asignatura_compartida_id'] ?? null;
 
 
@@ -212,43 +286,38 @@ class HorarioController extends Controller
                 return response()->json(['success' => false, 'message' => 'No se han arrastrado bloques al horario.'], 400);
             }
 
-            // Se movió la validación del docente asignado para cada bloque
-            // y se asegura que el docente_id venga en cada bloque.
-            // Si la lógica es que cada asignatura debe tener al menos UN docente,
-            // esta validación debería hacerse al cargar las asignaturas o al arrastrar.
-            // Aquí, se asume que cada bloque ya tiene un docente_id válido.
-
-            // Validar la carga horaria máxima antes de guardar
-            // $this->validarCargaHoraria($horariosBloques); // Descomentar si la lógica de validación es crítica
+            DB::beginTransaction(); // Iniciar transacción
 
             // Eliminar horarios existentes para esta sección, periodo y turno antes de guardar los nuevos
-            // Esto es crucial para evitar duplicados y permitir la re-generación
             Horario::where('seccion_id', $seccionId)
                    ->where('periodo_id', $periodoId)
-                   ->where('carrera_id', $carreraId) // Asegúrate de incluir todos los filtros relevantes
+                   ->where('carrera_id', $carreraId)
                    ->where('semestre_id', $semestreId)
                    ->where('turno_id', $turnoId)
-                   ->delete(); // Usar delete() para eliminar físicamente o softDelete() si lo tienes
+                   ->delete();
 
             foreach ($horariosBloques as $bloque) {
-                // Si la tabla 'horarios' tiene un solo docente_id, tomamos el que viene en el bloque.
-                $docenteIdParaHorario = $bloque['docente_id'] ?? null; // Asegura que el docente_id se obtenga del bloque
-
-                // Validar que el docente exista si es requerido
-                if (!$docenteIdParaHorario) {
-                     Log::error("Docente ID no proporcionado para la asignatura {$bloque['asignatura_id']}.");
-                     return response()->json([
-                         'success' => false,
-                         'message' => "Docente no asignado para la asignatura {$bloque['asignatura_id']} en un bloque."
-                     ], 400);
-                }
+                // Validar cada bloque individualmente
+                // Nota: Estas validaciones se aplican a cada elemento del array 'bloques_horario'
+                // Si la validación falla aquí, detendrá el proceso.
+                $request->validate([
+                    'bloques_horario.*.asignatura_id' => 'required|string|exists:asignaturas,asignatura_id',
+                    'bloques_horario.*.docente_id' => 'required|string|exists:docentes,cedula_doc',
+                    'bloques_horario.*.dia_semana' => 'required|integer|between:1,6', // Días de Lunes a Sábado
+                    'bloques_horario.*.hora_inicio' => 'required|date_format:H:i',
+                    'bloques_horario.*.hora_fin' => 'required|date_format:H:i',
+                    'bloques_horario.*.tipo_horas' => 'required|in:teorica,practica,laboratorio,Clase', // Añadido 'Clase'
+                    'bloques_horario.*.bloques' => 'required|integer|min:1|max:6',
+                    'bloques_horario.*.aula_id' => 'required|exists:aulas,id', // Validar el aula_id
+                    'bloques_horario.*.observaciones' => 'nullable|string|max:500',
+                ]);
 
                 Horario::create([
-                    'coordinador_cedula' => $coordinadorCedula,
+                    'coordinador_cedula' => $coordinadorCedula, // Usar la cédula obtenida del usuario autenticado
                     'periodo_id' => $periodoId,
                     'asignatura_id' => $bloque['asignatura_id'],
                     'carrera_id' => $carreraId,
-                    'docente_id' => $docenteIdParaHorario, // Usar el docente_id del bloque
+                    'docente_id' => $bloque['docente_id'],
                     'seccion_id' => $seccionId,
                     'turno_id' => $turnoId,
                     'semestre_id' => $semestreId,
@@ -257,18 +326,30 @@ class HorarioController extends Controller
                     'hora_fin' => $bloque['hora_fin'],
                     'tipo_horas' => $bloque['tipo_horas'],
                     'bloques' => $bloque['bloques'],
-                    'asignatura_compartida_id' => $asignaturaCompartidaId, // ¡Nuevo campo!
-                    // Otros campos como 'activo', 'observaciones' si los manejas aquí
+                    'aula_id' => $bloque['aula_id'], // Guardar el ID del aula
+                    'observaciones' => $bloque['observaciones'] ?? null,
+                    'asignatura_compartida_id' => $asignaturaCompartidaId,
+                    'activo' => true, // O el valor por defecto que uses
                 ]);
             }
 
+            DB::commit(); // Confirmar transacción
             return response()->json([
                 'success' => true,
                 'message' => 'Horario guardado exitosamente.',
                 'redirect' => route('horario.index')
             ], 200);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack(); // Revertir transacción en caso de error de validación
+            Log::error('Error de validación al guardar horario:', ['errors' => $e->errors(), 'request_data' => $request->json()->all()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación: ' . $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422); // Código 422 para errores de validación
         } catch (\Exception $e) {
+            DB::rollBack(); // Revertir transacción en caso de cualquier otro error
             Log::error('Error al guardar horario:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'request_data' => $request->json()->all()]);
             return response()->json(['success' => false, 'message' => 'Error al guardar el horario: ' . $e->getMessage()], 500);
         }
@@ -311,7 +392,8 @@ class HorarioController extends Controller
                 ->sum('horas_academicas');
 
             // Convertir cargaMaxima (horas_academicas) a bloques (de 45 minutos) para comparar
-            $cargaMaximaBloques = round($cargaMaxima / 0.75);
+            // Asumiendo que 1 hora académica = 45 minutos = 1 bloque
+            $cargaMaximaBloques = $cargaMaxima; // Si horas_academicas ya son bloques de 45 min
 
             if ($totalAsignado > $cargaMaximaBloques) {
                 throw new \Exception(
@@ -334,7 +416,11 @@ class HorarioController extends Controller
             'semestre',
             'turno',
             'seccion',
-            'coordinador'
+            'coordinador',
+            'asignatura', // Cargar la asignatura del horario principal
+            'docente',    // Cargar el docente del horario principal
+            'aula',       // Cargar el aula del horario principal
+            'asignaturaCompartida' // Cargar la relación de asignatura compartida si existe
         ])->findOrFail($id);
 
         // Obtener TODOS los bloques del mismo grupo horario
@@ -343,7 +429,7 @@ class HorarioController extends Controller
             ->where('carrera_id', $horario->carrera_id)
             ->where('semestre_id', $horario->semestre_id)
             ->where('turno_id', $horario->turno_id)
-            ->with(['asignatura', 'docente'])
+            ->with(['asignatura', 'docente', 'aula']) // Cargar la relación 'aula'
             ->orderBy('dia_semana')
             ->orderBy('hora_inicio')
             ->get();
@@ -376,8 +462,8 @@ class HorarioController extends Controller
         return view('horario.show', [
             'horario' => $horario,
             'bloques' => $bloques,
-            'horas' => $horas,
-            'diasSemana' => $diasSemana // Pasar los días de la semana a la vista
+            'horas' => $horas, // Se pasa como 'horas' para que la vista lo reconozca
+            'diasSemana' => $diasSemana
         ]);
     }
 
@@ -388,6 +474,7 @@ class HorarioController extends Controller
     {
         $horario = Horario::findOrFail($id);
 
+        // Eliminar todos los horarios que comparten los mismos filtros principales
         Horario::where('seccion_id', $horario->seccion_id)
             ->where('periodo_id', $horario->periodo_id)
             ->where('carrera_id', $horario->carrera_id)
@@ -445,7 +532,7 @@ class HorarioController extends Controller
             'secciones' => Seccion::all(),
             'asignaturas' => Asignatura::all(),
             'docentes' => Docente::all(),
+            'aulas' => Aula::all(), // Asegúrate de pasar las aulas también para el edit
         ]);
     }
 }
-

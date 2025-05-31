@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo; // Importar BelongsTo
 
 class Horario extends Model
 {
@@ -19,7 +20,6 @@ class Horario extends Model
         'coordinador_cedula',
         'periodo_id',
         'asignatura_id',
-        'asignatura_compartida_id',
         'carrera_id',
         'docente_id',
         'seccion_id',
@@ -32,7 +32,9 @@ class Horario extends Model
         'tipo_horas',    // Campo añadido: teorica/practica/laboratorio
         'bloques',       // Campo añadido: número de bloques de 45 minutos
         'activo',        // Estado del horario
-        'observaciones'  // Comentarios adicionales
+        'observaciones', // Comentarios adicionales
+        'aula_id',       // NUEVO: Campo para la clave foránea del aula
+        'asignatura_compartida_id' // Campo para asignatura compartida
     ];
 
     /**
@@ -49,29 +51,41 @@ class Horario extends Model
     ];
 
     /**
+     * Relación con Periodo
+     */
+    public function periodo(): BelongsTo
+    {
+        return $this->belongsTo(Periodo::class);
+    }
+
+    /**
      * Relación con Asignatura
      */
-    public function asignatura()
+    public function asignatura(): BelongsTo
     {
-        return $this->belongsTo(Asignatura::class, 'asignatura_id', 'asignatura_id')
-            ->with('cargaHoraria');
+        return $this->belongsTo(Asignatura::class, 'asignatura_id', 'asignatura_id');
+    }
+
+    /**
+     * Relación con Carrera
+     */
+    public function carrera(): BelongsTo
+    {
+        return $this->belongsTo(Carrera::class, 'carrera_id', 'carrera_id');
     }
 
     /**
      * Relación con Docente
      */
-    public function docente()
+    public function docente(): BelongsTo
     {
-        return $this->belongsTo(Docente::class, 'docente_id', 'cedula_doc')
-            ->withDefault([
-                'nombre' => 'Docente no asignado'
-            ]);
+        return $this->belongsTo(Docente::class, 'docente_id', 'cedula_doc');
     }
 
     /**
      * Relación con Turno
      */
-    public function turno()
+    public function turno(): BelongsTo
     {
         return $this->belongsTo(Turno::class, 'turno_id', 'id_turno');
     }
@@ -79,46 +93,43 @@ class Horario extends Model
     /**
      * Relación con Semestre
      */
-    public function semestre()
+    public function semestre(): BelongsTo
     {
         return $this->belongsTo(Semestre::class, 'semestre_id', 'id_semestre');
-            // ->with('carrera');
-    }
-
-    /**
-     * Relación con Periodo
-     */
-    public function periodo()
-    {
-        return $this->belongsTo(Periodo::class, 'periodo_id', 'id')
-            ->select('id', 'nombre', 'fecha_inicio', 'fecha_fin');
-    }
-
-    /**
-     * Relación con Carrera
-     */
-    public function carrera()
-    {
-        return $this->belongsTo(Carrera::class, 'carrera_id', 'carrera_id');
-            // ->with('semestres');
     }
 
     /**
      * Relación con Sección
      */
-    public function seccion()
+    public function seccion(): BelongsTo
     {
-        return $this->belongsTo(Seccion::class, 'seccion_id', 'codigo_seccion')
-            ->with(['asignaturas', 'turno']);
+        return $this->belongsTo(Seccion::class, 'seccion_id', 'codigo_seccion');
     }
 
     /**
      * Relación con Usuario (Coordinador)
      */
-    public function coordinador()
+    public function coordinador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'coordinador_cedula', 'cedula')
             ->select('cedula', 'name');
+    }
+
+    /**
+     * NUEVO: Relación con Aula
+     * Un horario pertenece a un aula.
+     */
+    public function aula(): BelongsTo
+    {
+        return $this->belongsTo(Aula::class, 'aula_id', 'id');
+    }
+
+    /**
+     * Relación con Asignatura Compartida (si aplica)
+     */
+    public function asignaturaCompartida(): BelongsTo
+    {
+        return $this->belongsTo(Asignatura::class, 'asignatura_compartida_id', 'asignatura_id');
     }
 
     /**
@@ -140,7 +151,7 @@ class Horario extends Model
     /**
      * Obtiene la duración total en minutos
      */
-    public function getDuracionTotalAttribute()
+    public function getDuracionTotalAttribute(): int
     {
         return $this->bloques * 45;
     }
@@ -148,7 +159,7 @@ class Horario extends Model
     /**
      * Formatea las horas para visualización
      */
-    public function getHorarioFormateadoAttribute()
+    public function getHorarioFormateadoAttribute(): string
     {
         return sprintf('%s - %s (%d bloques)',
             $this->hora_inicio->format('H:i'),
@@ -157,10 +168,9 @@ class Horario extends Model
         );
     }
 
-    public function bloquesRelacionados()
-    {
-        return $this->hasMany(Horario::class, 'seccion_id', 'seccion_id')
-            ->where('periodo_id', $this->periodo_id)
-            ->with(['asignatura', 'docente']);
-    }
+    // Si tienes alguna lógica para bloques relacionados, iría aquí
+    // public function bloquesRelacionados()
+    // {
+    //     // Implementa la lógica para obtener bloques relacionados si es necesario
+    // }
 }

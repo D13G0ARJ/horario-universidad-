@@ -246,6 +246,7 @@
                                                 <th>Docente</th>
                                                 <th>Teléfono Docente</th>
                                                 <th>Correo Docente</th>
+                                                <th>Aula</th> {{-- Nueva columna para Aula --}}
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -294,6 +295,7 @@
                 const docenteTelefono = bloque.docente ? bloque.docente.telefono : 'N/A';
                 const docenteCorreo = bloque.docente ? bloque.docente.email : 'N/A';
                 const docenteCedula = bloque.docente ? bloque.docente.cedula_doc : 'N/A';
+                const aulaName = bloque.aula ? bloque.aula.nombre : 'N/A'; // OBTENER NOMBRE DEL AULA
 
 
                 // Asignar un color a la asignatura si no tiene uno
@@ -321,6 +323,7 @@
                         bloquesCount,
                         tipoHoras,
                         docenteName,
+                        aulaName, // PASAR NOMBRE DEL AULA
                         colorClass,
                         targetCell.rowIndex,
                         targetCell.cellIndex
@@ -338,7 +341,8 @@
                             asignatura_nombre: asignaturaName,
                             docente_nombre: docenteName,
                             docente_telefono: docenteTelefono,
-                            docente_correo: docenteCorreo
+                            docente_correo: docenteCorreo,
+                            aula_nombre: aulaName // AÑADIR NOMBRE DEL AULA
                         };
                     }
                 }
@@ -354,6 +358,7 @@
                         <td>${item.docente_nombre}</td>
                         <td>${item.docente_telefono}</td>
                         <td>${item.docente_correo}</td>
+                        <td>${item.aula_nombre}</td> {{-- Renderizar el nombre del aula --}}
                     </tr>
                 `;
                 tablaAsignaturasDocentesBody.append(row);
@@ -370,7 +375,7 @@
             }
 
             // Función para crear y añadir el bloque visual al horario
-            function crearBloqueVisual(celda, asignaturaId, asignaturaName, dia, horaInicio, horaFin, bloques, tipoHoras, docenteName, colorClass, rowIndex, colIndex) {
+            function crearBloqueVisual(celda, asignaturaId, asignaturaName, dia, horaInicio, horaFin, bloques, tipoHoras, docenteName, aulaName, colorClass, rowIndex, colIndex) {
                 const bloque = document.createElement('div');
                 bloque.classList.add('bloque-horario', colorClass);
                 bloque.style.height = `${bloques * BASE_CELL_HEIGHT}px`;
@@ -380,6 +385,7 @@
                         <div class="asignatura-details">
                             <div title="${tipoHoras} - ${bloques} bloques">${tipoHoras} (${bloques}b)</div>
                             <div title="Docente">Doc: ${docenteName}</div>
+                            <div title="Aula">Aula: ${aulaName}</div> {{-- Añadir el nombre del aula --}}
                             <div>${horaInicio} - ${horaFin}</div>
                         </div>
                     </div>
