@@ -51,7 +51,6 @@ Route::put('/asignaturas/{asignatura}', [AsignaturaController::class, 'update'])
 Route::delete('/asignaturas/{asignatura}', [AsignaturaController::class, 'destroy'])->name('asignatura.destroy');
 
 
-
 // Rutas para docentes
 Route::get('/docente', [DocenteController::class, 'index'])->name('docente.index')->middleware('auth');
 Route::post('/docentes', [DocenteController::class, 'store'])->name('docente.store');

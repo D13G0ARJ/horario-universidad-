@@ -24,7 +24,11 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>    
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.dataTables.min.css">
-    
+
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+
      
 
     <!-- AdminLTE -->
@@ -523,6 +527,9 @@
         });
     </script>
     ```
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2/dist/js/i18n/es.js"></script> {{-- Para traducción al español --}}
     <!-- Scripts -->
     <!-- jQuery -->
     <!-- jQuery -->
@@ -553,6 +560,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
   
+
+
+
+  
     <!-- AdminLTE -->
     <script src="{{ asset('dist/js/adminlte.min.js') }}"></script>
 
@@ -566,6 +577,8 @@
             // Manejo básico de modales si es necesario
         });
     </script>
+
+    
 
     @stack('scripts') <!-- Para que las vistas añadan sus scripts específicos -->
 </body>

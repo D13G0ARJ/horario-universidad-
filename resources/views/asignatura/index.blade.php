@@ -1,38 +1,40 @@
 @extends('layouts.admin')
-@section('style')
-<style>#mensaje-inicial {
-    transition: all 0.3s ease;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-}
 
-#mensaje-inicial h4 {
-    font-weight: 300;
-    letter-spacing: 0.5px;
-}
+@section('style')
+<style>
+    #mensaje-inicial {
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    #mensaje-inicial h4 {
+        font-weight: 300;
+        letter-spacing: 0.5px;
+    }
+
+    /* Agrega aquí cualquier estilo CSS adicional que necesites para la tabla o los botones */
 </style>
 @endsection
 
 @section('content')
 <div class="container-fluid">
-    <!-- Título principal -->
     <div class="row mb-4">
         <div class="col-12">
             <h3 class="text-primary">
-                <i class="fas fa-book mr-2"></i>Listado de Asignaturas
+                <i class="fas fa-book me-2"></i>Listado de Asignaturas
             </h3>
         </div>
     </div>
 
-    <!-- Modal para mensaje de no resultados -->
     <div class="modal fade" id="modalNoResultados" tabindex="-1" role="dialog" aria-labelledby="modalNoResultadosLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-warning text-white">
                     <h5 class="modal-title" id="modalNoResultadosLabel">
-                        <i class="fas fa-exclamation-circle mr-2"></i>Sin resultados
+                        <i class="fas fa-exclamation-circle me-2"></i>Sin resultados
                     </h5>
-                    <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -46,9 +48,6 @@
         </div>
     </div>
 
-    <!-- Filtros de búsqueda mejorados -->
-
-    <!-- Carrera -->
     <div class="row mb-4">
         <div class="col-md-3">
             <label for="carrera" class="form-label">Carrera:</label>
@@ -60,7 +59,6 @@
             </select>
         </div>
 
-        <!-- Turno -->
         <div class="col-md-2">
             <label for="turno" class="form-label">Turno:</label>
             <select id="turno" name="turno_id" class="form-select form-select-lg" required>
@@ -71,7 +69,6 @@
             </select>
         </div>
 
-        <!-- Semestre -->
         <div class="col-md-3">
             <label for="semestre" class="form-label">Semestre:</label>
             <select id="semestre" name="semestre_id" class="form-select form-select-lg" required disabled>
@@ -79,32 +76,29 @@
             </select>
         </div>
 
-        <!-- Buscar -->
         <div class="col-md-2 d-flex align-items-end">
             <button id="filtrar-datos" class="btn btn-primary w-100">
-                <i class="fas fa-search mr-2"></i>Buscar
+                <i class="fas fa-search me-2"></i>Buscar
             </button>
         </div>
 
-        <!-- Limpiar datos -->
         <div class="col-md-2 d-flex align-items-end">
             <button id="reset-filtros" class="btn btn-outline-secondary w-100">
-                <i class="fas fa-broom mr-2"></i>Limpiar filtros
+                <i class="fas fa-broom me-2"></i>Limpiar filtros
             </button>
         </div>
     </div>
 
-    <!-- Tabla de asignaturas -->
     <div class="row">
         <div class="col-md-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h4 class="card-title mb-0">
-                        <i class="fas fa-list-alt mr-2"></i>Asignaturas Registradas
+                        <i class="fas fa-list-alt me-2"></i>Asignaturas Registradas
                     </h4>
                     <a href="#" class="btn btn-success ms-auto text-dark"
                         data-bs-toggle="modal" data-bs-target="#registroModal">
-                        <i class="fas fa-plus mr-1"></i>Nueva Asignatura
+                        <i class="fas fa-plus me-1"></i>Nueva Asignatura
                     </a>
                 </div>
                 <div class="card-body">
@@ -133,7 +127,6 @@
     </div>
 </div>
 
-<!-- Inclusión de modals -->
 @isset($docentes) {{-- Verificar que la variable existe --}}
     @include('modals.asignaturas.create', [
         'docentes' => $docentes,
@@ -145,7 +138,7 @@
 @include('modals.asignaturas.edit', [
         'docentes' => $docentes,
         'secciones' => $secciones
-    ]))
+    ])
 
 @endsection
 
@@ -222,18 +215,6 @@ $(document).ready(function() {
                 previous: "Anterior"
             }
         },
-        // Los datos para la tabla provienen de la llamada AJAX en cargarDatos()
-        // La estructura de 'row' en la función render es la definida por el método 'filtrar' del controlador:
-        // {
-        //   '0': item->id (PK),
-        //   '1': item->asignatura_id (Código),
-        //   '2': item->name (Nombre),
-        //   '3': item->secciones->first()?->codigo_seccion,
-        //   '4': item->docentes->first()?->name,
-        //   'docentes': array de nombres de docentes,
-        //   'secciones': array de códigos de sección,
-        //   'carga_horaria': objeto {teorica: X, practica: Y, laboratorio: Z}
-        // }
         columns: [
             { data: '0', className: 'text-center align-middle' }, // N° (ID PK)
             { data: '1', className: 'text-center align-middle' }, // Código Asignatura
@@ -269,7 +250,14 @@ $(document).ready(function() {
                     // Serializar arrays/objetos para los data attributes, asegurando que existan
                     const docentesData = (row.docentes && Array.isArray(row.docentes)) ? JSON.stringify(row.docentes) : '[]';
                     const seccionesData = (row.secciones && Array.isArray(row.secciones)) ? JSON.stringify(row.secciones) : '[]';
-                    const cargaHorariaData = (row.carga_horaria && typeof row.carga_horaria === 'object') ? JSON.stringify(row.carga_horaria) : '{}';
+                    
+                    // Formatear carga_horaria a un array de objetos para el modal de show y edit
+                    const cargaHorariaRaw = row.carga_horaria || {};
+                    const cargaHorariaArray = Object.keys(cargaHorariaRaw).map(tipo => ({
+                        tipo: tipo,
+                        horas_academicas: cargaHorariaRaw[tipo]
+                    }));
+                    const cargaHorariaData = JSON.stringify(cargaHorariaArray);
 
                     return `
                         <div class="btn-group" role="group" aria-label="Acciones de asignatura">
@@ -289,18 +277,19 @@ $(document).ready(function() {
                                 title="Editar Asignatura"
                                 data-bs-toggle="modal"
                                 data-bs-target="#editarModal"
-                                data-asignatura_id="${asignaturaCodigo}" 
-                                data-name="${nombreAsignatura}"
-                                data-docentes='${docentesData}'
-                                data-secciones='${seccionesData}'
-                                data-carga_horaria='${cargaHorariaData}'
-                                data-pk_id="${asignaturaPkId}">
+                                data-asignatura-id="${asignaturaCodigo}" 
+                                data-asignatura-name="${nombreAsignatura}"
+                                data-asignatura-docentes='${docentesData}'
+                                data-asignatura-secciones='${seccionesData}'
+                                data-asignatura-carga-horaria='${cargaHorariaData}'>
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
                             
+                            {{-- Botón de Eliminar - Llama a la función JavaScript directamente --}}
                             <button type="button" class="btn btn-danger btn-sm btn-eliminar"
-                                title="Eliminar Asignatura" 
-                                data-id="${asignaturaPkId}">  <i class="fas fa-trash"></i>
+                                title="Eliminar Asignatura"
+                                onclick="confirmarEliminarAsignatura('${asignaturaCodigo}', '${nombreAsignatura}')">
+                                <i class="fas fa-trash"></i>
                             </button>
                         </div>`;
                 }
@@ -410,65 +399,70 @@ $(document).ready(function() {
         $('#mensaje-inicial').html('<div class="text-center py-5"><i class="fas fa-search fa-3x text-muted mb-3"></i><h4 class="text-muted">Utilice los filtros para visualizar las asignaturas</h4></div>').fadeIn(500);
     });
 
-    // Manejo de eliminación de asignatura
-    $(document).on('click', '.btn-eliminar', function() {
-        const asignaturaPkId = $(this).data('id'); // Este es el ID primario de la asignatura
-
+    // ***** Lógica para la ELIMINACIÓN de Asignaturas (función global) *****
+    // Hacemos la función global para que pueda ser llamada desde el 'onclick' del botón
+    window.confirmarEliminarAsignatura = function(asignaturaId, asignaturaName) {
         Swal.fire({
-            title: '¿Está seguro?',
-            text: "¡Esta acción eliminará la asignatura permanentemente y no se puede deshacer!",
+            title: '¿Estás seguro?',
+            html: `¡No podrás revertir esto!<br>Se eliminará la asignatura <strong>${asignaturaName}</strong> y todas sus relaciones (docentes, secciones, carga horaria).`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
+            confirmButtonColor: '#dc3545', // Color rojo para confirmar
+            cancelButtonColor: '#6c757d',  // Color gris para cancelar
             confirmButtonText: 'Sí, ¡eliminar!',
-            cancelButtonText: 'Cancelar',
-            reverseButtons: true
+            cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                // La ruta debe ser /asignaturas/{id_primario}
-                // El controlador destroy(Asignatura $asignatura) usará este ID para el Route Model Binding.
-                const deleteUrl = `/asignaturas/${asignaturaPkId}`; 
+                // Si el usuario confirma, procede con la eliminación AJAX
+                
+                // Muestra una alerta "cargando" mientras se procesa la solicitud
+                Swal.fire({
+                    title: 'Eliminando...',
+                    text: 'Por favor, espera.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
                 $.ajax({
-                    url: deleteUrl,
-                    method: 'POST', // Laravel usa POST para _method spoofing
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                    data: { _method: 'DELETE' },
+                    // URL: Debe coincidir con tu ruta DELETE de Laravel.
+                    // Usamos el `asignaturaId` que se pasa a la función.
+                    url: `/asignaturas/${asignaturaId}`, 
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Laravel CSRF token
+                    },
                     success: function(response) {
-                        // Recargar datos si los filtros están aplicados
-                        const carrera = $('#carrera').val();
-                        const turno = $('#turno').val();
-                        const semestre = $('#semestre').val();
-                        
-                        if(carrera && turno && semestre) {
-                            cargarDatos(carrera, turno, semestre);
-                        } else {
-                            table.clear().draw();
-                            $('#tabla-asignaturas').hide();
-                            $('#mensaje-inicial').html('<div class="text-center py-5"><i class="fas fa-search fa-3x text-muted mb-3"></i><h4 class="text-muted">Utilice los filtros para visualizar las asignaturas</h4></div>').show();
-                        }
-                        
                         Swal.fire({
-                            icon: response.alert && response.alert.icon ? response.alert.icon : 'success',
-                            title: response.alert && response.alert.title ? response.alert.title : 'Eliminado',
-                            text: response.alert && response.alert.text ? response.alert.text : 'La asignatura ha sido eliminada.',
-                            timer: 2500,
-                            showConfirmButton: false
+                            icon: 'success',
+                            title: '¡Eliminado!',
+                            text: 'La asignatura ha sido eliminada correctamente.',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            // Recargar la página o actualizar la tabla para reflejar el cambio
+                            location.reload(); 
                         });
                     },
                     error: function(xhr) {
+                        console.error('Error en la solicitud AJAX de eliminación:', xhr.responseText);
+                        let errorMessage = 'Hubo un error al eliminar la asignatura.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.status === 404) {
+                            errorMessage = 'La asignatura no fue encontrada o ya ha sido eliminada.';
+                        }
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error al eliminar',
-                            text: (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'No se pudo eliminar la asignatura. Verifique la consola.'
+                            title: 'Error',
+                            text: errorMessage
                         });
-                        console.error("Error en AJAX delete:", xhr.responseText);
                     }
                 });
             }
         });
-    });
+    };
 
     // Manejo de alertas de sesión (como las tienes en tu archivo original)
     @if(session('alert'))
@@ -481,76 +475,243 @@ $(document).ready(function() {
         });
     @endif
 
-    // Script para el modal de edición (como lo tienes en tu archivo original)
-    // Asegúrate que 'editarModal' y los IDs de los campos del formulario de edición son correctos
+    // Script para el modal de edición
     const editarModalElement = document.getElementById('editarModal');
     if (editarModalElement) {
         editarModalElement.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            const form = editarModalElement.querySelector('form'); // Asegúrate que el form tiene un ID o es el único
+            const button = event.relatedTarget; // Botón que disparó el modal
             
-            const asignaturaPkId = button.dataset.pk_id; // ID primario para la URL de update
-            const asignaturaCodigo = button.dataset.asignatura_id;
-            const name = button.dataset.name;
-            const docentes = JSON.parse(button.dataset.docentes || '[]');
-            const secciones = JSON.parse(button.dataset.secciones || '[]');
-            const cargaHoraria = JSON.parse(button.dataset.carga_horaria || '{}');
+            // Obtener datos del botón que abre el modal
+            const asignaturaId = button.dataset.asignaturaId;
+            const asignaturaName = button.dataset.asignaturaName;
+            const asignaturaDocentes = JSON.parse(button.dataset.asignaturaDocentes || '[]');
+            const asignaturaSecciones = JSON.parse(button.dataset.asignaturaSecciones || '[]');
+            // Asegúrate de que este data-attribute se llama 'data-asignatura-carga-horaria' en tu botón de edición
+            const asignaturaCargaHoraria = JSON.parse(button.dataset.asignaturaCargaHoraria || '[]');
 
-            // La URL para actualizar sería algo como /asignaturas/{id_primario_asignatura}
-            if(form) form.action = `/asignaturas/${asignaturaPkId}`;
-            
-            // Poblar campos básicos
-            $('#asignatura_id_editar').val(asignaturaCodigo); // El código de la asignatura
-            $('#name_editar').val(name);
+            // 1. Precargar campos básicos
+            document.getElementById('asignatura_id_editar').value = asignaturaId;
+            document.getElementById('name_editar').value = asignaturaName;
 
-            // Poblar Select2 para docentes si usas Select2, o un multiselect normal
-            const docentesSelect = $('#docentes_editar');
-            docentesSelect.val(null).trigger('change'); // Limpiar previas si es Select2
-            if (docentes.length > 0) {
-                 // Para un multiselect normal:
-                docentesSelect.find('option').each(function() {
-                    $(this).prop('selected', docentes.includes($(this).text().split(' - ')[1]) || docentes.includes($(this.val()))); // Compara por cédula o nombre completo si es necesario
-                });
-            }
-            // Ajustar visualización del multiselect si es necesario (ej. Select2 o Chosen)
-            // $('.select2').select2(); // Si usas select2, reinicializa o actualiza
+            // 2. Actualizar la acción del formulario para apuntar a la ruta de actualización correcta
+            const formEditar = document.getElementById('formEditar');
+            formEditar.action = `/asignaturas/${asignaturaId}`; // Asegúrate de que esta ruta sea correcta en tus web.php
 
-            // Poblar Select2 para secciones
-            const seccionesSelect = $('#secciones_editar');
-            seccionesSelect.val(null).trigger('change');
-            if (secciones.length > 0) {
-                 seccionesSelect.find('option').each(function() {
-                    $(this).prop('selected', secciones.includes($(this).val()));
-                });
-            }
-
-            // Poblar Carga Horaria en el modal de edición
-            // Esto es más complejo y depende de cómo esté estructurado tu form de edición para la carga horaria.
-            // Similar a como se hace en el modal de creación, necesitarás recrear los bloques.
-            // Ejemplo conceptual (debes adaptarlo a tu modal de edición):
-            const cargaHorariaContainerEdit = $('#cargaHorariaContainer_editar'); // Suponiendo que tienes un contenedor
-            cargaHorariaContainerEdit.empty(); // Limpiar bloques anteriores
-            let editIndex = 0;
-            for (const tipo in cargaHoraria) {
-                if (cargaHoraria.hasOwnProperty(tipo) && cargaHoraria[tipo] > 0) {
-                    // Aquí deberías tener una plantilla similar a la de 'create.blade.php' para la carga horaria
-                    // y clonarla, llenarla y añadirla al contenedor.
-                    // const nuevoBloque = $('#cargaHorariaTemplate_editar').clone().html(); // Suponiendo template
-                    // ... reemplazar __INDEX__ con editIndex, seleccionar tipo, horas y añadir
-                    // cargaHorariaContainerEdit.append(nuevoBloque);
-                    editIndex++;
+            // 3. Precargar y seleccionar docentes
+            const docentesSelect = document.getElementById('docentes_editar');
+            // Deseleccionar todas las opciones primero
+            Array.from(docentesSelect.options).forEach(option => option.selected = false);
+            // Seleccionar las opciones correspondientes
+            asignaturaDocentes.forEach(docenteId => {
+                const option = docentesSelect.querySelector(`option[value="${docenteId}"]`);
+                if (option) {
+                    option.selected = true;
                 }
-            }
-             if (editIndex === 0 && cargaHorariaContainerEdit.length) { // Si no hay carga horaria, agregar un bloque vacío por defecto
-                // agregarBloqueCargaHorariaEditar(); // Función para añadir un bloque en el modal de edición
+            });
+            // La función filtrarOpcionesEditar debería estar definida en edit.blade.php
+            if (typeof filtrarOpcionesEditar === 'function') {
+                filtrarOpcionesEditar('docentes_editar', ''); // Resetear filtro y mostrar seleccionados
             }
 
 
-            // Actualizar datos de carrera, semestre, turno si están en el modal de edición y dependen de la sección
-            // actualizarDatosSeccionEditar(); // Si tienes esta función
+            // 4. Precargar y seleccionar secciones
+            const seccionesSelect = document.getElementById('secciones_editar');
+            // Deseleccionar todas las opciones primero
+            Array.from(seccionesSelect.options).forEach(option => option.selected = false);
+            // Seleccionar las opciones correspondientes
+            let firstSelectedSeccion = null;
+            asignaturaSecciones.forEach(seccionId => {
+                const option = seccionesSelect.querySelector(`option[value="${seccionId}"]`);
+                if (option) {
+                    option.selected = true;
+                    if (!firstSelectedSeccion) {
+                        firstSelectedSeccion = option; // Guardar la primera sección seleccionada
+                    }
+                }
+            });
+            // La función filtrarOpcionesEditar debería estar definida en edit.blade.php
+            if (typeof filtrarOpcionesEditar === 'function') {
+                filtrarOpcionesEditar('secciones_editar', ''); // Resetear filtro y mostrar seleccionados
+            }
+
+            // 5. Precargar campos ocultos de carrera, semestre y turno de la primera sección seleccionada
+            if (firstSelectedSeccion) {
+                document.getElementById('carrera_id_hidden_editar').value = firstSelectedSeccion.dataset.carreraId;
+                document.getElementById('semestre_id_hidden_editar').value = firstSelectedSeccion.dataset.semestreId;
+                document.getElementById('turno_id_hidden_editar').value = firstSelectedSeccion.dataset.turnoId;
+            } else {
+                // Limpiar si no hay secciones seleccionadas
+                document.getElementById('carrera_id_hidden_editar').value = '';
+                document.getElementById('semestre_id_hidden_editar').value = '';
+                document.getElementById('turno_id_hidden_editar').value = '';
+            }
+
+            // 6. Precargar bloques de carga horaria
+            const cargaHorariaContainer = document.getElementById('cargaHorariaContainerEditar');
+            cargaHorariaContainer.innerHTML = ''; // Limpiar bloques existentes
+            // NOTA: La función 'agregarBloqueCargaEditar' DEBE estar definida en 'edit.blade.php'
+            // o ser globalmente accesible para que esta parte funcione.
+            if (typeof agregarBloqueCargaEditar === 'function') {
+                if (asignaturaCargaHoraria.length > 0) {
+                    asignaturaCargaHoraria.forEach(carga => {
+                        agregarBloqueCargaEditar(carga.tipo, carga.horas_academicas);
+                    });
+                } else {
+                    // Si no hay carga horaria, añadir un bloque vacío por defecto
+                    agregarBloqueCargaEditar();
+                }
+            } else {
+                console.warn("La función 'agregarBloqueCargaEditar' no está definida. Asegúrate de que esté en 'edit.blade.php' o sea global.");
+            }
         });
     }
 
+    // Script para el modal de mostrar (show)
+    const mostrarModalElement = document.getElementById('mostrarModal');
+    if (mostrarModalElement) {
+        mostrarModalElement.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Botón que disparó el modal
+
+            // Obtener datos del botón (usamos data-asignatura_id para consistencia)
+            const asignaturaId = button.dataset.asignatura_id; 
+            const asignaturaName = button.dataset.name;
+            const docentes = JSON.parse(button.dataset.docentes || '[]');
+            const secciones = JSON.parse(button.dataset.secciones || '[]');
+            // data-carga_horaria ahora es un array de objetos [{tipo: "teorica", horas_academicas: X}]
+            const cargaHoraria = JSON.parse(button.dataset.carga_horaria || '[]'); 
+
+            // Corregir IDs de elementos HTML para el modal de mostrar
+            document.getElementById('modalShowCode').textContent = asignaturaId;
+            document.getElementById('modalShowName').textContent = asignaturaName;
+
+            // Mostrar Docentes
+            const docentesList = document.getElementById('modalShowDocentesList');
+            const noDocentesMessage = document.getElementById('modalShowNoDocentes');
+            docentesList.innerHTML = ''; // Limpiar lista anterior
+            if (docentes.length > 0) {
+                noDocentesMessage.style.display = 'none';
+                docentes.forEach(docenteId => {
+                    // Esta parte asume que $docentes->pluck('name', 'cedula_doc') está disponible en el JS.
+                    // Si 'docentes' ya trae el nombre directamente, simplifica esto.
+                    const docenteEncontrado = {{ Js::from($docentes->pluck('name', 'cedula_doc')) }}[docenteId];
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item'; // Asegurar clase para estilo
+                    li.innerHTML = `<i class="fas fa-user-tie me-2 text-primary"></i>${docenteEncontrado || docenteId}`; // Mostrar nombre si existe, sino ID
+                    docentesList.appendChild(li);
+                });
+            } else {
+                noDocentesMessage.style.display = 'block';
+            }
+
+            // Mostrar Secciones
+            const seccionesList = document.getElementById('modalShowSeccionesList');
+            const noSeccionesMessage = document.getElementById('modalShowNoSecciones');
+            seccionesList.innerHTML = ''; // Limpiar lista anterior
+            if (secciones.length > 0) {
+                noSeccionesMessage.style.display = 'none';
+                secciones.forEach(seccion => {
+                    // Asumimos que 'seccion' ya es el string formateado del render del DataTable
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item'; // Asegurar clase para estilo
+                    li.innerHTML = `<i class="fas fa-door-open me-2 text-success"></i>${seccion}`;
+                    seccionesList.appendChild(li);
+                });
+            } else {
+                noSeccionesMessage.style.display = 'block';
+            }
+
+            // Mostrar Carga Horaria
+            const cargaHorariaList = document.getElementById('modalShowCargaHorariaList');
+            const noCargaHorariaMessage = document.getElementById('modalShowNoCargaHoraria');
+            cargaHorariaList.innerHTML = ''; // Limpiar lista anterior
+            if (cargaHoraria.length > 0) { // CargaHoraria es un array de objetos
+                noCargaHorariaMessage.style.display = 'none';
+                cargaHoraria.forEach(carga => { // Iterar directamente el array
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item'; // Asegurar clase para estilo
+                    li.textContent = `${carga.tipo.charAt(0).toUpperCase() + carga.tipo.slice(1)}: ${carga.horas_academicas} horas`;
+                    cargaHorariaList.appendChild(li);
+                });
+            } else {
+                noCargaHorariaMessage.style.display = 'block';
+            }
+        });
+    }
+
+    // Código JavaScript del modal de creación (create.blade.php)
+    // Este bloque no fue modificado, se mantiene como en tu base.
+    let bloqueIndex = {{ is_array(old('carga_horaria')) ? count(old('carga_horaria')) : 0 }};
+    let initialLoad = true;
+
+    $('#addCargaHorariaBtn').on('click', function() {
+        agregarBloqueCarga();
+    });
+
+    $('#cargaHorariaContainer').on('click', '.eliminar-carga-horaria', function() {
+        $(this).closest('.carga-horaria-block').remove();
+    });
+
+    function agregarBloqueCarga(tipo = '', horas = '') {
+        const newBlockHtml = `
+            <div class="carga-horaria-block mb-2 p-3 border rounded" data-index="${bloqueIndex}">
+                <div class="row">
+                    <div class="col-md-5 mb-2">
+                        <label for="carga_horaria_${bloqueIndex}_tipo" class="form-label small">Tipo de Hora <span class="text-danger">*</span></label>
+                        <select class="form-control form-control-sm" name="carga_horaria[${bloqueIndex}][tipo]" id="carga_horaria_${bloqueIndex}_tipo" required>
+                            <option value="">Seleccione</option>
+                            <option value="teorica" ${tipo === 'teorica' ? 'selected' : ''}>Teórica</option>
+                            <option value="practica" ${tipo === 'practica' ? 'selected' : ''}>Práctica</option>
+                            <option value="laboratorio" ${tipo === 'laboratorio' ? 'selected' : ''}>Laboratorio</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5 mb-2">
+                        <label for="carga_horaria_${bloqueIndex}_horas_academicas" class="form-label small">Horas Académicas <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control form-control-sm" name="carga_horaria[${bloqueIndex}][horas_academicas]" id="carga_horaria_${bloqueIndex}_horas_academicas" value="${horas}" min="1" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end mb-2">
+                        <button type="button" class="btn btn-danger btn-sm w-100 eliminar-carga-horaria">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('#cargaHorariaContainer').append(newBlockHtml);
+        bloqueIndex++;
+    }
+
+    // Cargar bloques antiguos si hay errores de validación
+    @if(is_array(old('carga_horaria')) && count(old('carga_horaria')) > 0)
+        $(document).ready(function() {
+            $('#cargaHorariaContainer').empty(); // Limpiar el bloque por defecto si ya está allí
+            @foreach(old('carga_horaria') as $index => $carga)
+                agregarBloqueCarga('{{ $carga['tipo'] ?? '' }}', '{{ $carga['horas_academicas'] ?? '' }}');
+            @endforeach
+        });
+    @endif
+
+    // Asegurar que al menos un bloque de carga horaria esté presente en la carga inicial si no hay old data
+    // ESTE ES EL BLOQUE QUE CAUSA LA DUPLICACIÓN Y SERÁ ELIMINADO
+    /*
+    $(document).ready(function() {
+        if (initialLoad && !({{ is_array(old('carga_horaria')) && count(old('carga_horaria')) > 0 ? 'true' : 'false' }})) {
+            agregarBloqueCarga();
+        }
+        initialLoad = false;
+    });
+    */
+
+    // Mantener modal abierto si hay errores
+    @if ($errors->any() && session('open_modal'))
+        $(document).ready(function() {
+            $('#registroModal').modal('show');
+            
+            // Reindexar bloques si hay errores
+            @if(is_array(old('carga_horaria')))
+                bloqueIndex = {{ count(old('carga_horaria')) }};
+            @endif
+        });
+    @endif
 });
 </script>
 @endpush

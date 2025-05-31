@@ -83,7 +83,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const name = button.dataset.name;
             const docentesData = JSON.parse(button.dataset.docentes || '[]');
             const seccionesData = JSON.parse(button.dataset.secciones || '[]');
-            const cargaHorariaData = JSON.parse(button.dataset.carga_horaria || '{}'); // Nueva línea
+            // CORRECCIÓN: Ahora se espera un array de objetos para carga_horaria
+            const cargaHorariaData = JSON.parse(button.dataset.carga_horaria || '[]'); 
 
             // Actualizar Información Básica
             document.getElementById('modalShowCode').textContent = asignaturaId || 'No disponible';
@@ -96,27 +97,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
             let totalHoras = 0;
 
-            if (Object.keys(cargaHorariaData).length > 0) {
-                for (const tipo in cargaHorariaData) {
-                    if (cargaHorariaData.hasOwnProperty(tipo) && cargaHorariaData[tipo] > 0) {
-                        const horas = parseInt(cargaHorariaData[tipo]);
-                        totalHoras += horas;
-                        
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                        
-                        let tipoText = tipo.charAt(0).toUpperCase() + tipo.slice(1);
-                        if(tipo === 'teorica') tipoText = 'Teórica';
-                        if(tipo === 'practica') tipoText = 'Práctica';
-                        if(tipo === 'laboratorio') tipoText = 'Laboratorio';
+            // CORRECCIÓN: Iterar sobre el array de objetos
+            if (cargaHorariaData.length > 0) {
+                cargaHorariaData.forEach(item => { // Iterar sobre cada objeto en el array
+                    const tipo = item.tipo;
+                    const horas = parseInt(item.horas_academicas); // Acceder a la propiedad 'horas_academicas'
 
-                        li.innerHTML = `
-                            <span class="text-capitalize"><i class="far fa-clock me-2"></i>${tipoText}</span>
-                            <span class="badge bg-primary rounded-pill">${horas} hr(s)</span>
-                        `;
-                        cargaHorariaList.appendChild(li);
-                    }
-                }
+                    totalHoras += horas;
+                    
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    
+                    let tipoText = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+                    // Puedes mantener estas conversiones si quieres nombres más amigables
+                    if(tipo === 'teorica') tipoText = 'Teórica';
+                    if(tipo === 'practica') tipoText = 'Práctica';
+                    if(tipo === 'laboratorio') tipoText = 'Laboratorio';
+
+                    li.innerHTML = `
+                        <span class="text-capitalize"><i class="far fa-clock me-2"></i>${tipoText}</span>
+                        <span class="badge bg-primary rounded-pill">${horas} hr(s)</span>
+                    `;
+                    cargaHorariaList.appendChild(li);
+                });
                 
                 // Mostrar el total solo si hay al menos un tipo de horas
                 if (totalHoras > 0) {
@@ -132,16 +135,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 cargaHorariaList.appendChild(li);
             }
 
-            // Actualizar Docentes
+           // Actualizar Docentes
             const docentesList = document.getElementById('modalShowDocentes');
             const noDocentesMessage = document.getElementById('noDocentesMessage');
             docentesList.innerHTML = ''; // Limpiar contenido previo
             if (docentesData && docentesData.length > 0) {
                 noDocentesMessage.style.display = 'none';
-                docentesData.forEach(docente => {
+                docentesData.forEach(docente => { // 'docente' aquí es el string que recibe
                     const li = document.createElement('li');
                     li.className = 'list-group-item';
-                    li.innerHTML = `<i class="fas fa-user-tie me-2 text-info"></i>${docente}`;
+                    li.innerHTML = `<i class="fas fa-user-tie me-2 text-info"></i>${docente}`; // Se inserta directamente el string 'docente'
                     docentesList.appendChild(li);
                 });
             } else {
