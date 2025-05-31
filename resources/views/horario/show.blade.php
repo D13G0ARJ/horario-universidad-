@@ -41,7 +41,7 @@
             position: relative; /* Para posicionar los bloques absolutos */
             padding: 0; /* Eliminar padding para que el bloque ocupe todo el espacio */
             height: 45px; /* Altura base para un bloque */
-            min-width: 100px; /* Ancho mínimo para las celdas de días */
+            /* min-width: 100px; REMOVED */
         }
         .table-horario thead th {
             background-color: #343a40;
@@ -115,6 +115,68 @@
         .coordinador-info span {
             color: #6c757d;
         }
+
+        /* Estilos para impresión */
+        @media print {
+            body {
+                overflow: visible !important; /* Asegura que no haya scroll y todo se imprima */
+                margin: 0;
+                padding: 0;
+            }
+            .wrapper, .content-wrapper, .content {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .main-header, .main-sidebar, .main-footer, .breadcrumb, .btn-info, hr {
+                display: none !important; /* Oculta elementos no deseados en la impresión */
+            }
+            .card {
+                border: 1px solid #dee2e6 !important; /* Asegura bordes en las cards */
+                box-shadow: none !important;
+                margin-bottom: 10px !important;
+            }
+            .card-header {
+                background-color: #e9ecef !important; /* Fondo claro para cabeceras de card */
+                color: #343a40 !important;
+                border-bottom: 1px solid #dee2e6 !important;
+            }
+            .table-responsive {
+                overflow-x: visible !important; /* Evita el scroll horizontal en impresión */
+            }
+            .table-horario {
+                width: 100%;
+                table-layout: fixed; /* Distribuye el ancho de las columnas de manera uniforme */
+            }
+            .table-horario th, .table-horario td {
+                font-size: 0.65rem; /* Reduce el tamaño de fuente para que quepa más */
+                padding: 1px 2px; /* Reduce el padding de las celdas */
+                height: auto; /* Permite que la altura se ajuste al contenido */
+                min-width: unset; /* Elimina min-width para mayor flexibilidad */
+            }
+            .table-horario tbody th {
+                min-width: 60px; /* Ajusta el ancho de la columna de horas para impresión */
+            }
+            .bloque-horario {
+                font-size: 0.6rem; /* Reduce aún más la fuente dentro de los bloques */
+                padding: 1px 2px;
+                margin: 0; /* Elimina márgenes extra */
+                border-radius: 0; /* Elimina bordes redondeados si es necesario */
+            }
+            .asignatura-nombre {
+                font-size: 0.7rem; /* Ajusta el tamaño de fuente del nombre de asignatura */
+            }
+            .asignatura-details {
+                font-size: 0.55rem; /* Ajusta el tamaño de fuente de los detalles */
+            }
+            /* Asegurar que los colores de fondo se impriman */
+            .color-0, .color-1, .color-2, .color-3, .color-4, .color-5, .color-6, .color-7, .color-8, .color-9, .color-10 {
+                -webkit-print-color-adjust: exact; /* Para Chrome/Safari */
+                print-color-adjust: exact; /* Para otros navegadores */
+            }
+        }
     </style>
 </head>
 <body class="hold-transition sidebar-mini">
@@ -123,7 +185,7 @@
             <section class="content">
                 <div class="container-fluid">
                     <div class="row mb-4">
-                        <div class="col-12">
+                        <div class="col-12 text-center">
                             <h3 class="text-primary mt-4">
                                 <i class="fas fa-calendar-check mr-2"></i>Detalle de Horario
                             </h3>
@@ -135,6 +197,9 @@
                                 </ol>
                             </nav>
                             <hr>
+                            <button type="button" class="btn btn-info btn-sm mt-2" onclick="window.print()">
+                                <i class="fas fa-print me-1"></i> Imprimir Horario
+                            </button>
                         </div>
                     </div>
 
@@ -199,7 +264,7 @@
                                     </h4>
                                 </div>
                                 <div class="card-body">
-                                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                                    <div class="table-responsive" style="overflow-x: auto;"> {{-- Eliminado max-height y overflow-y: auto --}}
                                         <table class="table table-bordered table-horario">
                                             <thead>
                                                 <tr>
@@ -383,10 +448,8 @@
                     <div class="bloque-contenido">
                         <div class="asignatura-nombre" title="${asignaturaName}">${asignaturaName}</div>
                         <div class="asignatura-details">
-                            <div title="${tipoHoras} - ${bloques} bloques">${tipoHoras} (${bloques}b)</div>
-                            <div title="Docente">Doc: ${docenteName}</div>
-                            <div title="Aula">Aula: ${aulaName}</div> {{-- Añadir el nombre del aula --}}
-                            <div>${horaInicio} - ${horaFin}</div>
+                            <div title="${tipoHoras}">${tipoHoras}</div>
+                            <div title="Aula">${aulaName}</div>
                         </div>
                     </div>
                 `;

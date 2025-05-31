@@ -168,9 +168,5 @@ class Horario extends Model
         );
     }
 
-    // Si tienes alguna lógica para bloques relacionados, iría aquí
-    // public function bloquesRelacionados()
-    // {
-    //     // Implementa la lógica para obtener bloques relacionados si es necesario
-    // }
+    
 }
