@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth; // Importar la fachada Auth
+use Illuminate\Validation\ValidationException; // Importar para manejar errores de validación
 
 class HorarioController extends Controller
 {
@@ -57,15 +58,10 @@ class HorarioController extends Controller
      */
     public function create()
     {
-        // Se pasan las variables directamente a la vista para la carga inicial de los selectores
-        // en caso de que el JavaScript falle o para compatibilidad.
-        // Sin embargo, la lógica de la vista 'create.blade.php' que usa fetch()
-        // debería hacer que estos datos sean redundantes si el JS funciona correctamente.
         return view('horario.create', [
             'periodos' => Periodo::all(),
             'carreras' => Carrera::all(),
             'turnos' => Turno::all(),
-            // 'coordinadores' => User::all(), // Este ya no es necesario pasarlo a la vista
         ]);
     }
 
@@ -128,7 +124,7 @@ class HorarioController extends Controller
         $carreraId = $request->input('carrera_id');
         $semestreId = $request->input('semestre_id');
         $turnoId = $request->input('turno_id');
-        $periodoId = $request->input('periodo_id'); // Aunque no se usa directamente en el filtro de asignaturas, se puede usar para validación o logs.
+        $periodoId = $request->input('periodo_id');
 
         // Validación básica de parámetros
         if (!$seccionId || !$carreraId || !$semestreId || !$turnoId) {
@@ -175,7 +171,6 @@ class HorarioController extends Controller
             return response()->json($formattedAsignaturas);
 
         } catch (ModelNotFoundException $e) {
-            // Esto ocurre si la sección con esos criterios no existe
             Log::warning("Sección no encontrada para filtros: " . json_encode($request->all()));
             return response()->json(['error' => 'No se encontró la sección con los filtros proporcionados o no tiene asignaturas asociadas.'], 404);
         } catch (\Exception $e) {
@@ -246,8 +241,7 @@ class HorarioController extends Controller
      */
     public function store(Request $request)
     {
-        // Log para depuración: Ver el JSON crudo que llega
-        Log::info('Datos de horario recibidos:', $request->json()->all());
+        Log::info('Datos de horario recibidos (store):', $request->json()->all());
 
         try {
             $formData = $request->json()->all();
@@ -257,18 +251,14 @@ class HorarioController extends Controller
                 return response()->json(['success' => false, 'message' => 'Usuario no autenticado.'], 401);
             }
 
-            // Obtener la cédula del coordinador autenticado
-            // Se asume que el usuario autenticado tiene una propiedad 'cedula'
             $coordinadorCedula = $user->cedula;
 
-            // Validar los datos principales del formulario
             $request->validate([
                 'periodo_id' => 'required|exists:periodos,id',
                 'carrera_id' => 'required|exists:carreras,carrera_id',
                 'turno_id' => 'required|exists:turnos,id_turno',
                 'semestre_id' => 'required|exists:semestres,id_semestre',
                 'seccion_id' => 'required|exists:secciones,codigo_seccion',
-                // 'coordinador_cedula' => 'required|exists:users,cedula', // ELIMINADO: Ya no se valida desde el request
                 'asignatura_compartida_id' => 'nullable|exists:asignaturas,asignatura_id',
                 'bloques_horario' => 'required|array|min:1',
             ]);
@@ -286,9 +276,8 @@ class HorarioController extends Controller
                 return response()->json(['success' => false, 'message' => 'No se han arrastrado bloques al horario.'], 400);
             }
 
-            DB::beginTransaction(); // Iniciar transacción
+            DB::beginTransaction();
 
-            // Eliminar horarios existentes para esta sección, periodo y turno antes de guardar los nuevos
             Horario::where('seccion_id', $seccionId)
                    ->where('periodo_id', $periodoId)
                    ->where('carrera_id', $carreraId)
@@ -297,23 +286,25 @@ class HorarioController extends Controller
                    ->delete();
 
             foreach ($horariosBloques as $bloque) {
-                // Validar cada bloque individualmente
-                // Nota: Estas validaciones se aplican a cada elemento del array 'bloques_horario'
-                // Si la validación falla aquí, detendrá el proceso.
-                $request->validate([
-                    'bloques_horario.*.asignatura_id' => 'required|string|exists:asignaturas,asignatura_id',
-                    'bloques_horario.*.docente_id' => 'required|string|exists:docentes,cedula_doc',
-                    'bloques_horario.*.dia_semana' => 'required|integer|between:1,6', // Días de Lunes a Sábado
-                    'bloques_horario.*.hora_inicio' => 'required|date_format:H:i',
-                    'bloques_horario.*.hora_fin' => 'required|date_format:H:i',
-                    'bloques_horario.*.tipo_horas' => 'required|in:teorica,practica,laboratorio,Clase', // Añadido 'Clase'
-                    'bloques_horario.*.bloques' => 'required|integer|min:1|max:6',
-                    'bloques_horario.*.aula_id' => 'required|exists:aulas,id', // Validar el aula_id
-                    'bloques_horario.*.observaciones' => 'nullable|string|max:500',
+                // Validar cada bloque individualmente (usando Request::validate para errores detallados)
+                $validator = \Validator::make($bloque, [
+                    'asignatura_id' => 'required|string|exists:asignaturas,asignatura_id',
+                    'docente_id' => 'required|string|exists:docentes,cedula_doc',
+                    'dia_semana' => 'required|integer|between:1,6',
+                    'hora_inicio' => 'required|date_format:H:i',
+                    'hora_fin' => 'required|date_format:H:i',
+                    'tipo_horas' => 'required|in:teorica,practica,laboratorio,Clase',
+                    'bloques' => 'required|integer|min:1|max:6',
+                    'aula_id' => 'nullable|exists:aulas,id', // 'nullable' si el aula es opcional
+                    'observaciones' => 'nullable|string|max:500',
                 ]);
 
+                if ($validator->fails()) {
+                    throw new ValidationException($validator);
+                }
+
                 Horario::create([
-                    'coordinador_cedula' => $coordinadorCedula, // Usar la cédula obtenida del usuario autenticado
+                    'coordinador_cedula' => $coordinadorCedula,
                     'periodo_id' => $periodoId,
                     'asignatura_id' => $bloque['asignatura_id'],
                     'carrera_id' => $carreraId,
@@ -326,31 +317,31 @@ class HorarioController extends Controller
                     'hora_fin' => $bloque['hora_fin'],
                     'tipo_horas' => $bloque['tipo_horas'],
                     'bloques' => $bloque['bloques'],
-                    'aula_id' => $bloque['aula_id'], // Guardar el ID del aula
+                    'aula_id' => $bloque['aula_id'] ?? null, // Asegura que se guarda NULL si no se envía
                     'observaciones' => $bloque['observaciones'] ?? null,
                     'asignatura_compartida_id' => $asignaturaCompartidaId,
-                    'activo' => true, // O el valor por defecto que uses
+                    'activo' => true,
                 ]);
             }
 
-            DB::commit(); // Confirmar transacción
+            DB::commit();
             return response()->json([
                 'success' => true,
                 'message' => 'Horario guardado exitosamente.',
                 'redirect' => route('horario.index')
             ], 200);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack(); // Revertir transacción en caso de error de validación
-            Log::error('Error de validación al guardar horario:', ['errors' => $e->errors(), 'request_data' => $request->json()->all()]);
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            Log::error('Error de validación al guardar horario (store):', ['errors' => $e->errors(), 'request_data' => $request->json()->all()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Error de validación: ' . $e->getMessage(),
                 'errors' => $e->errors()
-            ], 422); // Código 422 para errores de validación
+            ], 422);
         } catch (\Exception $e) {
-            DB::rollBack(); // Revertir transacción en caso de cualquier otro error
-            Log::error('Error al guardar horario:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'request_data' => $request->json()->all()]);
+            DB::rollBack();
+            Log::error('Error al guardar horario (store):', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'request_data' => $request->json()->all()]);
             return response()->json(['success' => false, 'message' => 'Error al guardar el horario: ' . $e->getMessage()], 500);
         }
     }
@@ -361,12 +352,7 @@ class HorarioController extends Controller
      */
     private function validarCargaHoraria($bloques)
     {
-        // Esta lógica debe ser más sofisticada si una asignatura tiene varios tipos de horas
-        // y se pueden arrastrar múltiples bloques de cada tipo.
-        // La validación debe sumar los bloques arrastrados para cada asignatura y tipo de hora,
-        // y compararlo con la carga horaria total de esa asignatura y tipo.
-        
-        $cargasAsignadas = []; // Almacena el total de bloques asignados por asignatura_id y tipo_horas
+        $cargasAsignadas = [];
         
         foreach ($bloques as $bloque) {
             $key = $bloque['asignatura_id'] . '_' . $bloque['tipo_horas'];
@@ -391,9 +377,7 @@ class HorarioController extends Controller
                 ->where('tipo', $tipoHoras)
                 ->sum('horas_academicas');
 
-            // Convertir cargaMaxima (horas_academicas) a bloques (de 45 minutos) para comparar
-            // Asumiendo que 1 hora académica = 45 minutos = 1 bloque
-            $cargaMaximaBloques = $cargaMaxima; // Si horas_academicas ya son bloques de 45 min
+            $cargaMaximaBloques = $cargaMaxima;
 
             if ($totalAsignado > $cargaMaximaBloques) {
                 throw new \Exception(
@@ -409,7 +393,6 @@ class HorarioController extends Controller
      */
     public function show($id)
     {
-        // Obtener el horario base (puede ser cualquier registro del grupo)
         $horario = Horario::with([
             'periodo',
             'carrera',
@@ -417,30 +400,27 @@ class HorarioController extends Controller
             'turno',
             'seccion',
             'coordinador',
-            'asignatura', // Cargar la asignatura del horario principal
-            'docente',    // Cargar el docente del horario principal
-            'aula',       // Cargar el aula del horario principal
-            'asignaturaCompartida' // Cargar la relación de asignatura compartida si existe
+            'asignatura',
+            'docente',
+            'aula',
+            'asignaturaCompartida'
         ])->findOrFail($id);
 
-        // Obtener TODOS los bloques del mismo grupo horario
         $bloques = Horario::where('seccion_id', $horario->seccion_id)
             ->where('periodo_id', $horario->periodo_id)
             ->where('carrera_id', $horario->carrera_id)
             ->where('semestre_id', $horario->semestre_id)
             ->where('turno_id', $horario->turno_id)
-            ->with(['asignatura', 'docente', 'aula']) // Cargar la relación 'aula'
+            ->with(['asignatura', 'docente', 'aula'])
             ->orderBy('dia_semana')
             ->orderBy('hora_inicio')
             ->get();
 
-        // Definir los días de la semana para la tabla
         $diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-        // Generar franjas horarias de 45 minutos
         $horas = [];
-        $currentMinutes = 7 * 60; // Iniciar a las 7:00 AM en minutos
-        $endMinutes = 21 * 60;   // Terminar a las 21:00 PM en minutos
+        $currentMinutes = 7 * 60;
+        $endMinutes = 21 * 60;
 
         while ($currentMinutes < $endMinutes) {
             $hours = floor($currentMinutes / 60);
@@ -456,13 +436,13 @@ class HorarioController extends Controller
                 'inicio' => $horaInicioFormato,
                 'fin' => $horaFinFormato,
             ];
-            $currentMinutes += 45; // Avanzar 45 minutos
+            $currentMinutes += 45;
         }
 
         return view('horario.show', [
             'horario' => $horario,
             'bloques' => $bloques,
-            'horas' => $horas, // Se pasa como 'horas' para que la vista lo reconozca
+            'horas' => $horas,
             'diasSemana' => $diasSemana
         ]);
     }
@@ -474,7 +454,6 @@ class HorarioController extends Controller
     {
         $horario = Horario::findOrFail($id);
 
-        // Eliminar todos los horarios que comparten los mismos filtros principales
         Horario::where('seccion_id', $horario->seccion_id)
             ->where('periodo_id', $horario->periodo_id)
             ->where('carrera_id', $horario->carrera_id)
@@ -491,48 +470,246 @@ class HorarioController extends Controller
      */
     public function edit($id)
     {
+        // Carga el horario principal con sus relaciones
         $horario = Horario::with([
             'periodo',
             'carrera',
             'semestre',
             'turno',
             'seccion',
-            'coordinador'
+            'coordinador',
+            'asignaturaCompartida' // Asegúrate de cargar la relación de asignatura compartida
         ])->findOrFail($id);
 
+        // Carga todos los bloques relacionados con este conjunto de horario,
+        // incluyendo sus relaciones de asignatura, docente Y AULA
         $bloques = Horario::where('seccion_id', $horario->seccion_id)
             ->where('periodo_id', $horario->periodo_id)
             ->where('carrera_id', $horario->carrera_id)
             ->where('semestre_id', $horario->semestre_id)
             ->where('turno_id', $horario->turno_id)
-            ->with(['asignatura', 'docente'])
+            ->with(['asignatura', 'docente', 'aula']) // ¡Añadir 'aula' aquí!
             ->orderBy('dia_semana')
             ->orderBy('hora_inicio')
             ->get();
 
+        // Genera el rango de horas para la tabla (si es necesario para la edición)
         $horas = [];
         $current = strtotime('07:00');
-        $end = strtotime('21:00');
+        $end = strtotime('21:00'); // Ajusta según tu necesidad
         while ($current < $end) {
             $horas[] = [
                 'inicio' => date('H:i', $current),
-                'fin' => date('H:i', $current + 2700),
+                'fin' => date('H:i', $current + 2700), // 2700 segundos = 45 minutos
             ];
             $current += 2700;
         }
 
+        // Obtener listas para los selectores del formulario
+        $periodos = Periodo::all();
+        $carreras = Carrera::all();
+        $semestres = Semestre::all();
+        $turnos = Turno::all();
+        // Filtrar secciones para que solo muestre las relevantes al horario actual
+        $secciones = Seccion::where('carrera_id', $horario->carrera_id)
+                            ->where('semestre_id', $horario->semestre_id)
+                            ->where('turno_id', $horario->turno_id)
+                            ->get();
+        $docentes = Docente::all();
+        $aulas = Aula::all(); // ¡Obtener todas las aulas!
+        
+        // MODIFICADO: Cargar asignaturas con sus relaciones docentes y cargaHoraria
+        // y formatearlas explícitamente para evitar errores de sintaxis en JavaScript.
+        $rawAsignaturas = Asignatura::with(['docentes', 'cargaHoraria'])->get(); 
+
+        $asignaturas = $rawAsignaturas->map(function ($asignatura) {
+            return [
+                'asignatura_id' => $asignatura->asignatura_id,
+                'name' => e($asignatura->name), // Escapar el nombre de la asignatura
+                'carga_horaria' => $asignatura->cargaHoraria->map(function($carga) {
+                    return [
+                        'tipo' => e($carga->tipo), // Escapar el tipo de carga
+                        'horas_academicas' => $carga->horas_academicas
+                    ];
+                }),
+                'docentes' => $asignatura->docentes->map(function ($docente) {
+                    return [
+                        'cedula_doc' => $docente->cedula_doc,
+                        'name' => e($docente->name) // Escapar el nombre del docente
+                    ];
+                }),
+            ];
+        });
+
+        // MODIFICADO: Formatear los bloques existentes, escapando nombres para JS
+        $bloquesFormateados = $bloques->map(function($bloque) {
+            $bloqueArray = $bloque->toArray(); // Convertir a array para modificar
+            
+            // Escapar nombres de relaciones anidadas si existen
+            if (isset($bloqueArray['asignatura']['name'])) {
+                $bloqueArray['asignatura']['name'] = e($bloqueArray['asignatura']['name']);
+            }
+            if (isset($bloqueArray['docente']['name'])) {
+                $bloqueArray['docente']['name'] = e($bloqueArray['docente']['name']);
+            }
+            if (isset($bloqueArray['aula']['nombre'])) {
+                $bloqueArray['aula']['nombre'] = e($bloqueArray['aula']['nombre']);
+            }
+            // Asegúrate de que los campos directos también estén escapados si son cadenas de texto
+            $bloqueArray['tipo_horas'] = e($bloqueArray['tipo_horas']);
+            // 'observaciones' ya se eliminó, pero si hubiera otros campos de texto, escaparlos aquí.
+
+            return $bloqueArray;
+        });
+
+
         return view('horario.edit', [
             'horario' => $horario,
-            'bloques' => $bloques,
+            'bloques' => $bloquesFormateados, // Ahora es el array formateado para el frontend
             'horas' => $horas,
-            'periodos' => Periodo::all(),
-            'carreras' => Carrera::all(),
-            'semestres' => Semestre::all(),
-            'turnos' => Turno::all(),
-            'secciones' => Seccion::all(),
-            'asignaturas' => Asignatura::all(),
-            'docentes' => Docente::all(),
-            'aulas' => Aula::all(), // Asegúrate de pasar las aulas también para el edit
+            'periodos' => $periodos,
+            'carreras' => $carreras,
+            'semestres' => $semestres,
+            'turnos' => $turnos,
+            'secciones' => $secciones,
+            'docentes' => $docentes,
+            'aulas' => $aulas, // Pasar las aulas a la vista
+            'asignaturas' => $asignaturas, // Ahora es el array formateado para el frontend
         ]);
+    }
+
+    /**
+     * Procesa la actualización de un horario.
+     */
+    public function update(Request $request, $id)
+    {
+        Log::info('Datos de horario recibidos (update):', $request->json()->all());
+
+        try {
+            DB::beginTransaction();
+
+            $horarioPrincipal = Horario::findOrFail($id);
+
+            // Los campos principales del horario (periodo, carrera, etc.)
+            // están deshabilitados en el frontend y no se envían para actualización directa.
+            // Se asume que estos campos definen el "grupo" del horario y no cambian.
+
+            $bloquesData = $request->input('bloques', []); // Bloques existentes modificados/sin modificar
+            $bloquesNuevosData = $request->input('bloques_nuevos', []); // Nuevos bloques añadidos en la edición
+
+            // Obtener los IDs de los bloques existentes que fueron enviados en el request
+            $existingBlockIdsInRequest = collect($bloquesData)->pluck('id')->filter()->toArray();
+
+            // Eliminar los bloques que NO fueron enviados en el request (es decir, fueron eliminados en el frontend)
+            Horario::where('seccion_id', $horarioPrincipal->seccion_id)
+                ->where('periodo_id', $horarioPrincipal->periodo_id)
+                ->where('carrera_id', $horarioPrincipal->carrera_id)
+                ->where('semestre_id', $horarioPrincipal->semestre_id)
+                ->where('turno_id', $horarioPrincipal->turno_id)
+                ->whereNotIn('id', $existingBlockIdsInRequest)
+                ->delete();
+
+            // Procesar bloques existentes (actualizar)
+            foreach ($bloquesData as $bloque) {
+                // Validar cada bloque individualmente
+                $validator = \Validator::make($bloque, [
+                    'id' => 'required|exists:horarios,id', // El ID del bloque existente
+                    'asignatura_id' => 'required|string|exists:asignaturas,asignatura_id',
+                    'docente_id' => 'required|string|exists:docentes,cedula_doc',
+                    'dia_semana' => 'required|integer|between:1,6',
+                    'hora_inicio' => 'required|date_format:H:i',
+                    'bloques' => 'required|integer|min:1|max:6',
+                    'tipo_horas' => 'required|in:teorica,practica,laboratorio,Clase',
+                    'aula_id' => 'nullable|exists:aulas,id',
+                    // 'observaciones' => 'nullable|string|max:500', // Campo eliminado
+                ]);
+
+                if ($validator->fails()) {
+                    throw new ValidationException($validator);
+                }
+
+                // Calcular hora_fin
+                $horaFin = Carbon::parse($bloque['hora_inicio'])
+                                ->addMinutes($bloque['bloques'] * 45)
+                                ->format('H:i');
+
+                Horario::where('id', $bloque['id'])->update([
+                    'asignatura_id' => $bloque['asignatura_id'],
+                    'docente_id' => $bloque['docente_id'],
+                    'dia_semana' => $bloque['dia_semana'],
+                    'hora_inicio' => $bloque['hora_inicio'],
+                    'hora_fin' => $horaFin, // Asegúrate de calcular y guardar hora_fin
+                    'bloques' => $bloque['bloques'],
+                    'tipo_horas' => $bloque['tipo_horas'],
+                    'aula_id' => $bloque['aula_id'] ?? null,
+                    'observaciones' => null, // Establecer observaciones a null o cadena vacía
+                    // Los campos del horario principal (periodo, carrera, etc.) no deben cambiar aquí
+                    // ya que definen el grupo de horarios que se está editando.
+                ]);
+            }
+
+            // Procesar nuevos bloques (crear)
+            foreach ($bloquesNuevosData as $bloque) {
+                // Validar cada nuevo bloque
+                $validator = \Validator::make($bloque, [
+                    'asignatura_id' => 'required|string|exists:asignaturas,asignatura_id',
+                    'docente_id' => 'required|string|exists:docentes,cedula_doc',
+                    'dia_semana' => 'required|integer|between:1,6',
+                    'hora_inicio' => 'required|date_format:H:i',
+                    'bloques' => 'required|integer|min:1|max:6',
+                    'tipo_horas' => 'required|in:teorica,practica,laboratorio,Clase',
+                    'aula_id' => 'nullable|exists:aulas,id',
+                    // 'observaciones' => 'nullable|string|max:500', // Campo eliminado
+                ]);
+
+                if ($validator->fails()) {
+                    throw new ValidationException($validator);
+                }
+
+                // Calcular hora_fin
+                $horaFin = Carbon::parse($bloque['hora_inicio'])
+                                ->addMinutes($bloque['bloques'] * 45)
+                                ->format('H:i');
+
+                Horario::create([
+                    'coordinador_cedula' => Auth::user()->cedula, // Asignar coordinador del usuario autenticado
+                    'periodo_id' => $horarioPrincipal->periodo_id,
+                    'asignatura_id' => $bloque['asignatura_id'],
+                    'carrera_id' => $horarioPrincipal->carrera_id,
+                    'docente_id' => $bloque['docente_id'],
+                    'seccion_id' => $horarioPrincipal->seccion_id,
+                    'turno_id' => $horarioPrincipal->turno_id,
+                    'semestre_id' => $horarioPrincipal->semestre_id,
+                    'dia_semana' => $bloque['dia_semana'],
+                    'hora_inicio' => $bloque['hora_inicio'],
+                    'hora_fin' => $horaFin,
+                    'tipo_horas' => $bloque['tipo_horas'],
+                    'bloques' => $bloque['bloques'],
+                    'aula_id' => $bloque['aula_id'] ?? null,
+                    'observaciones' => null, // Establecer observaciones a null o cadena vacía
+                    'asignatura_compartida_id' => $horarioPrincipal->asignatura_compartida_id, // Mantener la misma si existe
+                    'activo' => true,
+                ]);
+            }
+
+            // Actualizar el campo 'observaciones' del horario principal si es necesario (aunque se eliminó del frontend)
+            // $horarioPrincipal->observaciones = $request->input('observaciones_horario', null);
+            // $horarioPrincipal->save();
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Horario actualizado con éxito.', 'redirect' => route('horario.show', $horarioPrincipal->id)]);
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            Log::error('Error de validación al actualizar horario:', ['errors' => $e->errors(), 'request_data' => $request->json()->all()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación: ' . $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error al actualizar horario: " . $e->getMessage() . " en " . $e->getFile() . " línea " . $e->getLine());
+            return response()->json(['success' => false, 'error' => 'Error al actualizar el horario: ' . $e->getMessage()], 500);
+        }
     }
 }
