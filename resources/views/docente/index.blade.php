@@ -69,7 +69,8 @@
                                             data-name="{{ $docente->name }}"
                                             data-email="{{ $docente->email }}"
                                             data-telefono="{{ $docente->telefono }}"
-                                            data-dedicacion="{{ $docente->dedicacion->dedicacion ?? 'Sin dedicación' }}">
+                                            data-dedicacion="{{ $docente->dedicacion->dedicacion ?? 'Sin dedicación' }}"
+                                            data-hmax="{{ $docente->dedicacion->h_max ?? 0 }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
 
@@ -196,36 +197,90 @@
             });
         });
 
-        // Script para llenar el modal de visualización
+        // Script para llenar el modal de mostrar (consolidado)
         $('#mostrarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
-            const modal = $(this);
-            modal.find('#modalCedula').text(button.data('cedula'));
-            modal.find('#modalName').text(button.data('name'));
-            modal.find('#modalEmail').text(button.data('email'));
-            modal.find('#modalTelefono').text(button.data('telefono'));
-            modal.find('#modalDedicacion').text(button.data('dedicacion'));
+            const cedula = button.data('cedula');
+            const name = button.data('name');
+            const email = button.data('email');
+            const telefono = button.data('telefono');
+            const dedicacion = button.data('dedicacion');
+            const hmax = parseFloat(button.data('hmax')); // Obtener h_max como flotante
 
-            var docenteId = button.data('cedula');
+            // Asignar los datos al modal (usa los IDs del show.blade.php)
+            $('#modalCedula').text(cedula);
+            $('#modalName').text(name);
+            $('#modalEmail').text(email);
+            $('#modalTelefono').text(telefono);
+            $('#modalDedicacion').text(dedicacion);
+            $('#modalHorasMax').text(Math.round(hmax) + ' Horas'); // Redondear a entero para mostrar
 
-            $.get(`/api/docentes/${docenteId}/asignaturas`, function(response) {
-                const asignaturasContainer = $('#asignaturasContainer');
-        
-                    if (response.asignaturas && response.asignaturas.length > 0) {
-                        const listaAsignaturas = response.asignaturas
-                        .map(asig => 
-                            `<dt class="col-sm-4">${asig.asignatura_id}</dt>
-                            <dd class="col-sm-8">${asig.name}</dd>
-                            `
+            // Guardar la cédula del docente actual para el botón de horario
+            let currentDocenteCedula = cedula;
+
+            // Limpiar asignaturas anteriores y el mensaje de "no asignaturas"
+            const modalAsignaturasList = $('#modalAsignaturasList');
+            const noAsignaturasMessage = $('#noAsignaturasMessage');
+            const totalHorasDocenteElement = $('#totalHorasDocente');
+            modalAsignaturasList.empty();
+            noAsignaturasMessage.hide();
+
+            // Mostrar spinner mientras se cargan las asignaturas
+            modalAsignaturasList.html('<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div></div>');
+
+            // Cargar asignaturas con AJAX (usando la ruta que ya tenías y el método .get de jQuery)
+            $.get(`/api/docentes/${cedula}/asignaturas`, function(response) {
+                modalAsignaturasList.empty(); // Limpiar el spinner
+                if (response.asignaturas && response.asignaturas.length > 0) {
+                    const listaAsignaturas = response.asignaturas
+                        .map(asig =>
+                            `<li class="list-group-item">
+                            <strong>${asig.asignatura_id}</strong> - ${asig.name}
+                                <span class="badge bg-secondary float-end">
+                                    ${asig.carga_horaria_total} Horas totales.
+                                </span>
+                            </li>`
                         )
                         .join('');
-                        asignaturasContainer.html(`<ul class="list-group">${listaAsignaturas}</ul>`);
-                    } else {
-                        asignaturasContainer.html('<div class="alert alert-warning">No tiene asignaturas asociadas</div>');
-                    }
-                }).fail(function() {
-                    $('#asignaturasContainer').html('<div class="alert alert-danger">Error al cargar asignaturas</div>');
+                    modalAsignaturasList.html(listaAsignaturas); // Aquí va el HTML de la lista
+                } else {
+                    noAsignaturasMessage.show(); // Mostrar el mensaje si no hay asignaturas
+                }
+
+                totalHorasDocenteElement.text(response.total_horas_docente + ' Horas');
+
+            }).fail(function() {
+                modalAsignaturasList.html('<li class="list-group-item text-danger">Error al cargar asignaturas.</li>');
+            });
+
+            // Cargar períodos académicos para el selector de horario
+            const periodoSelect = $('#periodoSelect');
+            periodoSelect.empty().append('<option value="">Cargando períodos...</option>'); // Limpiar y poner mensaje de carga
+            $.get('/api/periods', function(periods) {
+                periodoSelect.empty().append('<option value="">Seleccione un Período</option>');
+                periods.forEach(period => {
+                    periodoSelect.append(`<option value="${period.id}">${period.nombre}</option>`);
                 });
+            }).fail(function() {
+                periodoSelect.empty().append('<option value="">Error al cargar períodos</option>');
+            });
+
+            // Listener para el botón "Mostrar Horario" dentro del modal
+            $('#btnCargarHorario').off('click').on('click', function() { // Usar .off().on() para evitar duplicación de eventos
+                const selectedPeriodId = periodoSelect.val();
+
+                if (!selectedPeriodId) {
+                    alert('Por favor, seleccione un período académico.');
+                    return;
+                }
+
+                if (!currentDocenteCedula) {
+                    alert('No se pudo obtener la cédula del docente. Intente recargar la página.');
+                    return;
+                }
+
+                window.location.href = `/docentes/${currentDocenteCedula}/horario/${selectedPeriodId}`;
+            });
         });
 
         // Script para llenar el modal de edición
@@ -236,8 +291,16 @@
             modal.find('#name_editar').val(button.data('name'));
             modal.find('#email_editar').val(button.data('email'));
             modal.find('#telefono_editar').val(button.data('telefono'));
-            modal.find('#dedicacion_editar').val(button.data('dedicacion'));
+            modal.find('#dedicacion_editar').val(button.data('dedicacion')); // Ojo: Aquí se espera dedicacion_id, no el nombre
             modal.find('#formEditar').attr('action', '/docentes/' + button.data('cedula'));
+        });
+
+        // Script para confirmar eliminar (si tienes un modal separado para esto)
+        $('#confirmarEliminarModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            const docenteCedula = button.data('cedula');
+            const form = $(this).find('#formEliminarDocente'); // Asumiendo que tienes un formulario con este ID
+            form.attr('action', `/docentes/${docenteCedula}`); // Ajusta la ruta de eliminación
         });
     });
 </script>

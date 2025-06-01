@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log; // Para logs de errores
 use Carbon\Carbon; // Importar Carbon para formatear fechas y horas
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class DocenteController extends Controller
 {
@@ -33,16 +34,42 @@ class DocenteController extends Controller
 
     public function getAsignaturasByDocente($id)
     {
-        // Obtener docente por cédula
-        $docente = Docente::where('cedula_doc', $id)
-            ->with(['asignaturas' => function ($query) {
-                $query->select('asignaturas.asignatura_id', 'asignaturas.name');
-            }])
-            ->firstOrFail();
-        
-        return response()->json([
-            'asignaturas' => $docente->asignaturas,
-        ]);
+        try {
+            // Asegúrate de que el docente se encuentre o lance un 404
+            $docente = Docente::where('cedula_doc', $id)
+                ->with(['asignaturas' => function ($query) {
+                    // Seleccionar solo los campos que necesitas para reducir el payload
+                    $query->select('asignaturas.asignatura_id', 'asignaturas.name')
+                            ->with('cargaHoraria');
+                }])
+                ->firstOrFail(); // Esto lanzará un 404 si el docente no existe
+
+            $asignaturasData = $docente->asignaturas->map(function ($asignatura) {
+                return [
+                    'asignatura_id' => $asignatura->asignatura_id,
+                    'name' => $asignatura->name,
+                    // Acceder al accessor getCargaHorariaTotalAttribute()
+                    'carga_horaria_total' => $asignatura->cargaHorariaTotal // Laravel automáticamente llama al accessor
+                ];
+            });
+
+            $totalHorasDocente = $asignaturasData->sum('carga_horaria_total');
+
+            // Retorna una respuesta JSON. Es CRUCIAL que no haya redirecciones aquí.
+            return response()->json([
+                'asignaturas' => $docente->asignaturas,
+                'total_horas_docente' => $totalHorasDocente,
+                'message' => 'Asignaturas cargadas correctamente'
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Si el docente no se encuentra, devuelve un 404 JSON, no redirijas
+            return response()->json(['error' => 'Docente no encontrado.'], 404);
+        } catch (\Exception $e) {
+            // Manejo de otros errores, devuelve un 500 JSON, no redirijas
+            Log::error("Error al obtener asignaturas del docente {$id}: " . $e->getMessage());
+            return response()->json(['error' => 'Error interno del servidor al cargar asignaturas.'], 500);
+        }
     }
 
     /**

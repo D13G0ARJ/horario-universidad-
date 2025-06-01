@@ -33,14 +33,14 @@ class AsignaturaController extends Controller
             },
             'cargaHoraria'
         ])->get();
-        
+
         // Cargar datos para los filtros y selectores en los modales
         $docentes = Docente::all();
         $secciones = Seccion::with(['carrera', 'semestre', 'turno'])->get();
         $turnos = Turno::orderBy('nombre')->get();
         $carreras = Carrera::orderBy('name')->get();
         $semestres = Semestre::orderBy('numero')->get();
-        
+
         return view('asignatura.index', compact(
             'asignaturas',
             'docentes',
@@ -67,7 +67,7 @@ class AsignaturaController extends Controller
                 Rule::exists('semestres', 'id_semestre')->where('turno_id', $request->id_turno)
             ],
         ]);
-    
+
         $asignaturas = Asignatura::whereHas('secciones', function($query) use ($request) {
             $query->where('asignatura_seccion.carrera_id', $request->carrera_id)
                   ->where('asignatura_seccion.semestre_id', $request->id_semestre);
@@ -115,24 +115,66 @@ class AsignaturaController extends Controller
             'carga_horaria.*.tipo' => 'required|in:teorica,practica,laboratorio',
             'carga_horaria.*.horas_academicas' => 'required|integer|min:1|max:6'
         ]);
-    
+
         DB::beginTransaction();
-    
+
         try {
+            // --- Lógica de Validación de Carga Horaria de Docentes ---
+            $horas_nueva_asignatura = 0;
+            foreach ($validated['carga_horaria'] as $carga) {
+                $horas_nueva_asignatura += $carga['horas_academicas'];
+            }
+
+            foreach ($validated['docentes'] as $docente_id) {
+                $docente = Docente::with('dedicacion', 'asignaturas.cargaHoraria')->findOrFail($docente_id);
+                $dedicacion = $docente->dedicacion;
+
+                if (!$dedicacion) {
+                    throw new \Exception("Docente con cédula {$docente_id} no tiene una dedicación asignada.");
+                }
+
+                // Redondear a entero para la alerta
+                $max_horas_int = (int) round($dedicacion->h_max); // Convertir a entero redondeado
+
+                // Sumar las horas de las asignaturas ya asignadas al docente
+                $horas_actuales_docente = 0;
+                foreach ($docente->asignaturas as $asignatura_existente) {
+                    // Acceder al accessor getCargaHorariaTotalAttribute()
+                    $horas_actuales_docente += $asignatura_existente->cargaHorariaTotal;
+                }
+
+                // Redondear a entero para la alerta
+                $horas_actuales_docente_int = (int) round($horas_actuales_docente);
+                $horas_nueva_asignatura_int = (int) round($horas_nueva_asignatura);
+                $horas_totales_con_nueva_int = (int) round($horas_actuales_docente + $horas_nueva_asignatura);
+
+
+                if ($horas_actuales_docente + $horas_nueva_asignatura > $dedicacion->h_max) { // La comparación sigue siendo con el decimal original
+                    DB::rollBack();
+                    return redirect()->back()->withInput()->with('alert', [
+                        'icon' => 'error',
+                        'title' => 'Error de Carga Horaria',
+                        // Usar las variables enteras para el mensaje
+                        'text' => "El docente {$docente->name} (C.I. {$docente_id}) excede su carga horaria máxima ({$max_horas_int} horas) con esta asignatura. Carga actual: {$horas_actuales_docente_int}, Horas de la nueva asignatura: {$horas_nueva_asignatura_int}, Total: {$horas_totales_con_nueva_int}."
+                    ])->with('open_modal', true); // Reabrir modal de creación
+                }
+            }
+            // --- Fin Lógica de Validación de Carga Horaria de Docentes ---
+
             // Crear asignatura
             $asignatura = Asignatura::create([
                 'asignatura_id' => $validated['asignatura_id'],
                 'name' => $validated['name']
             ]);
-    
+
             // Carga Horaria
             foreach ($validated['carga_horaria'] as $carga) {
                 $asignatura->cargaHoraria()->create($carga);
             }
-    
+
             // Sincronizar docentes
             $asignatura->docentes()->sync($validated['docentes']);
-    
+
             // Sincronizar secciones con sus propios datos de la tabla 'secciones'
             $seccionesData = [];
             foreach ($validated['secciones'] as $seccionId) {
@@ -144,7 +186,7 @@ class AsignaturaController extends Controller
                 ];
             }
             $asignatura->secciones()->sync($seccionesData);
-    
+
             // Registrar en bitácora
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
@@ -153,13 +195,13 @@ class AsignaturaController extends Controller
             ]);
 
             DB::commit();
-    
+
             return redirect()->route('asignatura.index')->with('alert', [
                 'icon' => 'success',
                 'title' => 'Registro Exitoso',
                 'text' => 'Asignatura registrada correctamente'
             ]);
-    
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear asignatura: ' . $e->getMessage(), [
@@ -202,6 +244,53 @@ class AsignaturaController extends Controller
         DB::beginTransaction();
 
         try {
+            // --- Lógica de Validación de Carga Horaria de Docentes para UPDATE ---
+            $horas_asignatura_a_actualizar = 0;
+            foreach ($validated['carga_horaria'] as $carga) {
+                $horas_asignatura_a_actualizar += $carga['horas_academicas'];
+            }
+
+            // Claves de los docentes que se van a asignar (nuevos y existentes)
+            $docentes_a_sincronizar = $validated['docentes'];
+
+            foreach ($docentes_a_sincronizar as $docente_id) {
+                $docente = Docente::with('dedicacion', 'asignaturas.cargaHoraria')->findOrFail($docente_id);
+                $dedicacion = $docente->dedicacion;
+
+                if (!$dedicacion) {
+                    throw new \Exception("Docente con cédula {$docente_id} no tiene una dedicación asignada.");
+                }
+
+                // Redondear a entero para la alerta
+                $max_horas_int = (int) round($dedicacion->h_max); // Convertir a entero redondeado
+
+                // Calcular horas actuales del docente, excluyendo las de la asignatura que se está actualizando
+                $horas_actuales_docente = 0;
+                foreach ($docente->asignaturas as $asignatura_existente) {
+                    // Si la asignatura existente NO es la que estamos actualizando, sumar sus horas
+                    if ($asignatura_existente->asignatura_id !== $asignatura->asignatura_id) {
+                        $horas_actuales_docente += $asignatura_existente->cargaHorariaTotal;
+                    }
+                }
+
+                // Redondear a entero para la alerta
+                $horas_actuales_docente_int = (int) round($horas_actuales_docente);
+                $horas_asignatura_a_actualizar_int = (int) round($horas_asignatura_a_actualizar);
+                $horas_totales_con_nueva_int = (int) round($horas_actuales_docente + $horas_asignatura_a_actualizar);
+
+                // Sumar las horas de la asignatura que se está actualizando con sus nuevas horas
+                if ($horas_actuales_docente + $horas_asignatura_a_actualizar > $dedicacion->h_max) { // La comparación sigue siendo con el decimal original
+                    DB::rollBack();
+                    return redirect()->back()->withInput()->with('alert', [
+                        'icon' => 'error',
+                        'title' => 'Error de Carga Horaria',
+                        // Usar las variables enteras para el mensaje
+                        'text' => "El docente {$docente->name} (C.I. {$docente_id}) excede su carga horaria máxima ({$max_horas_int} horas) con esta asignatura. Carga actual (excluyendo esta asignatura): {$horas_actuales_docente_int}, Horas de esta asignatura (nuevas): {$horas_asignatura_a_actualizar_int}, Total: {$horas_totales_con_nueva_int}."
+                    ])->with('open_edit_modal', true); // Reabrir modal de edición
+                }
+            }
+            // --- Fin Lógica de Validación de Carga Horaria de Docentes para UPDATE ---
+
             // Actualizar la asignatura (solo el nombre, el ID es inmutable)
             $asignatura->update([
                 'name' => $validated['name']
@@ -237,11 +326,11 @@ class AsignaturaController extends Controller
             $asignatura->secciones()->sync($seccionesData);
 
             // Registrar en bitácora
-    Bitacora::create([
-        'cedula' => Auth::user()->cedula,
-        'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name . 
-                   ' (ID: ' . $asignatura->asignatura_id . ')'
-    ]);
+            Bitacora::create([
+                'cedula' => Auth::user()->cedula,
+                'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name .
+                           ' (ID: ' . $asignatura->asignatura_id . ')'
+            ]);
 
             // Confirmar transacción
             DB::commit();
@@ -255,7 +344,7 @@ class AsignaturaController extends Controller
         } catch (\Exception $e) {
             // Revertir transacción
             DB::rollBack();
-            
+
             Log::error('Error al actualizar asignatura: ' . $e->getMessage(), [
                 'exception' => $e,
                 'request_data' => $request->all(),
@@ -288,11 +377,11 @@ class AsignaturaController extends Controller
             $asignatura->docentes()->detach();
             $asignatura->secciones()->detach();
             $asignatura->cargaHoraria()->delete(); // Asegúrate de que cargaHoraria() sea un HasMany o HasOne y devuelva un objeto para delete()
-            
+
             // Registrar en bitácora antes de eliminar
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
-                'accion' => 'ASIGNATURA ELIMINADA: ' . $asignatura->name . 
+                'accion' => 'ASIGNATURA ELIMINADA: ' . $asignatura->name .
                            ' (ID: ' . $asignatura->asignatura_id . ')'
             ]);
 
@@ -311,7 +400,7 @@ class AsignaturaController extends Controller
         } catch (\Exception $e) {
             // Revertir transacción
             DB::rollBack();
-            
+
             Log::error('Error al eliminar asignatura: ' . $e->getMessage(), [
                 'exception' => $e,
                 'asignatura_id' => $asignatura->asignatura_id // Si $asignatura no es null en este punto

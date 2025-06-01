@@ -52,6 +52,8 @@ class Asignatura extends Model
      */
     protected $keyType = 'string';
 
+    protected $appends = ['carga_horaria_total'];
+
     /**
      * Relación muchos a muchos con Docente.
      * Una asignatura puede ser impartida por varios docentes.
@@ -125,7 +127,7 @@ class Asignatura extends Model
      */
     public function getCargaHorariaTotalAttribute(): int
     {
-        return $this->cargaHoraria()->sum('horas_academicas');
+        return (int) $this->cargaHoraria()->sum('horas_academicas');
     }
 
     /**
