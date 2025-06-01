@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth; // Importar la fachada Auth
 use Illuminate\Validation\ValidationException; // Importar para manejar errores de validación
+use Illuminate\Support\Facades\Validator; // Importar la fachada Validator
 
 class HorarioController extends Controller
 {
@@ -287,7 +288,7 @@ class HorarioController extends Controller
 
             foreach ($horariosBloques as $bloque) {
                 // Validar cada bloque individualmente (usando Request::validate para errores detallados)
-                $validator = \Validator::make($bloque, [
+                $validator = Validator::make($bloque, [
                     'asignatura_id' => 'required|string|exists:asignaturas,asignatura_id',
                     'docente_id' => 'required|string|exists:docentes,cedula_doc',
                     'dia_semana' => 'required|integer|between:1,6',
@@ -588,7 +589,13 @@ class HorarioController extends Controller
         try {
             DB::beginTransaction();
 
-            $horarioPrincipal = Horario::findOrFail($id);
+            $horarioPrincipal = Horario::find($id);
+            if (!$horarioPrincipal) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontró el horario principal para actualizar. Puede que haya sido eliminado.',
+                ], 404);
+            }
 
             // Los campos principales del horario (periodo, carrera, etc.)
             // están deshabilitados en el frontend y no se envían para actualización directa.
@@ -611,8 +618,13 @@ class HorarioController extends Controller
 
             // Procesar bloques existentes (actualizar)
             foreach ($bloquesData as $bloque) {
+                // Si no tiene id, lo tratamos como nuevo (lo agregamos a $bloquesNuevosData y lo saltamos aquí)
+                if (empty($bloque['id'])) {
+                    $bloquesNuevosData[] = $bloque;
+                    continue;
+                }
                 // Validar cada bloque individualmente
-                $validator = \Validator::make($bloque, [
+                $validator = Validator::make($bloque, [
                     'id' => 'required|exists:horarios,id', // El ID del bloque existente
                     'asignatura_id' => 'required|string|exists:asignaturas,asignatura_id',
                     'docente_id' => 'required|string|exists:docentes,cedula_doc',
@@ -651,7 +663,7 @@ class HorarioController extends Controller
             // Procesar nuevos bloques (crear)
             foreach ($bloquesNuevosData as $bloque) {
                 // Validar cada nuevo bloque
-                $validator = \Validator::make($bloque, [
+                $validator = Validator::make($bloque, [
                     'asignatura_id' => 'required|string|exists:asignaturas,asignatura_id',
                     'docente_id' => 'required|string|exists:docentes,cedula_doc',
                     'dia_semana' => 'required|integer|between:1,6',

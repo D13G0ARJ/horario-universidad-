@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Editar Horario</title>
+    <title>Crear Horario</title>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=swap">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -266,6 +266,34 @@
             /* display: none; */
             /* Ya no ocultamos celdas */
         }
+
+        .asignatura-draggable {
+            cursor: grab;
+            user-select: none;
+        }
+
+        .bloque-droppable {
+            min-width: 120px;
+            min-height: 50px;
+            background: #f8f9fa;
+            border: 1px dashed #adb5bd;
+            vertical-align: middle;
+            position: relative;
+        }
+
+        .bloque-asignado {
+            background: #e2edfa;
+            border-radius: 5px;
+            padding: 4px 8px;
+            margin: 2px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-quitar-bloque {
+            margin-left: 8px;
+        }
     </style>
 </head>
 
@@ -289,15 +317,14 @@
         <div class="card border-0 shadow-lg">
             <div class="card-header bg-primary text-white py-3">
                 <h2 class="h5 mb-0">
-                    <i class="fas fa-calendar-alt mr-2"></i>Configuración del Horario
+                    <i class="fas fa-calendar-alt mr-2"></i>Edición del Horario
                 </h2>
             </div>
 
             <form action="{{ route('horario.update', $horario->id) }}" method="POST" id="horarioForm">
                 @csrf
-                @method('PUT') {{-- Importante para las actualizaciones en Laravel --}}
+                @method('PUT')
                 <input type="hidden" name="horario_data" id="horarioData">
-                <input type="hidden" id="horarioId" value="{{ $horario->id }}"> {{-- ID del horario principal --}}
 
                 <div class="card-body p-4">
                     <div class="row g-3 mb-4 bg-light p-3 rounded">
@@ -307,57 +334,47 @@
                             <select id="periodo_id" name="periodo_id" class="form-select form-select-lg" required disabled>
                                 <option value="">Seleccione...</option>
                                 @foreach ($periodos as $periodo)
-                                    <option value="{{ $periodo->id }}" @selected($horario->periodo_id == $periodo->id)>{{ $periodo->nombre }}</option>
+                                    <option value="{{ $periodo->id }}" @if($horario->periodo_id == $periodo->id) selected @endif>{{ $periodo->nombre }}</option>
                                 @endforeach
                             </select>
                         </div>
-
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                             <label for="carrera_id" class="form-label fw-bold">Carrera</label>
                             <select id="carrera_id" name="carrera_id" class="form-select form-select-lg" required disabled>
                                 <option value="">Seleccione...</option>
                                 @foreach ($carreras as $carrera)
-                                    <option value="{{ $carrera->carrera_id }}" @selected($horario->carrera_id == $carrera->carrera_id)>{{ $carrera->name }}</option>
+                                    <option value="{{ $carrera->carrera_id }}" @if($horario->carrera_id == $carrera->carrera_id) selected @endif>{{ $carrera->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                             <label for="turno_id" class="form-label fw-bold">Turno</label>
                             <select id="turno_id" name="turno_id" class="form-select form-select-lg" required disabled>
                                 <option value="">Seleccione...</option>
                                 @foreach ($turnos as $turno)
-                                    <option value="{{ $turno->id_turno }}" @selected($horario->turno_id == $turno->id_turno)>{{ $turno->nombre }}</option>
+                                    <option value="{{ $turno->id_turno }}" @if($horario->turno_id == $turno->id_turno) selected @endif>{{ $turno->nombre }}</option>
                                 @endforeach
                             </select>
                         </div>
-
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                             <label for="semestre_id" class="form-label fw-bold">Semestre</label>
                             <select id="semestre_id" name="semestre_id" class="form-select form-select-lg" required disabled>
-                                {{-- Los semestres se cargarán por JS, pero el valor inicial se establece aquí --}}
-                                @if($horario->semestre)
-                                    <option value="{{ $horario->semestre_id }}" selected>{{ $horario->semestre->numero }}º Semestre</option>
-                                @else
-                                    <option value="">Cargando...</option>
-                                @endif
+                                <option value="">Seleccione...</option>
+                                @foreach ($semestres as $semestre)
+                                    <option value="{{ $semestre->id_semestre }}" @if($horario->semestre_id == $semestre->id_semestre) selected @endif>{{ $semestre->numero }}º</option>
+                                @endforeach
                             </select>
                         </div>
-
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
                             <label for="seccion_id" class="form-label fw-bold">Sección</label>
                             <select id="seccion_id" name="seccion_id" class="form-select form-select-lg" required disabled>
-                                {{-- Las secciones se cargarán por JS, pero el valor inicial se establece aquí --}}
-                                @if($horario->seccion)
-                                    <option value="{{ $horario->seccion_id }}" selected>{{ $horario->seccion->codigo_seccion }}</option>
-                                @else
-                                    <option value="">Cargando...</option>
-                                @endif
+                                <option value="">Seleccione...</option>
+                                @foreach ($secciones as $seccion)
+                                    <option value="{{ $seccion->codigo_seccion }}" @if($horario->seccion_id == $seccion->codigo_seccion) selected @endif>{{ $seccion->codigo_seccion }}</option>
+                                @endforeach
                             </select>
                         </div>
-
                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 d-flex align-items-end">
-                            {{-- El botón buscar se deshabilita en edición, el horario se carga automáticamente --}}
                             <button type="button" class="btn btn-primary btn-lg w-100 py-2" id="buscarHorarios" disabled>
                                 <i class="fas fa-search me-2"></i> Buscar
                             </button>
@@ -373,20 +390,17 @@
                                 <div class="card-body p-2 overflow-auto" id="asignaturasContainer">
                                     <div class="list-group" id="listaAsignaturas">
                                         <div class="text-center py-4 text-muted">
-                                            <i class="fas fa-info-circle me-2"></i>Cargando asignaturas...
+                                            <i class="fas fa-info-circle me-2"></i>Seleccione filtros y haga clic en
+                                            Buscar
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             {{-- Botón y etiqueta para Asignatura Compartida --}}
-                            <button type="button" class="btn btn-info btn-sm mt-3" id="btnAsignaturaCompartida">
+                            <button type="button" class="btn btn-info btn-sm mt-3" id="btnAsignaturaCompartida" disabled>
                                 <i class="fas fa-share-alt me-2"></i> Asignatura Compartida
                             </button>
-                            <span id="shared_asignatura_label" class="badge bg-info ml-2 mt-2" style="display:{{ $horario->asignaturaCompartida ? 'inline-block' : 'none' }};">
-                                @if($horario->asignaturaCompartida)
-                                    Compartida: {{ $horario->asignaturaCompartida->name }}
-                                @endif
-                            </span>
+                            <span id="shared_asignatura_label" class="badge bg-info ml-2 mt-2" style="display:none;"></span>
                         </div>
 
                         <div class="col-md-9 d-flex flex-column">
@@ -412,7 +426,8 @@
                                             <tbody id="horarioBody">
                                                 <tr>
                                                     <td colspan="7" class="text-center py-5 text-muted">
-                                                        <div class="spinner-border text-primary"></div><p>Cargando horario...</p>
+                                                        <i class="fas fa-info-circle me-2"></i>Complete los filtros y
+                                                        haga clic en Buscar
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -424,8 +439,8 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light p-3 text-end">
-                    <button type="submit" class="btn btn-primary btn-lg px-4" id="guardarHorario" disabled>
-                        <i class="fas fa-save me-2"></i> Actualizar
+                    <button type="submit" class="btn btn-primary btn-lg px-4" id="guardarHorario">
+                        <i class="fas fa-save me-2"></i> Guardar Cambios
                     </button>
                 </div>
             </form>
@@ -439,7 +454,9 @@
             <div class="modal-content">
                 <div class="modal-header bg-info text-white">
                     <h5 class="modal-title" id="modalAsignaturaCompartidaLabel">Seleccionar Asignatura Compartida</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     {{-- Filtros para la modal de Asignatura Compartida --}}
@@ -496,7 +513,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-info" id="btnGuardarAsignaturaCompartida">Guardar</button>
                 </div>
             </div>
@@ -518,7 +535,6 @@
                         <input type="hidden" id="modalDiaSemana">
                         <input type="hidden" id="modalHoraInicio">
                         <input type="hidden" id="modalColorClass"> {{-- Nuevo campo oculto para colorClass --}}
-                        <input type="hidden" id="modalBlockDbId"> {{-- Campo oculto para el ID del bloque si es existente --}}
 
                         <div class="mb-3">
                             <label for="modalAsignaturaNombre" class="form-label">Asignatura:</label>
@@ -558,6 +574,11 @@
                             </select>
                         </div>
 
+                        {{-- ELIMINADO: Apartado de Observaciones --}}
+                        {{-- <div class="mb-3">
+                            <label for="modalObservaciones" class="form-label">Observaciones (Opcional):</label>
+                            <textarea class="form-control" id="modalObservaciones" rows="2"></textarea>
+                        </div> --}}
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -586,11 +607,11 @@
             const semestreSelect = document.getElementById('semestre_id');
             const carreraSelect = document.getElementById('carrera_id');
             const seccionSelect = document.getElementById('seccion_id');
-            const buscarBtn = document.getElementById('buscarHorarios'); // Disabled in edit view
+            // const coordinadorSelect = document.getElementById('coordinador_cedula'); // REMOVED: Get the new coordinator select
+            const buscarBtn = document.getElementById('buscarHorarios');
             const listaAsignaturas = document.getElementById('listaAsignaturas');
             const horarioBody = document.getElementById('horarioBody');
             const guardarBtn = document.getElementById('guardarHorario');
-            const horarioId = document.getElementById('horarioId').value; // Get the main horario ID
 
             // NEW ELEMENTS FOR SHARED ASSIGNMENT
             const btnAsignaturaCompartida = document.getElementById('btnAsignaturaCompartida');
@@ -623,9 +644,9 @@
             const modalTipoHoras = document.getElementById('modalTipoHoras');
             const modalBloques = document.getElementById('modalBloques'); // Now a select
             const modalAula = document.getElementById('modalAula'); // New aula select
+            // const modalObservaciones = document.getElementById('modalObservaciones'); // REMOVED: Observaciones field
             const saveBlockBtn = document.getElementById('saveBlockBtn');
             const modalColorClass = document.getElementById('modalColorClass'); // Get the new hidden input
-            const modalBlockDbId = document.getElementById('modalBlockDbId'); // New hidden input for DB ID
 
 
             // Object to track assigned hours per subject and type
@@ -637,22 +658,17 @@
             // Array to store configured blocks for submission
             const bloquesParaGuardar = [];
 
-            // Initial data from the backend (Blade PHP variable)
-            const horarioInitial = @json($horario);
-            const bloquesInitial = @json($bloques);
-            const asignaturasDisponiblesInitial = @json($asignaturas); // All available subjects for the left panel
 
-            // 1. Load semesters based on selected shift (only if not already set, or for shared modal)
+            // 1. Load semesters based on selected shift
             turnoSelect.addEventListener('change', function() {
-                // In edit view, the main filters are disabled, so this listener is mostly for the shared modal.
-                // If you later enable filters for re-filtering, this logic would be more active.
                 const turnoId = this.value;
+                console.log('Turno seleccionado:', turnoId); // Debugging log
                 semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
                 semestreSelect.disabled = true;
                 seccionSelect.innerHTML = '<option value="">Complete filtros</option>';
                 seccionSelect.disabled = true;
                 
-                // Reset shared assignment related elements if main filters change (shouldn't happen if disabled)
+                // Reset shared assignment related elements
                 btnAsignaturaCompartida.disabled = true; 
                 asignaturaCompartidaIdHidden.value = ''; 
                 sharedAsignaturaLabel.style.display = 'none'; 
@@ -663,35 +679,38 @@
 
                 fetch(`{{ url('/horario/api/semestres-por-turno/') }}/${turnoId}`)
                     .then(response => {
+                        console.log('Respuesta de semestres-por-turno:', response); // Debugging log
                         if (!response.ok) throw new Error(`Error al cargar semestres: ${response.statusText}`);
                         return response.json();
                     })
                     .then(data => {
+                        console.log('Datos de semestres recibidos:', data); // Debugging log
                         semestreSelect.innerHTML = '<option value="">Seleccione...</option>';
                         data.forEach(semestre => {
                             const option = new Option(`${semestre.numero}º Semestre`, semestre.id_semestre);
                             semestreSelect.add(option);
                         });
                         semestreSelect.disabled = false;
-                        // No need to pre-select here as main filters are disabled
                     })
                     .catch(error => {
                         console.error('Error cargando semestres:', error);
                         semestreSelect.innerHTML = '<option value="">Error al cargar</option>';
-                        Swal.fire('Error', `No se pudieron cargar los semestres: ${error.message}`, 'error');
+                        Swal.fire('Error', `No se pudieron cargar los semestres: ${error.message}`, 'error'); // More specific error
                     });
             });
 
-            // 2. Function to load sections (only if not already set, or for shared modal)
+            // 2. Function to load sections
             async function cargarSecciones() {
                 const carreraId = carreraSelect.value;
                 const semestreId = semestreSelect.value;
                 const turnoId = turnoSelect.value;
 
+                console.log('Cargando secciones con:', { carreraId, semestreId, turnoId }); // Debugging log
+
                 seccionSelect.innerHTML = '<option value="">Cargando...</option>';
                 seccionSelect.disabled = true;
 
-                // Reset shared assignment related elements (shouldn't happen if main filters are disabled)
+                // Reset shared assignment related elements
                 btnAsignaturaCompartida.disabled = true; 
                 asignaturaCompartidaIdHidden.value = ''; 
                 sharedAsignaturaLabel.style.display = 'none'; 
@@ -707,8 +726,10 @@
                     url.searchParams.append('semestre_id', semestreId);
                     url.searchParams.append('turno_id', turnoId);
                     const response = await fetch(url);
+                    console.log('Respuesta de obtener-secciones:', response); // Debugging log
                     if (!response.ok) throw new Error(`Error getting sections: ${response.statusText}`);
                     const data = await response.json();
+                    console.log('Datos de secciones recibidos:', data); // Debugging log
                     seccionSelect.innerHTML = '<option value="">Seleccione sección</option>';
                     if (data.length > 0) {
                         data.forEach(s => {
@@ -720,132 +741,104 @@
                         seccionSelect.innerHTML = '<option value="">No hay secciones</option>';
                     }
                     seccionSelect.disabled = false;
-                    // No need to pre-select here as main filters are disabled
                 } catch (error) {
                     console.error('Error cargando secciones:', error);
-                    Swal.fire('Error', `No se pudieron cargar las secciones: ${error.message}`, 'error');
+                    Swal.fire('Error', `No se pudieron cargar las secciones: ${error.message}`, 'error'); // More specific error
                 }
             }
 
-            // In edit view, these listeners are primarily for the shared assignment modal filters
             carreraSelect.addEventListener('change', cargarSecciones);
             semestreSelect.addEventListener('change', cargarSecciones);
 
-            // 4. Main function when clicking Search (disabled in edit view, but keeping structure)
+            // 4. Main function when clicking Search
             buscarBtn.addEventListener('click', async function() {
-                // This function will not be actively used in edit view, as data is preloaded.
-                // However, its logic for loading assignments and generating schedule is reused.
-            });
+                const periodoId = periodoSelect.value;
+                const carreraId = carreraSelect.value;
+                const turnoId = turnoSelect.value;
+                const semestreId = semestreSelect.value;
+                const seccionId = seccionSelect.value;
+                // const coordinadorCedula = coordinadorSelect.value; // REMOVED: Get coordinator cedula
 
-            // Function to load initial data for edit view
-            async function loadInitialEditData() {
-                // Disable main filters immediately
-                periodoSelect.disabled = true;
-                carreraSelect.disabled = true;
-                turnoSelect.disabled = true;
-                semestreSelect.disabled = true;
-                seccionSelect.disabled = true;
-                buscarBtn.disabled = true; // Disable search button
+                // REMOVED: Check for coordinadorCedula
+                console.log('Buscando horarios con:', { periodoId, carreraId, turnoId, semestreId, seccionId }); // Debugging log
 
-                // Populate left panel with all available subjects
-                if (asignaturasDisponiblesInitial.length > 0) {
-                    listaAsignaturas.innerHTML = asignaturasDisponiblesInitial.map((asignatura, index) => {
-                        const colorClass = `bg-asignatura-${(index % 7) + 1}`;
-                        let cargaHorariaText = 'No definida';
-                        if (asignatura.carga_horaria && asignatura.carga_horaria.length > 0) {
-                            cargaHorariaText = asignatura.carga_horaria.map(c => `${c.tipo.substring(0,1)}:${c.horas_academicas}b`).join(', ');
-                        }
-                        return `
-                            <div class="list-group-item asignatura-item ${colorClass} text-white mb-2 py-2 px-3" 
-                                 draggable="true" 
-                                 data-asignatura-id="${asignatura.asignatura_id}"
-                                 data-asignatura-name="${asignatura.name}"
-                                 data-docentes='${JSON.stringify(asignatura.docentes)}'
-                                 data-carga-horaria='${JSON.stringify(asignatura.carga_horaria)}'>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span style="font-size: 0.8rem;">${asignatura.name} <small>(${cargaHorariaText})</small></span>
-                                    <i class="fas fa-arrows-alt ms-2"></i>
+                if (!periodoId || !carreraId || !turnoId || !semestreId || !seccionId) {
+                    Swal.fire('Advertencia', 'Por favor, complete todos los filtros.', 'warning');
+                    return;
+                }
+
+                // Reset assigned hours counter and schedule grid
+                assignedHoursPerSubject = {};
+                scheduleGrid = []; // Clear the grid on new search
+                bloquesParaGuardar.length = 0; // Clear blocks for saving
+                horarioBody.innerHTML = ''; // Clear existing blocks from table
+
+                listaAsignaturas.innerHTML =
+                    `<div class="text-center py-4"><div class="spinner-border text-primary"></div><p>Cargando...</p></div>`;
+                horarioBody.innerHTML =
+                    `<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div><p>Preparando...</p></td></tr>`;
+                
+                // Reset shared assignment related elements
+                btnAsignaturaCompartida.disabled = true; 
+                asignaturaCompartidaIdHidden.value = ''; 
+                sharedAsignaturaLabel.style.display = 'none'; 
+                sharedAsignaturaLabel.textContent = '';
+
+
+                try {
+                    const url = new URL(`{{ url('/horario/asignaturas') }}`);
+                    url.searchParams.append('seccion_id', seccionId);
+                    url.searchParams.append('carrera_id', carreraId);
+                    url.searchParams.append('semestre_id', semestreId);
+                    url.searchParams.append('turno_id', turnoId);
+                    url.searchParams.append('periodo_id', periodoId);
+
+                    const response = await fetch(url);
+                    console.log('Respuesta de asignaturas:', response); // Debugging log
+                    if (!response.ok) throw new Error(`Error getting subjects: ${response.statusText}`);
+                    const asignaturas = await response.json();
+                    console.log('Datos de asignaturas recibidos:', asignaturas); // Debugging log
+
+                    if (asignaturas.length > 0) {
+                        listaAsignaturas.innerHTML = asignaturas.map((asignatura, index) => {
+                            const colorClass = `bg-asignatura-${(index % 7) + 1}`;
+                            // Display clearer hour load
+                            let cargaHorariaText = 'No definida';
+                            if (asignatura.carga_horaria && asignatura.carga_horaria.length > 0) {
+                                cargaHorariaText = asignatura.carga_horaria.map(c => `${c.tipo.substring(0,1)}:${c.horas_academicas}b`).join(', '); // Example: T:4b, P:2b
+                            }
+                            
+                            return `
+                                <div class="list-group-item asignatura-item ${colorClass} text-white mb-2 py-2 px-3" 
+                                     draggable="true" 
+                                     data-asignatura-id="${asignatura.asignatura_id}"
+                                     data-asignatura-name="${asignatura.name}"
+                                     data-docentes='${JSON.stringify(asignatura.docentes)}'
+                                     data-carga-horaria='${JSON.stringify(asignatura.carga_horaria)}'>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span style="font-size: 0.8rem;">${asignatura.name} <small>(${cargaHorariaText})</small></span>
+                                        <i class="fas fa-arrows-alt ms-2"></i>
+                                    </div>
                                 </div>
-                            </div>
-                        `;
-                    }).join('');
-                    configurarDragAndDrop();
-                    btnAsignaturaCompartida.disabled = false; // Enable shared assignment button
-                } else {
-                    listaAsignaturas.innerHTML = `<div class="text-center py-4 text-muted"><i class="fas fa-exclamation-circle me-2"></i>No hay asignaturas disponibles.</div>`;
+                            `;
+                        }).join('');
+                        configurarDragAndDrop();
+                        // Enable the shared assignment button once assignments are loaded
+                        btnAsignaturaCompartida.disabled = false; 
+                    } else {
+                        listaAsignaturas.innerHTML =
+                            `<div class="text-center py-4 text-muted"><i class="fas fa-exclamation-circle me-2"></i>No hay asignaturas.</div>`;
+                    }
+                    generarHorario();
+                } catch (error) {
+                    console.error('Error en la búsqueda de asignaturas:', error); // More specific error log
+                    Swal.fire('Error', `Ocurrió un error al cargar: ${error.message}`, 'error');
+                    listaAsignaturas.innerHTML =
+                        `<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error al cargar.</div>`;
+                    horarioBody.innerHTML =
+                        `<tr><td colspan="7" class="text-center py-5 text-muted">Error.</td></tr>`;
                 }
-
-                // Generate the empty schedule grid first
-                generarHorario();
-
-                // Populate the schedule grid with existing blocks
-                if (bloquesInitial.length > 0) {
-                    bloquesInitial.forEach(block => {
-                        const targetCell = document.querySelector(`[data-dia="${block.dia_semana}"][data-hora="${block.hora_inicio}"]`);
-                        if (targetCell) {
-                            // Find the color class for the existing assignment
-                            let colorClass = 'bg-asignatura-1'; // Default color
-                            const originalAsignatura = asignaturasDisponiblesInitial.find(a => a.asignatura_id === block.asignatura_id);
-                            if (originalAsignatura) {
-                                const originalIndex = asignaturasDisponiblesInitial.indexOf(originalAsignatura);
-                                colorClass = `bg-asignatura-${(originalIndex % 7) + 1}`;
-                            } else if (block.asignatura_id === horarioInitial.asignatura_compartida_id) {
-                                colorClass = 'bg-shared-asignatura'; // Use shared class if it's the shared assignment
-                            }
-
-
-                            // Get aula name
-                            let aulaName = block.aula ? block.aula.nombre : 'N/A';
-
-                            // Recalculate hora_fin for consistency
-                            const horaFin = calcularHoraFinSimple(block.hora_inicio, block.bloques);
-
-                            // Add to bloquesParaGuardar (with DB ID)
-                            bloquesParaGuardar.push({
-                                id: block.id, // Store the DB ID
-                                asignatura_id: block.asignatura_id,
-                                docente_id: block.docente_id,
-                                dia_semana: block.dia_semana,
-                                hora_inicio: block.hora_inicio,
-                                hora_fin: horaFin,
-                                tipo_horas: block.tipo_horas,
-                                bloques: block.bloques,
-                                aula_id: block.aula_id,
-                                // observaciones: block.observaciones // REMOVED
-                            });
-
-                            // Mark cells as occupied in scheduleGrid
-                            const inicioRowIndex = getTimeRowIndex(block.hora_inicio);
-                            const diaInt = parseInt(block.dia_semana);
-                            for (let i = 0; i < block.bloques; i++) {
-                                const currentRowIndex = inicioRowIndex + i;
-                                if (currentRowIndex < scheduleGrid.length) {
-                                    scheduleGrid[currentRowIndex][diaInt] = { blockElement: true }; // Mark as occupied
-                                }
-                            }
-
-                            // Update assigned hours counter
-                            const subjectTypeKey = `${block.asignatura_id}_${block.tipo_horas}`;
-                            assignedHoursPerSubject[subjectTypeKey] = (assignedHoursPerSubject[subjectTypeKey] || 0) + block.bloques;
-
-                            // Create visual block
-                            crearBloqueVisual(targetCell, block.asignatura_id, block.asignatura.name, block.dia_semana, block.hora_inicio, horaFin, block.bloques, block.tipo_horas, block.aula_id, aulaName, colorClass, inicioRowIndex, diaInt, block.id);
-                        }
-                    });
-                } else {
-                    horarioBody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted"><i class="fas fa-info-circle me-2"></i>No hay bloques de horario registrados para esta sección.</td></tr>`;
-                }
-
-                // Pre-populate shared assignment if exists
-                if (horarioInitial.asignatura_compartida_id) {
-                    asignaturaCompartidaIdHidden.value = horarioInitial.asignatura_compartida_id;
-                    sharedAsignaturaLabel.textContent = `Compartida: ${horarioInitial.asignatura_compartida.name}`;
-                    sharedAsignaturaLabel.style.display = 'inline-block';
-                }
-
-                actualizarBotonGuardar(); // Update save button state
-            }
-
+            });
 
             // 5. Configure drag and drop
             function configurarDragAndDrop() {
@@ -927,67 +920,19 @@
                         this.classList.remove('hover-cell');
                     });
                     celda.addEventListener('drop', handleDrop);
-                    // Add click listener for editing existing blocks
-                    celda.addEventListener('click', handleCellClick);
                 });
             }
 
-            // Handle click on a cell (to edit an existing block)
-            async function handleCellClick(e) {
-                // If a block element was clicked directly, use its data
-                let blockElement = e.target.closest('.bloque-horario');
-
-                if (blockElement) {
-                    // Pre-fill modal with existing block data
-                    modalBlockDbId.value = blockElement.dataset.dbId || ''; // Set DB ID if exists
-                    modalAsignaturaId.value = blockElement.dataset.asignaturaId;
-                    modalAsignaturaNombre.value = blockElement.dataset.asignaturaName;
-                    modalDocenteId.value = blockElement.dataset.docenteId;
-                    modalDocenteNombre.value = asignaturasDisponiblesInitial
-                        .find(a => a.asignatura_id === blockElement.dataset.asignaturaId)
-                        ?.docentes.find(d => d.cedula_doc === blockElement.dataset.docenteId)?.name || 'N/A';
-                    modalDiaSemana.value = blockElement.dataset.dia;
-                    modalHoraInicio.value = blockElement.dataset.horaInicio;
-                    modalColorClass.value = blockElement.dataset.colorClass;
-
-                    // Populate Tipo de Horas
-                    const asignaturaData = asignaturasDisponiblesInitial.find(a => a.asignatura_id === blockElement.dataset.asignaturaId);
-                    let tipoOptionsHtml = '';
-                    if (asignaturaData && asignaturaData.carga_horaria && asignaturaData.carga_horaria.length > 0) {
-                        asignaturaData.carga_horaria.forEach(carga => {
-                            const subjectTypeKey = `${blockElement.dataset.asignaturaId}_${carga.tipo}`;
-                            const horasYaAsignadas = (assignedHoursPerSubject[subjectTypeKey] || 0) - (blockElement.dataset.tipoHoras === carga.tipo ? parseInt(blockElement.dataset.bloques) : 0); // Subtract current block's hours for re-validation
-                            const horasMaximasParaTipo = parseInt(carga.horas_academicas);
-                            const horasRestantesParaTipo = horasMaximasParaTipo - horasYaAsignadas;
-
-                            tipoOptionsHtml += `<option value="${carga.tipo}" ${blockElement.dataset.tipoHoras === carga.tipo ? 'selected' : ''} ${horasRestantesParaTipo <= 0 && blockElement.dataset.tipoHoras !== carga.tipo ? 'disabled' : ''}>${carga.tipo} (${horasRestantesParaTipo} bloques rest.)</option>`;
-                        });
-                    } else {
-                        tipoOptionsHtml = `<option value="Clase" ${blockElement.dataset.tipoHoras === 'Clase' ? 'selected' : ''}>Clase (carga no definida)</option>`;
-                    }
-                    modalTipoHoras.innerHTML = tipoOptionsHtml;
-                    modalTipoHoras.value = blockElement.dataset.tipoHoras; // Ensure selected
-
-                    // Populate Bloques
-                    modalBloques.value = blockElement.dataset.bloques;
-
-                    // Load Aulas and pre-select
-                    await cargarAulas();
-                    modalAula.value = blockElement.dataset.aulaId;
-
-                    horarioBlockModal.show();
-                }
-            }
-
-
-            // 8. Handle drop with hour validation (for NEW blocks)
+            // 8. Handle drop with hour validation
             async function handleDrop(e) {
                 e.preventDefault();
                 this.classList.remove('hover-cell');
 
                 const transferData = e.dataTransfer.getData('text/plain');
+                console.log('Data transferred:', transferData); // Log data transferred
 
                 if (!transferData) {
+                    console.error('No data transferred during drop event.');
                     Swal.fire('Error', 'No se pudo obtener la información de la asignatura arrastrada.', 'error');
                     return;
                 }
@@ -1000,6 +945,8 @@
                     Swal.fire('Error', 'Error al procesar la información de la asignatura.', 'error');
                     return;
                 }
+
+                console.log('Parsed data (handleDrop):', data); // Log parsed data
 
                 const {
                     asignatura_id,
@@ -1052,17 +999,15 @@
                     return;
                 }
 
-                // Reset modal for new block
-                modalBlockDbId.value = ''; // Ensure no DB ID for new blocks
+                // Populate modal fields before showing
                 modalAsignaturaId.value = asignatura_id;
                 modalAsignaturaNombre.value = asignaturaName;
                 modalDiaSemana.value = dia;
                 modalHoraInicio.value = horaInicio;
-                modalColorClass.value = colorClass;
+                modalColorClass.value = colorClass; // Store colorClass in modal hidden input
 
                 // Populate Tipo de Horas
                 modalTipoHoras.innerHTML = tipoOptionsHtml;
-                modalTipoHoras.value = ''; // No default selected for new blocks
 
                 // Set default for Bloques (if any)
                 modalBloques.value = '1';
@@ -1077,14 +1022,13 @@
 
                 // Load Aulas
                 await cargarAulas(); // Ensure aulas are loaded before showing modal
-                modalAula.value = ''; // No default selected for new blocks
 
                 horarioBlockModal.show(); // This is the line that shows the modal
             }
 
             // 9. Create the visual block in the table
             function crearBloqueVisual(targetCell, asignaturaId, asignaturaName, dia, horaInicio, horaFin, bloques,
-                tipoHoras, aulaId, aulaName, colorClass, rowIndex, colIndex, dbId = null) { // Added dbId parameter
+                tipoHoras, aulaId, aulaName, colorClass, rowIndex, colIndex) { // Simplified parameters
                 const bloque = document.createElement('div');
                 bloque.classList.add('bloque-horario', colorClass);
 
@@ -1103,18 +1047,17 @@
                     </div>
                 `;
 
-                // Save all necessary data in the element, including docenteId and dbId
+                // Save all necessary data in the element, including docenteId
                 Object.assign(bloque.dataset, {
-                    dbId: dbId, // Store the DB ID
                     asignaturaId,
                     asignaturaName,
-                    docenteId: modalDocenteId.value, // Get the actual selected docente ID from the modal
                     dia,
                     horaInicio,
                     horaFin,
                     bloques,
                     tipoHoras,
                     aulaId, // Store aula ID
+                    docenteId: modalDocenteId.value, // Get the actual selected docente ID from the modal
                     periodoId: periodoSelect.value,
                     carreraId: carreraSelect.value,
                     semestreId: semestreSelect.value,
@@ -1129,15 +1072,12 @@
                     eliminarBloque(bloque);
                 });
 
-                // Add click listener to edit existing block
-                bloque.addEventListener('click', handleCellClick);
-
                 // Append the block to the target cell
                 targetCell.appendChild(bloque);
 
                 // Mark the cells as occupied in scheduleGrid
                 for (let i = 0; i < bloques; i++) {
-                    scheduleGrid[rowIndex + i][colIndex] = { blockElement: bloque }; // Store reference to the element
+                    scheduleGrid[rowIndex + i][colIndex] = { blockElement: true }; // Mark as occupied
                 }
 
                 actualizarBotonGuardar();
@@ -1152,7 +1092,10 @@
                 return `${String(horasFin).padStart(2, '0')}:${String(minutosFin).padStart(2, '0')}`;
             }
 
-            // 12. Convert day number to text (not directly used in this JS logic, but good utility)
+            // 11. This function is no longer needed for rowspan logic
+            // function actualizarTablaHorario(dia, horaInicio, bloques) { }
+
+            // 12. Convert day number to text
             function convertirDiaNumeroATexto(diaNumero) {
                 const dias = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
                 return dias[parseInt(diaNumero)];
@@ -1167,8 +1110,7 @@
                     horaInicio,
                     bloques: numBloquesStr,
                     rowIndex: rowIndexStr,
-                    colIndex: colIndexStr,
-                    dbId // Get the DB ID
+                    colIndex: colIndexStr
                 } = bloqueElement.dataset;
                 const numBloques = parseInt(numBloquesStr);
                 const rowIndex = parseInt(rowIndexStr);
@@ -1195,12 +1137,15 @@
 
                 // Remove from bloquesParaGuardar array
                 const indexToRemove = bloquesParaGuardar.findIndex(b =>
-                    (b.id && b.id == dbId) || // Match by DB ID if exists
-                    (!b.id && b.asignatura_id === asignaturaId && b.dia_semana === parseInt(dia) && b.hora_inicio === horaInicio) // Match by properties for new blocks
+                    b.asignatura_id === asignaturaId &&
+                    b.dia_semana === parseInt(dia) &&
+                    b.hora_inicio === horaInicio
+                    // Consider adding more unique identifiers if needed, e.g., aula_id
                 );
                 if (indexToRemove !== -1) {
                     bloquesParaGuardar.splice(indexToRemove, 1);
                 }
+
 
                 actualizarBotonGuardar();
             }
@@ -1212,17 +1157,18 @@
 
             // --- Logic for Horario Block Modal ---
             saveBlockBtn.addEventListener('click', function() {
-                const dbId = modalBlockDbId.value || null; // Get DB ID if exists
                 const asignaturaId = modalAsignaturaId.value;
                 const asignaturaName = modalAsignaturaNombre.value;
                 const docenteId = modalDocenteId.value;
+                // const docenteName = modalDocenteNombre.value; // Not used for display in block
                 const diaSemana = modalDiaSemana.value;
                 const horaInicio = modalHoraInicio.value;
                 const tipoHoras = modalTipoHoras.value;
                 const bloques = parseInt(modalBloques.value);
                 const aulaId = modalAula.value;
-                const aulaName = modalAula.options[modalAula.selectedIndex].text;
-                const colorClass = modalColorClass.value;
+                const aulaName = modalAula.options[modalAula.selectedIndex].text; // Get aula name
+                // const observaciones = modalObservaciones.value; // REMOVED: Observaciones field
+                const colorClass = modalColorClass.value; // Get colorClass from hidden input
 
                 if (!asignaturaId || !docenteId || !diaSemana || !horaInicio || !tipoHoras || isNaN(bloques) || bloques < 1 || !aulaId) {
                     Swal.fire('Advertencia', 'Por favor, complete todos los campos requeridos (Asignatura, Docente, Tipo de Horas, Bloques y Aula).', 'warning');
@@ -1234,100 +1180,44 @@
                 // Check for cell availability again, considering the selected number of blocks
                 const inicioRowIndex = getTimeRowIndex(horaInicio);
                 const diaInt = parseInt(diaSemana);
-
-                // Before checking for occupied cells, clear the current block's cells if it's an existing block being moved/modified
-                if (dbId) {
-                    const existingBlockInArray = bloquesParaGuardar.find(b => b.id == dbId);
-                    if (existingBlockInArray) {
-                        const oldRowIndex = getTimeRowIndex(existingBlockInArray.hora_inicio);
-                        const oldDiaInt = existingBlockInArray.dia_semana;
-                        const oldBloques = existingBlockInArray.bloques;
-
-                        // Temporarily clear old cells in scheduleGrid for re-validation
-                        for (let i = 0; i < oldBloques; i++) {
-                            if (oldRowIndex + i < scheduleGrid.length && scheduleGrid[oldRowIndex + i][oldDiaInt] && scheduleGrid[oldRowIndex + i][oldDiaInt].blockElement && scheduleGrid[oldRowIndex + i][oldDiaInt].blockElement.dataset.dbId == dbId) {
-                                scheduleGrid[oldRowIndex + i][oldDiaInt] = null;
-                            }
-                        }
-                    }
-                }
-
                 for (let i = 0; i < bloques; i++) {
                     const currentRowIndex = inicioRowIndex + i;
                     if (currentRowIndex >= scheduleGrid.length || scheduleGrid[currentRowIndex][diaInt] !== null) {
                         Swal.fire('Celdas Ocupadas', 'Algunas de las celdas seleccionadas ya están ocupadas o no están disponibles para la cantidad de bloques elegida.', 'warning');
-                        // If it was an existing block, restore its cells
-                        if (dbId) {
-                            const existingBlockInArray = bloquesParaGuardar.find(b => b.id == dbId);
-                            if (existingBlockInArray) {
-                                const oldRowIndex = getTimeRowIndex(existingBlockInArray.hora_inicio);
-                                const oldDiaInt = existingBlockInArray.dia_semana;
-                                const oldBloques = existingBlockInArray.bloques;
-                                for (let j = 0; j < oldBloques; j++) {
-                                    if (oldRowIndex + j < scheduleGrid.length) {
-                                        scheduleGrid[oldRowIndex + j][oldDiaInt] = { blockElement: true };
-                                    }
-                                }
-                            }
-                        }
                         return;
                     }
                 }
 
                 // Update assigned hours counter
                 const subjectTypeKey = `${asignaturaId}_${tipoHoras}`;
-                // If editing an existing block, subtract old hours before adding new ones
-                if (dbId) {
-                    const existingBlock = bloquesParaGuardar.find(b => b.id == dbId);
-                    if (existingBlock) {
-                        const oldSubjectTypeKey = `${existingBlock.asignatura_id}_${existingBlock.tipo_horas}`;
-                        if (assignedHoursPerSubject[oldSubjectTypeKey]) {
-                            assignedHoursPerSubject[oldSubjectTypeKey] -= existingBlock.bloques;
-                            if (assignedHoursPerSubject[oldSubjectTypeKey] <= 0) {
-                                delete assignedHoursPerSubject[oldSubjectTypeKey];
-                            }
-                        }
-                    }
-                }
                 assignedHoursPerSubject[subjectTypeKey] = (assignedHoursPerSubject[subjectTypeKey] || 0) + bloques;
 
-
-                // Find or create the block in bloquesParaGuardar
-                let blockToUpdate = bloquesParaGuardar.find(b => b.id == dbId);
-                if (blockToUpdate) {
-                    // Update existing block
-                    blockToUpdate.asignatura_id = asignaturaId;
-                    blockToUpdate.docente_id = docenteId;
-                    blockToUpdate.dia_semana = parseInt(diaSemana);
-                    blockToUpdate.hora_inicio = horaInicio;
-                    blockToUpdate.hora_fin = horaFin;
-                    blockToUpdate.tipo_horas = tipoHoras;
-                    blockToUpdate.bloques = bloques;
-                    blockToUpdate.aula_id = aulaId;
-                } else {
-                    // Add new block
-                    bloquesParaGuardar.push({
-                        asignatura_id: asignaturaId,
-                        docente_id: docenteId,
-                        dia_semana: parseInt(diaSemana),
-                        hora_inicio: horaInicio,
-                        hora_fin: horaFin,
-                        tipo_horas: tipoHoras,
-                        bloques: bloques,
-                        aula_id: aulaId,
-                    });
+                // Add to array for saving
+                let bloqueId = null;
+                // Buscar si ya existe un bloque en la misma posición (para edición)
+                const bloqueExistente = window.bloquesPrecargados?.find(b =>
+                    b.dia_semana == parseInt(diaSemana) &&
+                    b.hora_inicio == horaInicio
+                );
+                if (bloqueExistente && bloqueExistente.id) {
+                    bloqueId = bloqueExistente.id;
                 }
-
-                // Remove existing visual block if it's being updated (e.g., moved)
-                const existingVisualBlock = document.querySelector(`.bloque-horario[data-db-id="${dbId}"]`);
-                if (existingVisualBlock) {
-                    existingVisualBlock.remove();
-                }
+                bloquesParaGuardar.push({
+                    ...(bloqueId ? { id: bloqueId } : {}),
+                    asignatura_id: asignaturaId,
+                    docente_id: docenteId,
+                    dia_semana: parseInt(diaSemana),
+                    hora_inicio: horaInicio,
+                    hora_fin: horaFin,
+                    tipo_horas: tipoHoras,
+                    bloques: bloques,
+                    aula_id: aulaId,
+                });
 
                 // Add visual block to the schedule
                 const targetCell = document.querySelector(`[data-dia="${diaSemana}"][data-hora="${horaInicio}"]`);
                 if (targetCell) {
-                    crearBloqueVisual(targetCell, asignaturaId, asignaturaName, diaSemana, horaInicio, horaFin, bloques, tipoHoras, aulaId, aulaName, colorClass, inicioRowIndex, diaInt, dbId);
+                    crearBloqueVisual(targetCell, asignaturaId, asignaturaName, diaSemana, horaInicio, horaFin, bloques, tipoHoras, aulaId, aulaName, colorClass, inicioRowIndex, diaInt);
                 }
 
                 // Mark cells as occupied in scheduleGrid
@@ -1336,7 +1226,7 @@
                 }
 
                 horarioBlockModal.hide();
-                Swal.fire('¡Bloque Guardado!', 'El bloque se ha guardado en el horario.', 'success');
+                Swal.fire('¡Bloque Añadido!', 'El bloque se ha añadido al horario.', 'success');
                 actualizarBotonGuardar();
             });
 
@@ -1347,8 +1237,10 @@
 
                 try {
                     const response = await fetch('/api/aulas'); // Ensure this route exists in your Laravel
+                    console.log('Respuesta de /api/aulas:', response); // Debugging log
                     if (!response.ok) throw new Error(`Error al cargar aulas: ${response.statusText}`);
                     const aulas = await response.json();
+                    console.log('Datos de aulas recibidos:', aulas); // Debugging log
 
                     modalAula.innerHTML = '<option value="">Seleccione un Aula</option>';
                     if (aulas.length > 0) {
@@ -1361,7 +1253,7 @@
                     }
                 } catch (error) {
                     console.error('Error cargando aulas:', error);
-                    Swal.fire('Error', `No se pudieron cargar las aulas: ${error.message}`, 'error');
+                    Swal.fire('Error', `No se pudieron cargar las aulas: ${error.message}`, 'error'); // More specific error
                 }
             }
 
@@ -1383,62 +1275,56 @@
                 const asignaturaCompartidaId = asignaturaCompartidaIdHidden.value;
 
                 if (!periodoId || !carreraId || !turnoId || !semestreId || !seccionId) {
-                    Swal.fire('Advertencia', 'Por favor, complete todos los filtros antes de guardar el horario.',
-                        'warning');
+                    Swal.fire('Advertencia', 'Por favor, complete todos los filtros antes de guardar el horario.', 'warning');
                     return;
                 }
                 
-                // Separate existing blocks from new blocks
-                const bloquesExistentesModificados = bloquesParaGuardar.filter(block => block.id);
-                const bloquesNuevos = bloquesParaGuardar.filter(block => !block.id);
-
                 const formData = {
+                    _method: 'PUT', // Para que Laravel lo reconozca como update
                     periodo_id: periodoId,
                     turno_id: turnoId,
                     carrera_id: carreraId,
                     semestre_id: semestreId,
                     seccion_id: seccionId,
-                    bloques: bloquesExistentesModificados, // Existing blocks that might be modified
-                    bloques_nuevos: bloquesNuevos, // Newly added blocks
+                    bloques: bloquesParaGuardar, // CAMBIO: nombre correcto para el backend
                     asignatura_compartida_id: asignaturaCompartidaId
                 };
 
                 try {
                     const response = await fetch(this.action, {
-                        method: 'POST', // Method will be PUT due to @method('PUT')
+                        method: 'POST', // Laravel espera POST + _method=PUT
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                .getAttribute('content')
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                         },
                         body: JSON.stringify(formData)
                     });
 
                     const responseText = await response.text();
-                    if (!response.ok) {
-                        let errorMessage = 'Error al guardar.';
-                        try {
-                            const errorData = JSON.parse(responseText);
-                            errorMessage = errorData.message || errorData.error || errorMessage;
-                            if (errorData.errors) { // Si hay errores de validación de Laravel
-                                let validationErrors = Object.values(errorData.errors).flat().join('<br>');
-                                errorMessage += '<br>' + validationErrors;
-                            }
-                        } catch (parseError) {
-                            errorMessage = responseText.substring(0, 200); // Avoid very long messages
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (err) {
+                        throw new Error('Respuesta inesperada del servidor: ' + responseText);
+                    }
+                    if (!response.ok || !data.success) {
+                        let errorMessage = data.message || data.error || 'Error al guardar.';
+                        if (data.errors) {
+                            let validationErrors = Object.values(data.errors).flat().join('<br>');
+                            errorMessage += '<br>' + validationErrors;
                         }
-                        throw new Error(errorMessage);
+                        Swal.fire('Error', errorMessage, 'error');
+                        return;
                     }
-                    const data = JSON.parse(responseText);
-                    if (data.success) {
-                        Swal.fire('Éxito', data.message, 'success').then(() => {
+                    Swal.fire('Éxito', data.message, 'success').then(() => {
+                        if (data.redirect) {
                             window.location.href = data.redirect;
-                        });
-                    } else {
-                        Swal.fire('Error', data.message || 'No se pudo guardar.', 'error');
-                    }
+                        } else {
+                            window.location.reload();
+                        }
+                    });
                 } catch (error) {
-                    console.error('Error sending:', error);
+                    console.error('Error enviando:', error);
                     Swal.fire('Error', `Ocurrió un error: ${error.message}`, 'error');
                 }
             });
@@ -1662,8 +1548,91 @@
                 }
             }
 
-            // Call the initial load function when the DOM is ready
-            loadInitialEditData();
+            // Al cargar la vista, precargar el horario existente en la tabla
+            function precargarHorarioExistente() {
+                if (!window.bloquesPrecargados || !Array.isArray(window.bloquesPrecargados)) return;
+                generarHorario();
+                window.bloquesPrecargados.forEach((bloque, idx) => {
+                    const rowIndex = getTimeRowIndex(bloque.hora_inicio);
+                    const diaInt = parseInt(bloque.dia_semana);
+                    const targetCell = document.querySelector(`[data-dia="${diaInt}"][data-hora="${bloque.hora_inicio}"]`);
+                    if (targetCell) {
+                        // Color por asignatura (opcional)
+                        const colorClass = `bg-asignatura-${((idx % 7) + 1)}`;
+                        crearBloqueVisual(
+                            targetCell,
+                            bloque.asignatura_id,
+                            (bloque.asignatura && (bloque.asignatura.name || bloque.asignatura.nombre)) || '',
+                            bloque.dia_semana,
+                            bloque.hora_inicio,
+                            bloque.hora_fin,
+                            bloque.bloques,
+                            bloque.tipo_horas,
+                            bloque.aula_id,
+                            (bloque.aula && (bloque.aula.nombre || bloque.aula.name)) || '',
+                            colorClass,
+                            rowIndex,
+                            diaInt,
+                            bloque.id
+                        );
+                        for (let i = 0; i < bloque.bloques; i++) {
+                            scheduleGrid[rowIndex + i][diaInt] = { blockElement: true };
+                        }
+                        bloquesParaGuardar.push({
+                            id: bloque.id,
+                            asignatura_id: bloque.asignatura_id,
+                            docente_id: bloque.docente_id,
+                            dia_semana: bloque.dia_semana,
+                            hora_inicio: bloque.hora_inicio,
+                            hora_fin: bloque.hora_fin,
+                            tipo_horas: bloque.tipo_horas,
+                            bloques: bloque.bloques,
+                            aula_id: bloque.aula_id
+                        });
+                    }
+                });
+                actualizarBotonGuardar();
+            }
+
+            // Precargar bloques desde PHP (debes pasar la variable desde el controlador)
+            window.bloquesPrecargados = @json($bloques);
+            precargarHorarioExistente();
+
+            // Precargar asignaturas disponibles en el panel izquierdo al cargar la vista de edición
+            function precargarAsignaturasDisponibles() {
+                if (!window.asignaturasDisponiblesInitial || !Array.isArray(window.asignaturasDisponiblesInitial)) return;
+                if (!listaAsignaturas) return;
+                if (window.asignaturasDisponiblesInitial.length === 0) {
+                    listaAsignaturas.innerHTML = `<div class="text-center py-4 text-muted"><i class="fas fa-exclamation-circle me-2"></i>No hay asignaturas disponibles.</div>`;
+                    return;
+                }
+                listaAsignaturas.innerHTML = window.asignaturasDisponiblesInitial.map((asignatura, index) => {
+                    const colorClass = `bg-asignatura-${((index % 7) + 1)}`;
+                    let cargaHorariaText = 'No definida';
+                    if (asignatura.carga_horaria && asignatura.carga_horaria.length > 0) {
+                        cargaHorariaText = asignatura.carga_horaria.map(c => `${c.tipo.substring(0,1)}:${c.horas_academicas}b`).join(', ');
+                    }
+                    return `
+                        <div class="list-group-item asignatura-item ${colorClass} text-white mb-2 py-2 px-3"
+                            draggable="true"
+                            data-asignatura-id="${asignatura.asignatura_id}"
+                            data-asignatura-name="${asignatura.name}"
+                            data-docentes='${JSON.stringify(asignatura.docentes)}'
+                            data-carga-horaria='${JSON.stringify(asignatura.carga_horaria)}'
+                            data-color-class="${colorClass}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span style="font-size: 0.8rem;">${asignatura.name} <small>(${cargaHorariaText})</small></span>
+                                <i class="fas fa-arrows-alt ms-2"></i>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                configurarDragAndDrop();
+            }
+
+            // Precargar asignaturas desde PHP (debes pasar la variable desde el controlador)
+            window.asignaturasDisponiblesInitial = @json($asignaturas);
+            precargarAsignaturasDisponibles();
         });
     </script>
 </body>
