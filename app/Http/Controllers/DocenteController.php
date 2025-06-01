@@ -186,18 +186,31 @@ class DocenteController extends Controller
             $horasDia = [];
             $startMinutes = 7 * 60; // 7:00 AM en minutos
             $endMinutes = 22 * 60; // 10:00 PM en minutos
+            $interval = 45; // Intervalo de 45 minutos
 
-            for ($currentMinutes = $startMinutes; $currentMinutes <= $endMinutes; $currentMinutes += 45) {
-                $hour = floor($currentMinutes / 60);
-                $minute = $currentMinutes % 60;
+            for ($currentMinutes = $startMinutes; $currentMinutes <= $endMinutes; $currentMinutes += $interval) {
+                $hourStart = floor($currentMinutes / 60);
+                $minuteStart = $currentMinutes % 60;
 
-                // Si el inicio del bloque actual excede el final del horario deseado (22:00),
-                // o si es 22:00 y ya hemos agregado 22:00, no agregamos más.
-                // Esta condición asegura que no se añadan intervalos como 22:45 si el horario termina a las 22:00.
-                if ($hour > 22 || ($hour === 22 && $minute > 0 && $currentMinutes > $endMinutes)) {
-                    break;
+                $endOfIntervalMinutes = $currentMinutes + $interval;
+                $hourEnd = floor($endOfIntervalMinutes / 60);
+                $minuteEnd = $endOfIntervalMinutes % 60;
+
+                // Asegurarse de que el rango no exceda la hora final del horario (22:00)
+                if ($currentMinutes >= $endMinutes && $minuteStart > 0) {
+                    break; // No añadir un bloque si el inicio ya está en o después del final y no es un inicio exacto
                 }
-                $horasDia[] = sprintf('%02d:%02d', $hour, $minute);
+                if ($endOfIntervalMinutes > $endMinutes && $hourEnd > 22) {
+                    // Si el final del intervalo excede el final del horario, ajustar para que el final sea 22:00
+                    $hourEnd = 22;
+                    $minuteEnd = 0;
+                }
+
+                $horaInicioStr = sprintf('%02d:%02d', $hourStart, $minuteStart);
+                $horaFinStr = sprintf('%02d:%02d', $hourEnd, $minuteEnd);
+                
+                // Almacenar el rango de tiempo (ej. "07:00 - 07:45")
+                $horasDia[] = $horaInicioStr . ' - ' . $horaFinStr;
             }
 
 
