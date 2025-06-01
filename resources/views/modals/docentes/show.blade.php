@@ -9,7 +9,6 @@
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <!-- Columna Izquierda -->
                     <div class="col-md-6">
                         <div class="card mb-3 border-primary">
                             <div class="card-header bg-primary text-white">
@@ -41,18 +40,42 @@
                         </div>
                     </div>
 
-                    <!-- Columna Derecha -->
                     <div class="col-md-6">
                         <div class="card border-success">
                             <div class="card-header bg-success text-white">
                                 <i class="fas fa-building"></i> Asignaturas asociadas al docente
                             </div>
                             <div class="card-body" id="asignaturasContainer">
-                            <!-- Las asignaturas se cargarán aquí dinámicamente -->
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="button" class="btn btn-info" id="btnMostrarHorarioDocente">
+                        <i class="fas fa-calendar-alt mr-1"></i> Mostrar Horario del Docente
+                    </button>
+                </div>
+
+                <div id="horarioFiltroContainer" style="display: none;" class="mt-4">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <i class="fas fa-filter mr-1"></i> Filtrar Horario por Período
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="periodoSelect">Seleccione un Período Académico:</label>
+                                <select class="form-control" id="periodoSelect">
+                                    <option value="">Cargando períodos...</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-primary mt-3" id="btnCargarHorario">
+                                <i class="fas fa-eye mr-1"></i> Mostrar Horario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -84,3 +107,77 @@
         display: inline-block;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnMostrarHorarioDocente = document.getElementById('btnMostrarHorarioDocente');
+        const horarioFiltroContainer = document.getElementById('horarioFiltroContainer');
+        const periodoSelect = document.getElementById('periodoSelect');
+        const btnCargarHorario = document.getElementById('btnCargarHorario');
+        let currentDocenteCedula = null; // Variable para almacenar la cédula del docente actual
+
+        // Listener para cuando se abre la modal de docente
+        document.getElementById('mostrarModal').addEventListener('show.bs.modal', function (event) {
+            // Obtener la cédula del docente de la modal (asumiendo que ya se carga en #modalCedula)
+            currentDocenteCedula = document.getElementById('modalCedula').textContent.trim();
+            // Ocultar el contenedor del filtro de horario al abrir la modal
+            horarioFiltroContainer.style.display = 'none';
+            // Resetear el select de períodos
+            periodoSelect.innerHTML = '<option value="">Cargando períodos...</option>';
+        });
+
+        // Listener para el botón "Mostrar Horario del Docente"
+        btnMostrarHorarioDocente.addEventListener('click', function() {
+            // Alternar la visibilidad del contenedor del filtro
+            if (horarioFiltroContainer.style.display === 'none') {
+                horarioFiltroContainer.style.display = 'block';
+                fetchPeriods(); // Cargar los períodos cuando se muestra el filtro
+            } else {
+                horarioFiltroContainer.style.display = 'none';
+            }
+        });
+
+        // Función para cargar los períodos desde la API
+        function fetchPeriods() {
+            fetch('/api/periods')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(periods => {
+                    periodoSelect.innerHTML = '<option value="">-- Seleccione un Período --</option>'; // Opción por defecto
+                    periods.forEach(period => {
+                        const option = document.createElement('option');
+                        option.value = period.id;
+                        option.textContent = period.nombre;
+                        periodoSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar los períodos:', error);
+                    periodoSelect.innerHTML = '<option value="">Error al cargar períodos</option>';
+                    // Puedes añadir un mensaje de error visible al usuario aquí si lo deseas
+                });
+        }
+
+        // Listener para el botón "Mostrar Horario" dentro del filtro
+        btnCargarHorario.addEventListener('click', function() {
+            const selectedPeriodId = periodoSelect.value;
+
+            if (!selectedPeriodId) {
+                alert('Por favor, seleccione un período académico.'); // Usar un modal personalizado en producción
+                return;
+            }
+
+            if (!currentDocenteCedula) {
+                alert('No se pudo obtener la cédula del docente. Intente recargar la página.'); // Usar un modal personalizado en producción
+                return;
+            }
+
+            // Redirigir a la nueva página del horario del docente
+            window.location.href = `/docentes/${currentDocenteCedula}/horario/${selectedPeriodId}`;
+        });
+    });
+</script>

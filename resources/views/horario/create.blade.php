@@ -181,6 +181,7 @@
             position: sticky;
             left: 0;
             z-index: 1;
+            width: 120px; /* Ancho ajustado para el formato de rango de horas */
         }
 
         #asignaturasContainer {
@@ -397,7 +398,7 @@
                                         <table class="table table-bordered table-hover mb-0" id="horarioTable">
                                             <thead class="table-light sticky-top">
                                                 <tr>
-                                                    <th class="text-center" style="width: 10%">Hora</th>
+                                                    <th class="text-center time-slot">Hora</th> {{-- Added time-slot class here --}}
                                                     <th class="text-center" style="width: 15%">Lunes</th>
                                                     <th class="text-center" style="width: 15%">Martes</th>
                                                     <th class="text-center" style="width: 15%">Miércoles</th>
@@ -755,11 +756,12 @@
                 scheduleGrid = []; // Clear the grid on new search
                 bloquesParaGuardar.length = 0; // Clear blocks for saving
                 horarioBody.innerHTML = ''; // Clear existing blocks from table
+                generarHorario(); // Regenerate the table with time slots
 
                 listaAsignaturas.innerHTML =
                     `<div class="text-center py-4"><div class="spinner-border text-primary"></div><p>Cargando...</p></div>`;
-                horarioBody.innerHTML =
-                    `<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div><p>Preparando...</p></td></tr>`;
+                // horarioBody.innerHTML = // This line is now handled by generarHorario()
+                //     `<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div><p>Preparando...</p></td></tr>`;
                 
                 // Reset shared assignment related elements
                 btnAsignaturaCompartida.disabled = true; 
@@ -812,7 +814,7 @@
                         listaAsignaturas.innerHTML =
                             `<div class="text-center py-4 text-muted"><i class="fas fa-exclamation-circle me-2"></i>No hay asignaturas.</div>`;
                     }
-                    generarHorario();
+                    // generarHorario(); // Moved up to clear and regenerate table earlier
                 } catch (error) {
                     console.error('Error en la búsqueda de asignaturas:', error); // More specific error log
                     Swal.fire('Error', `Ocurrió un error al cargar: ${error.message}`, 'error');
@@ -863,30 +865,34 @@
 
                 let currentMinutes = startHour * 60; // Convert start hour to minutes from midnight (e.g., 7 * 60 = 420)
                 const endMinutes = endHour * 60; // Convert end hour to minutes from midnight (e.g., 21 * 60 = 1260)
+                const interval = 45; // 45 minutes interval
 
                 let rowIndex = 0;
-                // Loop to generate time slots every 45 minutes
-                // The loop continues as long as the current time (start of a slot) is less than the end time.
-                // If the last block ends exactly at 21:00, it must start at 20:15.
-                // So, the last time slot to be displayed as a header should be 20:15.
                 while (currentMinutes < endMinutes) {
-                    const hours = Math.floor(currentMinutes / 60);
-                    const minutes = currentMinutes % 60;
-                    const horaFormato = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                    const hoursStart = Math.floor(currentMinutes / 60);
+                    const minutesStart = currentMinutes % 60;
+                    const horaInicioFormato = `${String(hoursStart).padStart(2, '0')}:${String(minutesStart).padStart(2, '0')}`;
+
+                    const nextMinutes = currentMinutes + interval;
+                    const hoursEnd = Math.floor(nextMinutes / 60);
+                    const minutesEnd = nextMinutes % 60;
+                    const horaFinFormato = `${String(hoursEnd).padStart(2, '0')}:${String(minutesEnd).padStart(2, '0')}`;
+                    
+                    // Format the time range for display
+                    const horaRangoDisplay = `${horaInicioFormato} - ${horaFinFormato}`;
 
                     let fila = document.createElement('tr');
                     fila.innerHTML = `
-                        <th class="time-slot" data-time="${horaFormato}" data-row-index="${rowIndex}">${horaFormato}</th>
-                        ${[1,2,3,4,5,6].map(dia => `<td class="drop-zone" data-hora="${horaFormato}" data-dia="${dia}" data-row-index="${rowIndex}" data-col-index="${dia}"></td>`).join('')}
+                        <th class="time-slot" data-time-start="${horaInicioFormato}" data-time-end="${horaFinFormato}" data-row-index="${rowIndex}">${horaRangoDisplay}</th>
+                        ${[1,2,3,4,5,6].map(dia => `<td class="drop-zone" data-hora="${horaInicioFormato}" data-dia="${dia}" data-row-index="${rowIndex}" data-col-index="${dia}"></td>`).join('')}
                     `;
                     horarioBody.appendChild(fila);
                     rowIndex++;
 
-                    currentMinutes += 45; // Add 45 minutes for the next slot
+                    currentMinutes += interval; // Add 45 minutes for the next slot
                 }
 
                 // Initialize scheduleGrid with the actual number of rows generated.
-                // The `rowIndex` at the end of the loop will be the total number of rows generated.
                 scheduleGrid = Array(rowIndex).fill(null).map(() => Array(7).fill(null)); // 7 days (0 unused, 1-6 for days)
 
                 configurarCeldasHorario();
@@ -940,7 +946,7 @@
                 } = data;
 
                 const dia = this.dataset.dia;
-                const horaInicio = this.dataset.hora;
+                const horaInicio = this.dataset.hora; // This is the start of the cell's interval
                 const inicioRowIndex = parseInt(this.dataset.rowIndex);
                 const diaInt = parseInt(dia);
 

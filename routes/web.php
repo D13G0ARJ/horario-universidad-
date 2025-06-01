@@ -56,6 +56,11 @@ Route::get('/docente', [DocenteController::class, 'index'])->name('docente.index
 Route::post('/docentes', [DocenteController::class, 'store'])->name('docente.store');
 Route::put('/docentes/{docente}', [DocenteController::class, 'update'])->name('docente.update');
 Route::delete('/docentes/{docente}', [DocenteController::class, 'destroy'])->name('docente.destroy');
+// Nueva ruta para mostrar el horario consolidado del docente para un período específico
+Route::get('/docentes/{docente}/horario/{periodo}', [DocenteController::class, 'showDocenteHorario'])
+    ->name('docentes.horario');
+
+
 
 // Rutas para períodos
 Route::get('/periodo', [PeriodoController::class, 'index'])->name('periodo.index')->middleware('auth');

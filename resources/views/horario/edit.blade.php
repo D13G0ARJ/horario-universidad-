@@ -181,6 +181,7 @@
             position: sticky;
             left: 0;
             z-index: 1;
+            width: 120px; /* Ancho ajustado para el formato de rango de horas */
         }
 
         #asignaturasContainer {
@@ -414,7 +415,7 @@
                                         <table class="table table-bordered table-hover mb-0" id="horarioTable">
                                             <thead class="table-light sticky-top">
                                                 <tr>
-                                                    <th class="text-center" style="width: 10%">Hora</th>
+                                                    <th class="text-center time-slot">Hora</th> {{-- Added time-slot class here --}}
                                                     <th class="text-center" style="width: 15%">Lunes</th>
                                                     <th class="text-center" style="width: 15%">Martes</th>
                                                     <th class="text-center" style="width: 15%">Miércoles</th>
@@ -880,30 +881,34 @@
 
                 let currentMinutes = startHour * 60; // Convert start hour to minutes from midnight (e.g., 7 * 60 = 420)
                 const endMinutes = endHour * 60; // Convert end hour to minutes from midnight (e.g., 21 * 60 = 1260)
+                const interval = 45; // 45 minutes interval
 
                 let rowIndex = 0;
-                // Loop to generate time slots every 45 minutes
-                // The loop continues as long as the current time (start of a slot) is less than the end time.
-                // If the last block ends exactly at 21:00, it must start at 20:15.
-                // So, the last time slot to be displayed as a header should be 20:15.
-                while (currentMinutes < endMinutes) {
-                    const hours = Math.floor(currentMinutes / 60);
-                    const minutes = currentMinutes % 60;
-                    const horaFormato = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                while (currentMinutes < endMinutes + interval) { // Adjusted loop condition
+                    const hoursStart = Math.floor(currentMinutes / 60);
+                    const minutesStart = currentMinutes % 60;
+                    const horaInicioFormato = `${String(hoursStart).padStart(2, '0')}:${String(minutesStart).padStart(2, '0')}`;
+
+                    const nextMinutes = currentMinutes + interval;
+                    const hoursEnd = Math.floor(nextMinutes / 60);
+                    const minutesEnd = nextMinutes % 60;
+                    const horaFinFormato = `${String(hoursEnd).padStart(2, '0')}:${String(minutesEnd).padStart(2, '0')}`;
+                    
+                    // Format the time range for display
+                    const horaRangoDisplay = `${horaInicioFormato} - ${horaFinFormato}`;
 
                     let fila = document.createElement('tr');
                     fila.innerHTML = `
-                        <th class="time-slot" data-time="${horaFormato}" data-row-index="${rowIndex}">${horaFormato}</th>
-                        ${[1,2,3,4,5,6].map(dia => `<td class="drop-zone" data-hora="${horaFormato}" data-dia="${dia}" data-row-index="${rowIndex}" data-col-index="${dia}"></td>`).join('')}
+                        <th class="time-slot" data-time-start="${horaInicioFormato}" data-time-end="${horaFinFormato}" data-row-index="${rowIndex}">${horaRangoDisplay}</th>
+                        ${[1,2,3,4,5,6].map(dia => `<td class="drop-zone" data-hora="${horaInicioFormato}" data-dia="${dia}" data-row-index="${rowIndex}" data-col-index="${dia}"></td>`).join('')}
                     `;
                     horarioBody.appendChild(fila);
                     rowIndex++;
 
-                    currentMinutes += 45; // Add 45 minutes for the next slot
+                    currentMinutes += interval; // Add 45 minutes for the next slot
                 }
 
                 // Initialize scheduleGrid with the actual number of rows generated.
-                // The `rowIndex` at the end of the loop will be the total number of rows generated.
                 scheduleGrid = Array(rowIndex).fill(null).map(() => Array(7).fill(null)); // 7 days (0 unused, 1-6 for days)
 
                 configurarCeldasHorario();
@@ -1028,7 +1033,7 @@
 
             // 9. Create the visual block in the table
             function crearBloqueVisual(targetCell, asignaturaId, asignaturaName, dia, horaInicio, horaFin, bloques,
-                tipoHoras, aulaId, aulaName, colorClass, rowIndex, colIndex) { // Simplified parameters
+                tipoHoras, aulaId, aulaName, colorClass, rowIndex, colIndex, existingBlockId = null) { // Added existingBlockId
                 const bloque = document.createElement('div');
                 bloque.classList.add('bloque-horario', colorClass);
 
@@ -1064,7 +1069,8 @@
                     turnoId: turnoSelect.value,
                     seccionId: seccionSelect.value,
                     rowIndex: rowIndex, // Store row index
-                    colIndex: colIndex // Store col index
+                    colIndex: colIndex, // Store col index
+                    blockId: existingBlockId // Store existing block ID if available
                 });
 
                 bloque.querySelector('.delete-btn').addEventListener('click', function(e) {
@@ -1077,7 +1083,7 @@
 
                 // Mark the cells as occupied in scheduleGrid
                 for (let i = 0; i < bloques; i++) {
-                    scheduleGrid[rowIndex + i][colIndex] = { blockElement: true }; // Mark as occupied
+                    scheduleGrid[rowIndex + i][colIndex] = { blockElement: true, ref: bloque }; // Store reference
                 }
 
                 actualizarBotonGuardar();
@@ -1110,7 +1116,8 @@
                     horaInicio,
                     bloques: numBloquesStr,
                     rowIndex: rowIndexStr,
-                    colIndex: colIndexStr
+                    colIndex: colIndexStr,
+                    blockId // Get the block ID
                 } = bloqueElement.dataset;
                 const numBloques = parseInt(numBloquesStr);
                 const rowIndex = parseInt(rowIndexStr);
@@ -1137,10 +1144,8 @@
 
                 // Remove from bloquesParaGuardar array
                 const indexToRemove = bloquesParaGuardar.findIndex(b =>
-                    b.asignatura_id === asignaturaId &&
-                    b.dia_semana === parseInt(dia) &&
-                    b.hora_inicio === horaInicio
-                    // Consider adding more unique identifiers if needed, e.g., aula_id
+                    (blockId && b.id === blockId) || // If it has an ID, match by ID
+                    (b.asignatura_id === asignaturaId && b.dia_semana === parseInt(dia) && b.hora_inicio === horaInicio)
                 );
                 if (indexToRemove !== -1) {
                     bloquesParaGuardar.splice(indexToRemove, 1);
@@ -1212,12 +1217,13 @@
                     tipo_horas: tipoHoras,
                     bloques: bloques,
                     aula_id: aulaId,
+                    // observaciones: observaciones // REMOVED: Observaciones field
                 });
 
                 // Add visual block to the schedule
                 const targetCell = document.querySelector(`[data-dia="${diaSemana}"][data-hora="${horaInicio}"]`);
                 if (targetCell) {
-                    crearBloqueVisual(targetCell, asignaturaId, asignaturaName, diaSemana, horaInicio, horaFin, bloques, tipoHoras, aulaId, aulaName, colorClass, inicioRowIndex, diaInt);
+                    crearBloqueVisual(targetCell, asignaturaId, asignaturaName, diaSemana, horaInicio, horaFin, bloques, tipoHoras, aulaId, aulaName, colorClass, inicioRowIndex, diaInt, bloqueId); // Pass blockId
                 }
 
                 // Mark cells as occupied in scheduleGrid
@@ -1551,7 +1557,7 @@
             // Al cargar la vista, precargar el horario existente en la tabla
             function precargarHorarioExistente() {
                 if (!window.bloquesPrecargados || !Array.isArray(window.bloquesPrecargados)) return;
-                generarHorario();
+                generarHorario(); // Generate the empty grid first
                 window.bloquesPrecargados.forEach((bloque, idx) => {
                     const rowIndex = getTimeRowIndex(bloque.hora_inicio);
                     const diaInt = parseInt(bloque.dia_semana);

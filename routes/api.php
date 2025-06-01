@@ -2,8 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DocenteController;
-use App\Http\Controllers\HorarioController;
+use App\Http\Controllers\DocenteController; // Asegúrate de que DocenteController esté importado
+use App\Http\Controllers\HorarioController; // Asegúrate de que HorarioController esté importado
 use Illuminate\Support\Facades\DB;
 
 /*
@@ -33,10 +33,11 @@ Route::get('/semestres-por-turno/{turnoId}', function($turnoId) {
 
 Route::get('/docentes/{id}/asignaturas', [DocenteController::class, 'getAsignaturasByDocente']);
 
-// Ruta para obtener todas horario
+// Nueva ruta para obtener todos los períodos académicos para el dropdown
+Route::get('/periods', [DocenteController::class, 'getPeriods']);
 
-    Route::get('/aulas', [HorarioController::class, 'getAulas']);
-    Route::get('/periodos', [HorarioController::class, 'getPeriodosApi']); // Nueva ruta
-    Route::get('/carreras', [HorarioController::class, 'getCarrerasApi']); // Nueva ruta
-    Route::get('/turnos', [HorarioController::class, 'getTurnosApi']);     // Nueva ruta
-    
+// Rutas existentes para horarios
+Route::get('/aulas', [HorarioController::class, 'getAulas']);
+Route::get('/periodos', [HorarioController::class, 'getPeriodosApi']); // Nueva ruta
+Route::get('/carreras', [HorarioController::class, 'getCarrerasApi']); // Nueva ruta
+Route::get('/turnos', [HorarioController::class, 'getTurnosApi']);     // Nueva ruta
