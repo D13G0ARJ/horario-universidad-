@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Docente;
-use App\Models\Bitacora;
+use App\Models\Bitacora; // Asegurarse de que el modelo Bitacora esté importado
 use App\Models\Dedicacion;
 use App\Models\Periodo; // Importar el modelo Periodo
 use App\Models\Horario; // Importar el modelo Horario
@@ -103,10 +103,12 @@ class DocenteController extends Controller
             'dedicacion_id'
         ));
 
+        // INICIO: Apartado de Bitácora para la función store
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Nuevo docente registrado: ' . $docente->name
+            'accion' => 'Nuevo docente registrado: ' . $docente->name . ' (Cédula: ' . $docente->cedula_doc . ')' // Agregado cedula_doc para más detalle
         ]);
+        // FIN: Apartado de Bitácora
 
         return redirect()->route('docente.index')
             ->with('success', 'Docente registrado exitosamente');
@@ -142,13 +144,30 @@ class DocenteController extends Controller
 
         $docente = Docente::findOrFail($cedula_doc);
         $oldName = $docente->name;
+        $oldEmail = $docente->email; // Capturar email anterior
+        $oldTelefono = $docente->telefono; // Capturar teléfono anterior
 
         $docente->update($request->only('name', 'email', 'telefono', 'dedicacion_id'));
 
-        Bitacora::create([
-            'cedula' => Auth::user()->cedula,
-            'accion' => 'Docente actualizado: ' . $oldName . ' → ' . $docente->name
-        ]);
+        // INICIO: Apartado de Bitácora para la función update
+        $cambios = [];
+        if ($oldName !== $docente->name) {
+            $cambios[] = 'Nombre: ' . $oldName . ' → ' . $docente->name;
+        }
+        if ($oldEmail !== $docente->email) {
+            $cambios[] = 'Email: ' . $oldEmail . ' → ' . $docente->email;
+        }
+        if ($oldTelefono !== $docente->telefono) {
+            $cambios[] = 'Teléfono: ' . $oldTelefono . ' → ' . $docente->telefono;
+        }
+        // Puedes agregar más campos si es necesario rastrear los cambios
+        if ($oldName !== $docente->name || $oldEmail !== $docente->email || $oldTelefono !== $docente->telefono) { // Solo si hubo cambios en los campos visibles en la bitácora
+            Bitacora::create([
+                'cedula' => Auth::user()->cedula,
+                'accion' => 'Docente actualizado: ' . $oldName . ' (Cédula: ' . $docente->cedula_doc . '). Cambios: ' . implode(', ', $cambios)
+            ]);
+        }
+        // FIN: Apartado de Bitácora
 
         return redirect()->route('docente.index')
             ->with('success', 'Docente actualizado correctamente');
@@ -161,11 +180,14 @@ class DocenteController extends Controller
     {
         $docente = Docente::findOrFail($cedula_doc);
         $nombreDocente = $docente->name;
+        $cedulaDocenteEliminado = $docente->cedula_doc; // Capturar la cédula antes de eliminar
 
+        // INICIO: Apartado de Bitácora para la función destroy
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Docente eliminado: ' . $nombreDocente
+            'accion' => 'Docente eliminado: ' . $nombreDocente . ' (Cédula: ' . $cedulaDocenteEliminado . ')'
         ]);
+        // FIN: Apartado de Bitácora
 
         $docente->delete();
 

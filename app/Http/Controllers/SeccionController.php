@@ -6,8 +6,10 @@ use App\Models\Seccion;
 use App\Models\Carrera;
 use App\Models\Turno;
 use App\Models\Semestre;
+use App\Models\Bitacora; // Importar el modelo Bitacora
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth; // Importar Auth para obtener el usuario autenticado
 
 class SeccionController extends Controller
 {
@@ -29,8 +31,7 @@ class SeccionController extends Controller
     }
 
     /**
-     * 
-     * Show the form for creating a new resource.
+     * * Show the form for creating a new resource.
      */
     public function create()
     {
@@ -48,8 +49,8 @@ class SeccionController extends Controller
         $request->validate([
             'codigo_seccion' => 'required|string|unique:secciones,codigo_seccion',
             'carrera_id' => 'required|exists:carreras,carrera_id',
-            'turno_id' => 'required|exists:turnos,id_turno', // Corregido a id_turno
-            'semestre_id' => 'required|exists:semestres,id_semestre' // Corregido a id_semestre
+            'turno_id' => 'required|exists:turnos,id_turno',
+            'semestre_id' => 'required|exists:semestres,id_semestre'
         ]);
 
         try {
@@ -62,6 +63,13 @@ class SeccionController extends Controller
             $seccion->turno()->associate(Turno::find($request->turno_id));
             $seccion->semestre()->associate(Semestre::find($request->semestre_id));
             $seccion->save();
+
+            // INICIO: Apartado de Bitácora para la función store
+            Bitacora::create([
+                'cedula' => Auth::user()->cedula,
+                'accion' => 'Nueva sección registrada: ' . $seccion->codigo_seccion
+            ]);
+            // FIN: Apartado de Bitácora
 
             DB::commit();
 
@@ -116,12 +124,16 @@ class SeccionController extends Controller
     public function update(Request $request, string $id)
     {
         $seccion = Seccion::findOrFail($id);
+        $oldCodigoSeccion = $seccion->codigo_seccion; // Capturar el código anterior para la bitácora
+        $oldCarreraId = $seccion->carrera_id;
+        $oldTurnoId = $seccion->turno_id;
+        $oldSemestreId = $seccion->semestre_id;
 
         $request->validate([
             'codigo_seccion' => 'required|string|unique:secciones,codigo_seccion,'.$seccion->codigo_seccion.',codigo_seccion',
             'carrera_id' => 'required|exists:carreras,carrera_id',
-            'turno_id' => 'required|exists:turnos,id_turno', // Corregido
-            'semestre_id' => 'required|exists:semestres,id_semestre' // Corregido
+            'turno_id' => 'required|exists:turnos,id_turno',
+            'semestre_id' => 'required|exists:semestres,id_semestre'
         ]);
 
         try {
@@ -134,6 +146,29 @@ class SeccionController extends Controller
             $seccion->turno()->associate(Turno::find($request->turno_id));
             $seccion->semestre()->associate(Semestre::find($request->semestre_id));
             $seccion->save();
+
+            // INICIO: Apartado de Bitácora para la función update
+            $cambios = [];
+            if ($oldCodigoSeccion !== $seccion->codigo_seccion) {
+                $cambios[] = 'Código de Sección: ' . $oldCodigoSeccion . ' → ' . $seccion->codigo_seccion;
+            }
+            if ($oldCarreraId !== $seccion->carrera_id) {
+                $cambios[] = 'Carrera: ' . Carrera::find($oldCarreraId)->name . ' → ' . Carrera::find($seccion->carrera_id)->name;
+            }
+            if ($oldTurnoId !== $seccion->turno_id) {
+                $cambios[] = 'Turno: ' . Turno::find($oldTurnoId)->nombre . ' → ' . Turno::find($seccion->turno_id)->nombre;
+            }
+            if ($oldSemestreId !== $seccion->semestre_id) {
+                $cambios[] = 'Semestre: ' . Semestre::find($oldSemestreId)->numero . ' → ' . Semestre::find($seccion->semestre_id)->numero;
+            }
+
+            if (!empty($cambios)) {
+                Bitacora::create([
+                    'cedula' => Auth::user()->cedula,
+                    'accion' => 'Sección actualizada: ' . $seccion->codigo_seccion . '. Cambios: ' . implode(', ', $cambios)
+                ]);
+            }
+            // FIN: Apartado de Bitácora
 
             DB::commit();
 
@@ -162,10 +197,19 @@ class SeccionController extends Controller
     public function destroy(string $id)
     {
         $seccion = Seccion::findOrFail($id);
+        $codigoSeccionEliminada = $seccion->codigo_seccion; // Capturar el código de la sección antes de eliminar
         
         try {
             DB::beginTransaction();
             $seccion->delete();
+
+            // INICIO: Apartado de Bitácora para la función destroy
+            Bitacora::create([
+                'cedula' => Auth::user()->cedula,
+                'accion' => 'Sección eliminada: ' . $codigoSeccionEliminada
+            ]);
+            // FIN: Apartado de Bitácora
+
             DB::commit();
 
             return redirect()->route('secciones.index')

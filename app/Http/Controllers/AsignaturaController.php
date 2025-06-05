@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Asignatura;
 use App\Models\Docente;
 use App\Models\Seccion;
-use App\Models\Bitacora;
+use App\Models\Bitacora; // Importar el modelo Bitacora
 use App\Models\Turno;
 use App\Models\Carrera;
 use App\Models\Semestre;
@@ -187,12 +187,13 @@ class AsignaturaController extends Controller
             }
             $asignatura->secciones()->sync($seccionesData);
 
-            // Registrar en bitácora
+            // INICIO: Apartado de Bitácora para la función store
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
                 'accion' => 'ASIGNATURA CREADA: ' . $asignatura->name .
                            ' (ID: ' . $asignatura->asignatura_id . ')'
             ]);
+            // FIN: Apartado de Bitácora
 
             DB::commit();
 
@@ -225,6 +226,10 @@ class AsignaturaController extends Controller
      */
     public function update(Request $request, Asignatura $asignatura)
     {
+        // Guardar el nombre y ID de la asignatura antes de la actualización para la bitácora
+        $oldAsignaturaName = $asignatura->name;
+        $oldAsignaturaId = $asignatura->asignatura_id;
+
         // Validación de datos
         $validated = $request->validate([
             // 'asignatura_id' no se valida aquí, ya que es readonly en el formulario de edición
@@ -325,12 +330,13 @@ class AsignaturaController extends Controller
             // Sincronizar secciones
             $asignatura->secciones()->sync($seccionesData);
 
-            // Registrar en bitácora
+            // INICIO: Apartado de Bitácora para la función update
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
-                'accion' => 'ASIGNATURA ACTUALIZADA: ' . $asignatura->name .
-                           ' (ID: ' . $asignatura->asignatura_id . ')'
+                'accion' => 'ASIGNATURA ACTUALIZADA: ' . $oldAsignaturaName . ' (ID: ' . $oldAsignaturaId . ') ' .
+                            ' -> Nuevo nombre: ' . $asignatura->name . ' (ID: ' . $asignatura->asignatura_id . ')'
             ]);
+            // FIN: Apartado de Bitácora
 
             // Confirmar transacción
             DB::commit();
