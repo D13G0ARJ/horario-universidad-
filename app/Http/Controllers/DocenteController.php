@@ -3,53 +3,99 @@
 namespace App\Http\Controllers;
 
 use App\Models\Docente;
-use App\Models\Bitacora; // Asegurarse de que el modelo Bitacora esté importado
+use App\Models\Bitacora;
 use App\Models\Dedicacion;
-use App\Models\Periodo; // Importar el modelo Periodo
-use App\Models\Horario; // Importar el modelo Horario
-use App\Models\Asignatura; // Importar el modelo Asignatura
-use App\Models\Seccion; // Importar el modelo Seccion
-use App\Models\Aula; // Importar el modelo Aula
-use App\Models\Carrera; // Importar el modelo Carrera
-use App\Models\Semestre; // Importar el modelo Semestre
-use App\Models\Turno; // Importar el modelo Turno
+use App\Models\Periodo;
+use App\Models\Horario;
+use App\Models\Asignatura;
+use App\Models\Seccion;
+use App\Models\Aula;
+use App\Models\Carrera;
+use App\Models\Semestre;
+use App\Models\Turno;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Log; // Para logs de errores
-use Carbon\Carbon; // Importar Carbon para formatear fechas y horas
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class DocenteController extends Controller
 {
     /**
-     * Mostrar lista de docentes
+     * Mostrar lista de docentes con filtro de estado.
+     * Recibe un 'status' opcional para filtrar.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $docentes = Docente::all();
-        $dedicaciones = Dedicacion::all(); // Obtener todas las dedicaciones
-        return view('docente.index', compact('docentes', 'dedicaciones'));
+        $statusFilter = $request->input('status', 'activo'); // Por defecto, mostrar 'activo'
+        $docentes = $this->getFilteredDocentes($statusFilter);
+        $dedicaciones = Dedicacion::all();
+
+        return view('docente.index', compact('docentes', 'dedicaciones', 'statusFilter'));
     }
 
-    public function getAsignaturasByDocente($id)
+    /**
+     * Método auxiliar para obtener docentes filtrados.
+     * Puede ser llamado desde index o vía AJAX.
+     */
+    private function getFilteredDocentes($status)
+    {
+        $query = Docente::query();
+
+        if ($status === 'activo' || $status === 'inactivo') {
+            $query->where('status', $status);
+        }
+        // Si el estado es 'todos' o cualquier otra cosa, no se aplica filtro de estado
+
+        return $query->get();
+    }
+
+    /**
+     * Endpoint para obtener docentes filtrados vía AJAX.
+     */
+    public function getDocentesByStatus(Request $request)
+    {
+        $statusFilter = $request->input('status', 'todos'); // Por defecto, mostrar 'todos' para AJAX
+        $docentes = $this->getFilteredDocentes($statusFilter);
+
+        // Retornar los docentes y su dedicación (si es necesario) para el DataTable
+        $docentesData = $docentes->map(function($docente) {
+            return [
+                'cedula_doc' => $docente->cedula_doc,
+                'name' => $docente->name,
+                'email' => $docente->email,
+                'telefono' => $docente->telefono,
+                'dedicacion_name' => $docente->dedicacion->dedicacion ?? 'N/A',
+                'h_max' => $docente->dedicacion ? $docente->dedicacion->h_max : 0,
+                'status' => $docente->status,
+                // Puedes añadir más campos aquí si necesitas renderizarlos directamente en JS
+            ];
+        });
+
+        return response()->json(['data' => $docentesData]);
+    }
+
+    /**
+     * Método para obtener asignaturas por docente.
+     * Utiliza la relación BelongsToMany para recuperar las asignaturas.
+     */
+    public function getAsignaturasByDocente($cedula_doc)
     {
         try {
             // Asegúrate de que el docente se encuentre o lance un 404
-            $docente = Docente::where('cedula_doc', $id)
+            $docente = Docente::where('cedula_doc', $cedula_doc)
                 ->with(['asignaturas' => function ($query) {
-                    // Seleccionar solo los campos que necesitas para reducir el payload
-                    $query->select('asignaturas.asignatura_id', 'asignaturas.name')
-                            ->with('cargaHoraria');
+                    // Cargar también la carga horaria para mostrar el total
+                    $query->with('cargaHoraria');
                 }])
-                ->firstOrFail(); // Esto lanzará un 404 si el docente no existe
+                ->firstOrFail();
 
             $asignaturasData = $docente->asignaturas->map(function ($asignatura) {
                 return [
                     'asignatura_id' => $asignatura->asignatura_id,
                     'name' => $asignatura->name,
-                    // Acceder al accessor getCargaHorariaTotalAttribute()
-                    'carga_horaria_total' => $asignatura->cargaHorariaTotal // Laravel automáticamente llama al accessor
+                    'carga_horaria_total' => $asignatura->cargaHorariaTotal // Acceder al accessor
                 ];
             });
 
@@ -57,7 +103,7 @@ class DocenteController extends Controller
 
             // Retorna una respuesta JSON. Es CRUCIAL que no haya redirecciones aquí.
             return response()->json([
-                'asignaturas' => $docente->asignaturas,
+                'asignaturas' => $asignaturasData,
                 'total_horas_docente' => $totalHorasDocente,
                 'message' => 'Asignaturas cargadas correctamente'
             ]);
@@ -66,14 +112,14 @@ class DocenteController extends Controller
             // Si el docente no se encuentra, devuelve un 404 JSON, no redirijas
             return response()->json(['error' => 'Docente no encontrado.'], 404);
         } catch (\Exception $e) {
-            // Manejo de otros errores, devuelve un 500 JSON, no redirijas
-            Log::error("Error al obtener asignaturas del docente {$id}: " . $e->getMessage());
+            Log::error("Error al obtener asignaturas del docente {$cedula_doc}: " . $e->getMessage());
             return response()->json(['error' => 'Error interno del servidor al cargar asignaturas.'], 500);
         }
     }
 
     /**
-     * Guardar nuevo docente
+     * Guardar nuevo docente.
+     * Por defecto, un nuevo docente se crea como 'activo'.
      */
     public function store(Request $request)
     {
@@ -101,12 +147,12 @@ class DocenteController extends Controller
             'email',
             'telefono',
             'dedicacion_id'
-        ));
+        ) + ['status' => 'activo']); // Añadir 'status' al array de creación
 
         // INICIO: Apartado de Bitácora para la función store
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Nuevo docente registrado: ' . $docente->name . ' (Cédula: ' . $docente->cedula_doc . ')' // Agregado cedula_doc para más detalle
+            'accion' => 'Nuevo docente registrado: ' . $docente->name . ' (Cédula: ' . $docente->cedula_doc . ')'
         ]);
         // FIN: Apartado de Bitácora
 
@@ -115,7 +161,8 @@ class DocenteController extends Controller
     }
 
     /**
-     * Actualizar docente
+     * Actualizar docente.
+     * No se permite actualizar el 'status' desde aquí.
      */
     public function update(Request $request, $cedula_doc)
     {
@@ -144,8 +191,9 @@ class DocenteController extends Controller
 
         $docente = Docente::findOrFail($cedula_doc);
         $oldName = $docente->name;
-        $oldEmail = $docente->email; // Capturar email anterior
-        $oldTelefono = $docente->telefono; // Capturar teléfono anterior
+        $oldEmail = $docente->email;
+        $oldTelefono = $docente->telefono;
+        $oldDedicacionId = $docente->dedicacion_id; // Para la bitácora
 
         $docente->update($request->only('name', 'email', 'telefono', 'dedicacion_id'));
 
@@ -160,8 +208,13 @@ class DocenteController extends Controller
         if ($oldTelefono !== $docente->telefono) {
             $cambios[] = 'Teléfono: ' . $oldTelefono . ' → ' . $docente->telefono;
         }
-        // Puedes agregar más campos si es necesario rastrear los cambios
-        if ($oldName !== $docente->name || $oldEmail !== $docente->email || $oldTelefono !== $docente->telefono) { // Solo si hubo cambios en los campos visibles en la bitácora
+        if ($oldDedicacionId !== $docente->dedicacion_id) {
+            $oldDedicacion = Dedicacion::find($oldDedicacionId)->name ?? 'N/A';
+            $newDedicacion = Dedicacion::find($docente->dedicacion_id)->name ?? 'N/A';
+            $cambios[] = 'Dedicación: ' . $oldDedicacion . ' → ' . $newDedicacion;
+        }
+
+        if (!empty($cambios)) {
             Bitacora::create([
                 'cedula' => Auth::user()->cedula,
                 'accion' => 'Docente actualizado: ' . $oldName . ' (Cédula: ' . $docente->cedula_doc . '). Cambios: ' . implode(', ', $cambios)
@@ -174,26 +227,85 @@ class DocenteController extends Controller
     }
 
     /**
-     * Eliminar docente
+     * Eliminar docente permanentemente.
+     * Al eliminar el docente, la cláusula onDelete('cascade') en la migración de la tabla pivote
+     * se encargará de eliminar las relaciones en 'asignatura_docente'.
      */
     public function destroy($cedula_doc)
     {
         $docente = Docente::findOrFail($cedula_doc);
         $nombreDocente = $docente->name;
-        $cedulaDocenteEliminado = $docente->cedula_doc; // Capturar la cédula antes de eliminar
+        $cedulaDocenteEliminado = $docente->cedula_doc;
+
+        $docente->delete(); // Esto activará el 'onDelete(cascade)' en la tabla pivote
 
         // INICIO: Apartado de Bitácora para la función destroy
         Bitacora::create([
             'cedula' => Auth::user()->cedula,
-            'accion' => 'Docente eliminado: ' . $nombreDocente . ' (Cédula: ' . $cedulaDocenteEliminado . ')'
+            'accion' => 'Docente eliminado permanentemente: ' . $nombreDocente . ' (Cédula: ' . $cedulaDocenteEliminado . ')'
         ]);
         // FIN: Apartado de Bitácora
-
-        $docente->delete();
 
         return redirect()->route('docente.index')
             ->with('success', 'Docente eliminado permanentemente');
     }
+
+    /**
+     * Cambia el estado de un docente a 'inactivo' y libera sus asignaturas.
+     *
+     * @param  \App\Models\Docente  $docente  (Laravel resuelve automáticamente por 'cedula_doc')
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function deactivate(Docente $docente)
+    {
+        if ($docente->status === 'inactivo') {
+            return redirect()->back()->with('error', 'El docente ya está inactivo.');
+        }
+
+        // 1. Marcar docente como inactivo
+        $docente->status = 'inactivo';
+        $docente->save();
+
+        // 2. Retirar TODAS las asignaturas asignadas de la tabla pivote
+        // 'detach()' eliminará todas las entradas para este docente en la tabla 'asignatura_docente'
+        $docente->asignaturas()->detach();
+
+        // INICIO: Apartado de Bitácora para la función deactivate
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Docente inactivado: ' . $docente->name . ' (Cédula: ' . $docente->cedula_doc . '). Asignaturas liberadas.'
+        ]);
+        // FIN: Apartado de Bitácora
+
+        return redirect()->route('docente.index')->with('success', 'Docente ' . $docente->name . ' (Cédula: ' . $docente->cedula_doc . ') marcado como inactivo y sus asignaturas liberadas.');
+    }
+
+    /**
+     * Cambia el estado de un docente a 'activo'.
+     *
+     * @param  \App\Models\Docente  $docente  (Laravel resuelve automáticamente por 'cedula_doc')
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function activate(Docente $docente)
+    {
+        if ($docente->status === 'activo') {
+            return redirect()->back()->with('error', 'El docente ya está activo.');
+        }
+
+        // Marcar docente como activo
+        $docente->status = 'activo';
+        $docente->save();
+
+        // INICIO: Apartado de Bitácora para la función activate
+        Bitacora::create([
+            'cedula' => Auth::user()->cedula,
+            'accion' => 'Docente activado: ' . $docente->name . ' (Cédula: ' . $docente->cedula_doc . ').'
+        ]);
+        // FIN: Apartado de Bitácora
+
+        return redirect()->route('docente.index')->with('success', 'Docente ' . $docente->name . ' (Cédula: ' . $docente->cedula_doc . ') marcado como activo.');
+    }
+
 
     /**
      * Obtener todos los períodos académicos para el dropdown.
@@ -247,7 +359,7 @@ class DocenteController extends Controller
 
                 // Asegurarse de que el rango no exceda la hora final del horario (22:00)
                 if ($currentMinutes >= $endMinutes && $minuteStart > 0) {
-                    break; // No añadir un bloque si el inicio ya está en o después del final y no es un inicio exacto
+                    break;
                 }
                 if ($endOfIntervalMinutes > $endMinutes && $hourEnd > 22) {
                     // Si el final del intervalo excede el final del horario, ajustar para que el final sea 22:00
@@ -273,7 +385,7 @@ class DocenteController extends Controller
                     'carrera',
                     'semestre',
                     'turno',
-                    'coordinador' // Asegúrate de que esta relación exista y sea necesaria
+                    'coordinador'
                 ])
                 ->orderBy('dia_semana')
                 ->orderBy('hora_inicio')

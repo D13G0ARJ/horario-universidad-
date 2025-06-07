@@ -56,7 +56,16 @@ Route::get('/docente', [DocenteController::class, 'index'])->name('docente.index
 Route::post('/docentes', [DocenteController::class, 'store'])->name('docente.store');
 Route::put('/docentes/{docente}', [DocenteController::class, 'update'])->name('docente.update');
 Route::delete('/docentes/{docente}', [DocenteController::class, 'destroy'])->name('docente.destroy');
+
+// Rutas adicionales para activación/desactivación
+Route::patch('/docentes/{docente}/deactivate', [DocenteController::class, 'deactivate'])->name('docente.deactivate');
+Route::patch('/docentes/{docente}/activate', [DocenteController::class, 'activate'])->name('docente.activate');
+
+// Nueva ruta para cargar docentes filtrados vía AJAX
+Route::get('/api/docentes-by-status', [DocenteController::class, 'getDocentesByStatus'])->name('api.docentes.by.status');
+
 // Nueva ruta para mostrar el horario consolidado del docente para un período específico
+Route::get('/docentes/periods', [DocenteController::class, 'getPeriods']);
 Route::get('/docentes/{docente}/horario/{periodo}', [DocenteController::class, 'showDocenteHorario'])
     ->name('docentes.horario');
 
@@ -90,7 +99,7 @@ Route::prefix('horario')->middleware('auth')->group(function () {
     // Actualizar horario
     Route::put('/{horario}', [HorarioController::class, 'update'])->where('horario', '[0-9]+')->name('horario.update');
     // Eliminar horario
-Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->where('horario', '[0-9]+')->name('horario.destroy');
+    Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->where('horario', '[0-9]+')->name('horario.destroy');
 
 });
 

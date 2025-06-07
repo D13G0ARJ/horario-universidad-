@@ -35,7 +35,7 @@ class AsignaturaController extends Controller
         ])->get();
 
         // Cargar datos para los filtros y selectores en los modales
-        $docentes = Docente::all();
+        $docentes = Docente::where('status', 'activo')->orderBy('name')->get();
         $secciones = Seccion::with(['carrera', 'semestre', 'turno'])->get();
         $turnos = Turno::orderBy('nombre')->get();
         $carreras = Carrera::orderBy('name')->get();

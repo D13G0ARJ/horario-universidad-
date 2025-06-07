@@ -20,6 +20,7 @@ class DocenteSeeder extends Seeder
             'email' => 'gabriela.rivas@gmail.com', // Email del docente
             'telefono' => '04143111397', // Teléfono del docente
             'dedicacion_id' => 1,
+            'status' => 'activo',
         ]);
 
         DB::table('docentes')->insert([
@@ -28,6 +29,7 @@ class DocenteSeeder extends Seeder
             'email' => 'carrasquel@gmail.com', // Email del docente
             'telefono' => '0414568965', // Teléfono del docente
             'dedicacion_id' => 1,
+            'status' => 'activo',
         ]);
 
         DB::table('docentes')->insert([
@@ -36,6 +38,7 @@ class DocenteSeeder extends Seeder
             'email' => 'Efrain@gmail.com', // Email del docente
             'telefono' => '04141248965', // Teléfono del docente
             'dedicacion_id' => 1,
+            'status' => 'activo',
         ]);
     }
 

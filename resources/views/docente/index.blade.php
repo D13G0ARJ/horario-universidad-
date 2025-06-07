@@ -1,9 +1,7 @@
-
 @extends('layouts.admin')
 
 @section('content')
 <div class="container-fluid">
-    <!-- Título principal -->
     <div class="row mb-4">
         <div class="col-12">
             <h3 class="text-primary">
@@ -13,12 +11,12 @@
     </div>
 
     @if($errors->any())
-    <div class="alert alert-danger" id="autoCloseAlert"> 
+    <div class="alert alert-danger" id="autoCloseAlert">
         @foreach($errors->all() as $error)
             <p>{{ $error }}</p>
         @endforeach
     </div>
-
+    
     <script>
         setTimeout(() => {
             document.getElementById('autoCloseAlert').style.display = 'none';
@@ -26,7 +24,41 @@
     </script>
     @endif
 
-    <!-- Tabla de docentes -->
+    @if(session('success'))
+    <div class="alert alert-success" id="autoCloseSuccessAlert">
+        {{ session('success') }}
+    </div>
+    <script>
+        setTimeout(() => {
+            document.getElementById('autoCloseSuccessAlert').style.display = 'none';
+        }, 3000);
+    </script>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger" id="autoCloseErrorAlert">
+        {{ session('error') }}
+    </div>
+    <script>
+        setTimeout(() => {
+            document.getElementById('autoCloseErrorAlert').style.display = 'none';
+        }, 3000);
+    </script>
+    @endif
+
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="statusFilter" class="form-label">Filtrar por Estado:</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="activo" {{ $statusFilter == 'activo' ? 'selected' : '' }}>Activos</option>
+                    <option value="inactivo" {{ $statusFilter == 'inactivo' ? 'selected' : '' }}>Inactivos</option>
+                    <option value="todos" {{ $statusFilter == 'todos' ? 'selected' : '' }}>Todos</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-12">
             <div class="card border-0 shadow-sm">
@@ -34,87 +66,93 @@
                     <h4 class="card-title mb-0">
                         <i class="fas fa-list-alt mr-2"></i>Docentes Registrados
                     </h4>
-                    <a href="#" class="btn btn-success ms-auto text-dark"
-                        data-bs-toggle="modal" data-bs-target="#registroModal">
-                        <i class="fas fa-plus mr-1"></i>Nuevo Docente
-                    </a>
+                        {{-- Botón Nuevo Docente --}}
+                        <a href="#" class="btn btn-success ms-auto text-dark"
+                            data-bs-toggle="modal" data-bs-target="#registroModal">
+                            <i class="fas fa-plus mr-1"></i>Nuevo Docente
+                        </a>
                 </div>
                 <div class="card-body">
-                    <table id="tabla-docentes" class="table table-bordered table-hover">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th style="text-align: center">Cédula</th>
-                                <th style="text-align: center">Nombre</th>
-                                <th style="text-align: center">Correo</th>
-                                <th style="text-align: center">Teléfono</th>
-                                <th style="text-align: center">Dedicación</th>
-                                <th style="text-align: center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($docentes as $docente)
-                            <tr>
-                                <td style="text-align: center">{{ $docente->cedula_doc }}</td>
-                                <td>{{ $docente->name }}</td>
-                                <td>{{ $docente->email }}</td>
-                                <td>{{ $docente->telefono }}</td>
-                                <td style="text-align: center">{{ $docente->dedicacion->dedicacion ?? 'Sin dedicación' }}</td>
-                                <td style="text-align: center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <!-- Botón para Mostrar -->
-                                        <button class="btn btn-info btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#mostrarModal"
-                                            data-cedula="{{ $docente->cedula_doc }}"
-                                            data-name="{{ $docente->name }}"
-                                            data-email="{{ $docente->email }}"
-                                            data-telefono="{{ $docente->telefono }}"
-                                            data-dedicacion="{{ $docente->dedicacion->dedicacion ?? 'Sin dedicación' }}"
-                                            data-hmax="{{ $docente->dedicacion->h_max ?? 0 }}">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-
-                                        <!-- Botón para Editar -->
-                                        <button class="btn btn-success btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editarModal"
-                                            data-cedula="{{ $docente->cedula_doc }}"
-                                            data-name="{{ $docente->name }}"
-                                            data-email="{{ $docente->email }}"
-                                            data-telefono="{{ $docente->telefono }}"
-                                            data-dedicacion="{{ $docente->dedicacion->dedicacion ?? '' }}">
-                                            <i class="fas fa-pencil-alt"></i>
-                                        </button>
-
-                                        <!-- Botón para Eliminar -->
-                                        <button class="btn btn-danger btn-sm btn-eliminar"
-                                            data-id="{{ $docente->cedula_doc }}"
-                                            data-name="{{ $docente->name }}">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped" id="docentesTable">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Cédula</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Dedicación</th>
+                                    <th>Estado</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- MODAL DE CONFIRMACIÓN PARA ACTIVAR/DESACTIVAR --}}
+    <div class="modal fade" id="confirmarAccionModal" tabindex="-1" aria-labelledby="confirmarAccionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="confirmarAccionModalLabel">Confirmar Acción</h5>
+                    <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="mensajeConfirmacion"></p>
+                    <form id="formAccionDocente" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger" id="confirmarAccionBtn">Confirmar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="confirmarEliminarModalLabel">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar permanentemente a este docente? Esta acción es irreversible.</p>
+                    <form id="formEliminarDocente" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<!-- Modals -->
 @include('modals.docentes.create')
 @include('modals.docentes.show')
 @include('modals.docentes.edit')
 
 @push('scripts')
 <script>
+    let docentesTable; // Variable global para la instancia del DataTable
+
     $(document).ready(function() {
-        // Configuración del DataTable
-        const table = $("#tabla-docentes").DataTable({
-            pageLength: 10,
+        // Inicializar DataTable
+        docentesTable = $('#docentesTable').DataTable({
             language: {
                 emptyTable: "No hay docentes registrados",
                 info: "Mostrando _START_ a _END_ de _TOTAL_ docentes",
@@ -128,9 +166,109 @@
                     previous: "Anterior"
                 }
             },
-            responsive: true,
-            lengthChange: true,
-            autoWidth: false,
+            "paging": true,
+            "pageLength": 10,
+            "searching": true,
+            "lengthChange": false,
+            "info": true,
+            "processing": true,
+            "serverSide": false,
+            "ajax": {
+                "url": "{{ route('api.docentes.by.status') }}",
+                "type": "GET",
+                "data": function(d) {
+                    d.status = $('#statusFilter').val();
+                },
+                "dataSrc": "data"
+            },
+            "columns": [
+                { "data": "cedula_doc" },
+                { "data": "name" },
+                { "data": "email" },
+                { "data": "telefono" },
+                { "data": "dedicacion_name" },
+                {
+                    "data": "status",
+                    "render": function(data, type, row) {
+                        return data === 'activo' ?
+                            '<span class="badge bg-success text-white">Activo</span>' :
+                            '<span class="badge bg-danger text-white">Inactivo</span>';
+                    }
+                },
+                {
+                    "data": null,
+                    "orderable": false,
+                    "searchable": false,
+                    "className": "text-center",
+                    "render": function(data, type, row) {
+                        const cedula = row.cedula_doc;
+                        const name = row.name;
+                        const email = row.email;
+                        const telefono = row.telefono;
+                        const dedicacionName = row.dedicacion_name;
+                        const dedicacionId = row.dedicacion_id;
+                        const hmax = row.h_max;
+                        const status = row.status;
+
+                        let buttons = `
+                            <div class="d-flex justify-content-center">
+                                <button class="btn btn-info btn-sm me-1"
+                                    data-bs-toggle="modal" data-bs-target="#mostrarModal"
+                                    data-cedula="${cedula}"
+                                    data-name="${name}"
+                                    data-email="${email}"
+                                    data-telefono="${telefono}"
+                                    data-dedicacion="${dedicacionName}"
+                                    data-hmax="${hmax}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+
+                                <button class="btn btn-primary btn-sm me-1" data-bs-toggle="modal"
+                                    data-bs-target="#editarModal"
+                                    data-cedula="${cedula}"
+                                    data-name="${name}"
+                                    data-email="${email}"
+                                    data-telefono="${telefono}"
+                                    data-dedicacion="${dedicacionId}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                        `;
+
+                        if (status === 'activo') {
+                            buttons += `
+                                <button class="btn btn-secondary btn-sm me-1 btn-desactivar"
+                                    data-bs-toggle="modal" data-bs-target="#confirmarAccionModal"
+                                    data-cedula="${cedula}"
+                                    data-nombre="${name}"
+                                    data-accion="desactivar">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+                            `;
+                        } else {
+                            buttons += `
+                                <button class="btn btn-success btn-sm me-1 btn-activar"
+                                    data-bs-toggle="modal" data-bs-target="#confirmarAccionModal"
+                                    data-cedula="${cedula}"
+                                    data-nombre="${name}"
+                                    data-accion="activar">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                            `;
+                        }
+
+                        buttons += `
+                                <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#confirmarEliminarModal"
+                                    data-cedula="${cedula}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        `;
+                        return buttons;
+                    }
+                }
+            ],
+
             dom: 'Bfrtip',
             buttons: [{
                     extend: 'print',
@@ -170,34 +308,24 @@
             }]
         });
 
-        // Confirmación de eliminación con SweetAlert
-        $('.btn-eliminar').on('click', function() {
-            const docenteId = $(this).data('id');
-            const docenteName = $(this).data('name');
-
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: `¡Vas a eliminar al docente "${docenteName}"!`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Crear y enviar el formulario de eliminación
-                    const form = $(`<form method="POST" action="/docentes/${docenteId}">`);
-                    form.append('@csrf');
-                    form.append('@method("DELETE")');
-                    $('body').append(form);
-                    form.submit();
-                }
-            });
+        // Evento para recargar el DataTable cuando cambie el filtro de estado
+        $('#statusFilter').on('change', function() {
+            docentesTable.ajax.reload(null, false);
         });
 
-        // Script para llenar el modal de mostrar (consolidado)
+        // SCRIPT PARA LLENAR EL MODAL DE EDICIÓN
+        $('#editarModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            const modal = $(this);
+            modal.find('#cedula_editar').val(button.data('cedula'));
+            modal.find('#name_editar').val(button.data('name'));
+            modal.find('#email_editar').val(button.data('email'));
+            modal.find('#telefono_editar').val(button.data('telefono'));
+            modal.find('#dedicacion_editar').val(button.data('dedicacion'));
+            modal.find('#formEditar').attr('action', '/docentes/' + button.data('cedula'));
+        });
+
+        // SCRIPT PARA EL MODAL DE MOSTRAR (show.blade.php)
         $('#mostrarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
             const cedula = button.data('cedula');
@@ -205,32 +333,27 @@
             const email = button.data('email');
             const telefono = button.data('telefono');
             const dedicacion = button.data('dedicacion');
-            const hmax = parseFloat(button.data('hmax')); // Obtener h_max como flotante
+            const hmax = parseFloat(button.data('hmax'));
 
-            // Asignar los datos al modal (usa los IDs del show.blade.php)
             $('#modalCedula').text(cedula);
             $('#modalName').text(name);
             $('#modalEmail').text(email);
             $('#modalTelefono').text(telefono);
             $('#modalDedicacion').text(dedicacion);
-            $('#modalHorasMax').text(Math.round(hmax) + ' Horas'); // Redondear a entero para mostrar
+            $('#modalHorasMax').text(Math.round(hmax) + ' Horas');
 
-            // Guardar la cédula del docente actual para el botón de horario
             let currentDocenteCedula = cedula;
 
-            // Limpiar asignaturas anteriores y el mensaje de "no asignaturas"
             const modalAsignaturasList = $('#modalAsignaturasList');
             const noAsignaturasMessage = $('#noAsignaturasMessage');
             const totalHorasDocenteElement = $('#totalHorasDocente');
             modalAsignaturasList.empty();
             noAsignaturasMessage.hide();
 
-            // Mostrar spinner mientras se cargan las asignaturas
             modalAsignaturasList.html('<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div></div>');
 
-            // Cargar asignaturas con AJAX (usando la ruta que ya tenías y el método .get de jQuery)
             $.get(`/api/docentes/${cedula}/asignaturas`, function(response) {
-                modalAsignaturasList.empty(); // Limpiar el spinner
+                modalAsignaturasList.empty();
                 if (response.asignaturas && response.asignaturas.length > 0) {
                     const listaAsignaturas = response.asignaturas
                         .map(asig =>
@@ -242,20 +365,17 @@
                             </li>`
                         )
                         .join('');
-                    modalAsignaturasList.html(listaAsignaturas); // Aquí va el HTML de la lista
+                    modalAsignaturasList.html(listaAsignaturas);
                 } else {
-                    noAsignaturasMessage.show(); // Mostrar el mensaje si no hay asignaturas
+                    noAsignaturasMessage.show();
                 }
-
                 totalHorasDocenteElement.text(response.total_horas_docente + ' Horas');
-
             }).fail(function() {
                 modalAsignaturasList.html('<li class="list-group-item text-danger">Error al cargar asignaturas.</li>');
             });
 
-            // Cargar períodos académicos para el selector de horario
             const periodoSelect = $('#periodoSelect');
-            periodoSelect.empty().append('<option value="">Cargando períodos...</option>'); // Limpiar y poner mensaje de carga
+            periodoSelect.empty().append('<option value="">Cargando períodos...</option>');
             $.get('/api/periods', function(periods) {
                 periodoSelect.empty().append('<option value="">Seleccione un Período</option>');
                 periods.forEach(period => {
@@ -265,8 +385,7 @@
                 periodoSelect.empty().append('<option value="">Error al cargar períodos</option>');
             });
 
-            // Listener para el botón "Mostrar Horario" dentro del modal
-            $('#btnCargarHorario').off('click').on('click', function() { // Usar .off().on() para evitar duplicación de eventos
+            $('#btnCargarHorario').off('click').on('click', function() {
                 const selectedPeriodId = periodoSelect.val();
 
                 if (!selectedPeriodId) {
@@ -283,24 +402,36 @@
             });
         });
 
-        // Script para llenar el modal de edición
-        $('#editarModal').on('show.bs.modal', function(event) {
-            const button = $(event.relatedTarget);
-            const modal = $(this);
-            modal.find('#cedula_editar').val(button.data('cedula'));
-            modal.find('#name_editar').val(button.data('name'));
-            modal.find('#email_editar').val(button.data('email'));
-            modal.find('#telefono_editar').val(button.data('telefono'));
-            modal.find('#dedicacion_editar').val(button.data('dedicacion')); // Ojo: Aquí se espera dedicacion_id, no el nombre
-            modal.find('#formEditar').attr('action', '/docentes/' + button.data('cedula'));
-        });
-
-        // Script para confirmar eliminar (si tienes un modal separado para esto)
+        // Script para confirmar eliminar
         $('#confirmarEliminarModal').on('show.bs.modal', function(event) {
             const button = $(event.relatedTarget);
             const docenteCedula = button.data('cedula');
-            const form = $(this).find('#formEliminarDocente'); // Asumiendo que tienes un formulario con este ID
-            form.attr('action', `/docentes/${docenteCedula}`); // Ajusta la ruta de eliminación
+            const form = $(this).find('#formEliminarDocente');
+            form.attr('action', `/docentes/${docenteCedula}`);
+        });
+
+        // Script para el modal de Confirmación de Activar/Desactivar
+        $('#confirmarAccionModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            const docenteCedula = button.data('cedula');
+            const docenteNombre = button.data('nombre');
+            const accion = button.data('accion');
+            const modal = $(this);
+            const form = modal.find('#formAccionDocente');
+            const confirmarBtn = modal.find('#confirmarAccionBtn');
+            let mensaje = "";
+
+            if (accion === 'desactivar') {
+                mensaje = `¿Está seguro de que desea <strong class="text-danger">DESACTIVAR</strong> al docente ${docenteNombre} (${docenteCedula})? <br> Sus asignaturas serán liberadas.`;
+                form.attr('action', `/docentes/${docenteCedula}/deactivate`);
+                confirmarBtn.removeClass('btn-success').addClass('btn-danger').text('Desactivar');
+            } else if (accion === 'activar') {
+                mensaje = `¿Está seguro de que desea <strong class="text-success">ACTIVAR</strong> al docente ${docenteNombre} (${docenteCedula})?`;
+                form.attr('action', `/docentes/${docenteCedula}/activate`);
+                confirmarBtn.removeClass('btn-danger').addClass('btn-success').text('Activar');
+            }
+
+            modal.find('#mensajeConfirmacion').html(mensaje);
         });
     });
 </script>
