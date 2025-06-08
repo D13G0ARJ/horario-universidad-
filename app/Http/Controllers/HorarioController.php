@@ -407,6 +407,8 @@ class HorarioController extends Controller
                 if ($docenteA === $bloqueB['docente_id'] && $diaA == $bloqueB['dia_semana']) {
                     $inicioB = $bloqueB['hora_inicio'];
                     $finB = Carbon::parse($inicioB)->addMinutes($bloqueB['bloques'] * 45)->format('H:i');
+                    // Si ambos bloques tienen id y son iguales, no comparar (es el mismo bloque)
+                    if (isset($bloqueA['id'], $bloqueB['id']) && $bloqueA['id'] == $bloqueB['id']) continue;
                     if ($inicioA < $finB && $finA > $inicioB) {
                         throw new \Exception("El docente tiene bloques solapados en la asignación: día $diaA entre $inicioA-$finA y $inicioB-$finB.");
                     }
