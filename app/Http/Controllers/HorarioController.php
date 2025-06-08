@@ -519,28 +519,45 @@ class HorarioController extends Controller
         $docentes = Docente::all();
         $aulas = Aula::all(); // ¡Obtener todas las aulas!
         
-        // MODIFICADO: Cargar asignaturas con sus relaciones docentes y cargaHoraria
-        // y formatearlas explícitamente para evitar errores de sintaxis en JavaScript.
-        $rawAsignaturas = Asignatura::with(['docentes', 'cargaHoraria'])->get(); 
+        // **MODIFICACIÓN CLAVE AQUÍ:**
+        // Obtener la sección específica del horario
+        $seccionActual = Seccion::where('codigo_seccion', $horario->seccion_id)
+                                ->where('carrera_id', $horario->carrera_id)
+                                ->where('semestre_id', $horario->semestre_id)
+                                ->where('turno_id', $horario->turno_id)
+                                ->first(); // Usa first() ya que esperas una sola sección
 
-        $asignaturas = $rawAsignaturas->map(function ($asignatura) {
-            return [
-                'asignatura_id' => $asignatura->asignatura_id,
-                'name' => e($asignatura->name), // Escapar el nombre de la asignatura
-                'carga_horaria' => $asignatura->cargaHoraria->map(function($carga) {
-                    return [
-                        'tipo' => e($carga->tipo), // Escapar el tipo de carga
-                        'horas_academicas' => $carga->horas_academicas
-                    ];
-                }),
-                'docentes' => $asignatura->docentes->map(function ($docente) {
-                    return [
-                        'cedula_doc' => $docente->cedula_doc,
-                        'name' => e($docente->name) // Escapar el nombre del docente
-                    ];
-                }),
-            ];
-        });
+        $asignaturas = collect(); // Inicializa una colección vacía para asignaturas
+
+        if ($seccionActual) {
+            // Cargar asignaturas relacionadas con la sección a través de la tabla pivote
+            $rawAsignaturas = $seccionActual->asignaturas()
+                                            ->wherePivot('carrera_id', $horario->carrera_id)
+                                            ->wherePivot('semestre_id', $horario->semestre_id)
+                                            ->wherePivot('turno_id', $horario->turno_id)
+                                            ->with(['docentes', 'cargaHoraria'])
+                                            ->get();
+
+            $asignaturas = $rawAsignaturas->map(function ($asignatura) {
+                return [
+                    'asignatura_id' => $asignatura->asignatura_id,
+                    'name' => e($asignatura->name), // Escapar el nombre de la asignatura
+                    'carga_horaria' => $asignatura->cargaHoraria->map(function($carga) {
+                        return [
+                            'tipo' => e($carga->tipo), // Escapar el tipo de carga
+                            'horas_academicas' => $carga->horas_academicas
+                        ];
+                    }),
+                    'docentes' => $asignatura->docentes->map(function ($docente) {
+                        return [
+                            'cedula_doc' => $docente->cedula_doc,
+                            'name' => e($docente->name) // Escapar el nombre del docente
+                        ];
+                    }),
+                ];
+            });
+        }
+
 
         // MODIFICADO: Formatear los bloques existentes, escapando nombres para JS
         $bloquesFormateados = $bloques->map(function($bloque) {
