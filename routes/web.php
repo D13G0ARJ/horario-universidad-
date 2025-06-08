@@ -98,8 +98,8 @@ Route::prefix('horario')->middleware('auth')->group(function () {
     Route::get('/{horario}/edit', [HorarioController::class, 'edit'])->where('horario', '[0-9]+')->name('horario.edit');
     // Actualizar horario
     Route::put('/{horario}', [HorarioController::class, 'update'])->where('horario', '[0-9]+')->name('horario.update');
-    // Eliminar horario
-    Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->where('horario', '[0-9]+')->name('horario.destroy');
+    // Eliminar horario (debe ser /horario/{horario}, no /horarios/{horario})
+    Route::delete('/{horario}', [HorarioController::class, 'destroy'])->where('horario', '[0-9]+')->name('horario.destroy');
 
 });
 

@@ -157,7 +157,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Crear y enviar el formulario de eliminación
-                    const form = $(`<form method="POST" action="/horarios/${horarioId}">`);
+                    const form = $(`<form method="POST" action="/horario/${horarioId}">`);
                     form.append('@csrf');
                     form.append('@method("DELETE")');
                     $('body').append(form);
