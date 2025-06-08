@@ -74,20 +74,23 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped" id="docentesTable">
-                            <thead class="bg-light">
+                        {{-- **CAMBIO AQUÍ:** Clases de tabla para coincidir con Coordinadores --}}
+                        <table class="table table-bordered table-hover" id="docentesTable">
+                            {{-- **CAMBIO AQUÍ:** Clase de thead para coincidir con Coordinadores --}}
+                            <thead class="thead-dark">
                                 <tr>
-                                    <th>Cédula</th>
-                                    <th>Nombre</th>
-                                    <th>Email</th>
-                                    <th>Teléfono</th>
-                                    <th>Dedicación</th>
-                                    <th>Estado</th>
-                                    <th class="text-center">Acciones</th>
+                                    <th style="text-align: center">Cédula</th>
+                                    <th style="text-align: center">Nombre</th>
+                                    <th style="text-align: center">Email</th>
+                                    <th style="text-align: center">Teléfono</th>
+                                    <th style="text-align: center">Dedicación</th>
+                                    <th style="text-align: center">Estado</th>
+                                    <th style="text-align: center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                </tbody>
+                                {{-- Los datos se cargarán aquí vía AJAX --}}
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -164,13 +167,18 @@
                     last: "Último",
                     next: "Siguiente",
                     previous: "Anterior"
+                },
+                buttons: {
+                    print: "Imprimir",
+                    pdf: "PDF",
+                    excel: "Excel"
                 }
             },
             "paging": true,
             "pageLength": 10,
             "searching": true,
-            "lengthChange": false,
-            "info": true,
+            "lengthChange": false, // Oculta el selector "Mostrar X entradas"
+            "info": true, // Muestra la información de paginación
             "processing": true,
             "serverSide": false,
             "ajax": {
@@ -269,12 +277,17 @@
                 }
             ],
 
+            // ** Configuración de DataTables para que se vea como el de Coordinadores **
             dom: 'Bfrtip',
-            buttons: [{
+            buttons: [
+                {
                     extend: 'print',
                     text: '<i class="fas fa-print mr-2"></i>Imprimir',
                     title: '',
                     autoPrint: true,
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5] // Cédula, Nombre, Email, Teléfono, Dedicación, Estado
+                    },
                     customize: function(win) {
                         $(win.document.body)
                             .css('font-size', '10pt')
@@ -286,26 +299,59 @@
 
                         $(win.document.body).find('table')
                             .addClass('compact')
-                            .css('font-size', 'inherit');
+                            .css('font-size', 'inherit')
+                            .find('thead th')
+                            .css({
+                                'background-color': '#343a40',
+                                'color': '#ffffff'
+                            });
+                        $(win.document.body).find('table thead th:nth-child(1)').css('width', 'auto');
+                        $(win.document.body).find('table thead th:nth-child(2)').css('width', 'auto');
+                        $(win.document.body).find('table thead th:nth-child(3)').css('width', 'auto');
+                        $(win.document.body).find('table thead th:nth-child(4)').css('width', 'auto');
+                        $(win.document.body).find('table thead th:nth-child(5)').css('width', 'auto');
+                        $(win.document.body).find('table thead th:nth-child(6)').css('width', 'auto');
                     }
                 },
                 {
-                    extend: 'pdf',
+                    extend: 'pdfHtml5', // Usamos pdfHtml5 para más control
                     text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
                     orientation: 'portrait',
                     pageSize: 'A4',
-                    className: 'btn btn-danger mr-2'
+                    className: 'btn btn-danger mr-2',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5] // Cédula, Nombre, Email, Teléfono, Dedicación, Estado
+                    },
+                    customize: function(doc) {
+                        doc.content.splice(0, 0, {
+                            text: 'REPORTE DE DOCENTES',
+                            fontSize: 14,
+                            alignment: 'center',
+                            margin: [0, 0, 0, 12]
+                        });
+                        doc.styles.tableHeader = {
+                            fillColor: '#343a40',
+                            color: '#ffffff',
+                            fontSize: 10,
+                            bold: true,
+                            alignment: 'center'
+                        };
+                        doc.content[1].table.widths = ['auto', 'auto', 'auto', 'auto', 'auto', 'auto'];
+                    }
                 },
                 {
-                    extend: 'excel',
+                    extend: 'excelHtml5', // Usamos excelHtml5 para más control
                     text: '<i class="fas fa-file-excel mr-2"></i>Excel',
-                    className: 'btn btn-success mr-2'
+                    className: 'btn btn-success mr-2',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5] // Cédula, Nombre, Email, Teléfono, Dedicación, Estado
+                    }
                 },
             ],
-            columnDefs: [{
-                targets: [0, 3, 4],
-                className: 'text-center'
-            }]
+            // Ajustar la alineación de las columnas para que coincida con el estilo de Coordinadores
+            columnDefs: [
+                { targets: [0, 1, 2, 3, 4, 5, 6], className: 'text-center' } // Centrar todas las columnas por defecto
+            ]
         });
 
         // Evento para recargar el DataTable cuando cambie el filtro de estado
