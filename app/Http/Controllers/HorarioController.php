@@ -272,10 +272,12 @@ class HorarioController extends Controller
             $horariosBloques = $formData['bloques_horario'];
             $asignaturaCompartidaId = $formData['asignatura_compartida_id'] ?? null;
 
-
             if (empty($horariosBloques)) {
                 return response()->json(['success' => false, 'message' => 'No se han arrastrado bloques al horario.'], 400);
             }
+
+            // Validar solapamiento de docentes antes de guardar
+            $this->validarSolapamientoDocente($horariosBloques, $periodoId);
 
             DB::beginTransaction();
 
@@ -390,6 +392,52 @@ class HorarioController extends Controller
     }
 
     /**
+     * Valida que no haya solapamientos de horario para el mismo docente
+     */
+    private function validarSolapamientoDocente($bloques, $periodoId, $bloquesAExcluir = [])
+    {
+        // Validar solapamiento entre los bloques NUEVOS/EDITADOS del mismo request
+        foreach ($bloques as $i => $bloqueA) {
+            $docenteA = $bloqueA['docente_id'];
+            $diaA = $bloqueA['dia_semana'];
+            $inicioA = $bloqueA['hora_inicio'];
+            $finA = Carbon::parse($inicioA)->addMinutes($bloqueA['bloques'] * 45)->format('H:i');
+            foreach ($bloques as $j => $bloqueB) {
+                if ($i === $j) continue;
+                if ($docenteA === $bloqueB['docente_id'] && $diaA == $bloqueB['dia_semana']) {
+                    $inicioB = $bloqueB['hora_inicio'];
+                    $finB = Carbon::parse($inicioB)->addMinutes($bloqueB['bloques'] * 45)->format('H:i');
+                    if ($inicioA < $finB && $finA > $inicioB) {
+                        throw new \Exception("El docente tiene bloques solapados en la asignación: día $diaA entre $inicioA-$finA y $inicioB-$finB.");
+                    }
+                }
+            }
+        }
+        // Validar contra la base de datos (otros horarios ya guardados, excluyendo los que se están editando)
+        foreach ($bloques as $bloque) {
+            $docenteId = $bloque['docente_id'];
+            $diaSemana = $bloque['dia_semana'];
+            $horaInicio = $bloque['hora_inicio'];
+            $bloquesCantidad = $bloque['bloques'];
+            $horaFin = Carbon::parse($horaInicio)->addMinutes($bloquesCantidad * 45)->format('H:i');
+            $query = Horario::where('docente_id', $docenteId)
+                ->where('periodo_id', $periodoId)
+                ->where('dia_semana', $diaSemana)
+                ->where(function($query) use ($horaInicio, $horaFin) {
+                    $query->where('hora_inicio', '<', $horaFin)
+                          ->where('hora_fin', '>', $horaInicio);
+                });
+            // Excluir los bloques que se están editando (por id)
+            if (!empty($bloquesAExcluir)) {
+                $query->whereNotIn('id', $bloquesAExcluir);
+            }
+            if ($query->exists()) {
+                throw new \Exception("El docente ya tiene un bloque asignado que se solapa el día $diaSemana entre $horaInicio y $horaFin.");
+            }
+        }
+    }
+
+    /**
      * Muestra el detalle de un horario con sus bloques (solo visualización).
      */
     public function show($id)
@@ -495,14 +543,14 @@ class HorarioController extends Controller
             ->get();
 
         // Genera el rango de horas para la tabla (si es necesario para la edición)
-        $horas = [];
+        $horas = array();
         $current = strtotime('07:00');
         $end = strtotime('21:00'); // Ajusta según tu necesidad
         while ($current < $end) {
-            $horas[] = [
+            $horas[] = array(
                 'inicio' => date('H:i', $current),
                 'fin' => date('H:i', $current + 2700), // 2700 segundos = 45 minutos
-            ];
+            );
             $current += 2700;
         }
 
@@ -621,10 +669,15 @@ class HorarioController extends Controller
             $bloquesData = $request->input('bloques', []); // Bloques existentes modificados/sin modificar
             $bloquesNuevosData = $request->input('bloques_nuevos', []); // Nuevos bloques añadidos en la edición
 
-            // Obtener los IDs de los bloques existentes que fueron enviados en el request
-            $existingBlockIdsInRequest = collect($bloquesData)->pluck('id')->filter()->toArray();
+            // Obtener los IDs de los bloques existentes que se están editando
+            $idsBloquesEditados = collect($bloquesData)->pluck('id')->filter()->toArray();
+
+            // Validar solapamiento de docentes antes de guardar, excluyendo los bloques actuales del horario
+            $this->validarSolapamientoDocente(array_merge($bloquesData, $bloquesNuevosData), $horarioPrincipal->periodo_id, $idsBloquesEditados);
 
             // Eliminar los bloques que NO fueron enviados en el request (es decir, fueron eliminados en el frontend)
+            $existingBlockIdsInRequest = collect($bloquesData)->pluck('id')->filter()->toArray();
+
             Horario::where('seccion_id', $horarioPrincipal->seccion_id)
                 ->where('periodo_id', $horarioPrincipal->periodo_id)
                 ->where('carrera_id', $horarioPrincipal->carrera_id)
