@@ -300,18 +300,21 @@
 
 <body>
     <div class="container-fluid">
-        <div class="row mb-4">
+        <div class="row mb-4" style="margin-top: 10px;">
             <div class="col-12">
-                <h1 class="h3 text-primary">
-                    <i class="fas fa-calendar-plus mr-2"></i>Editar Horario
-                </h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.index') }}">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('horario.index') }}">Horarios</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Editar</li>
-                    </ol>
-                </nav>
+                <div class="card shadow rounded-4 px-4 border border-2 border-primary-subtle">
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3" style="padding: 10px;">
+                            <a href="{{ route('horario.index') }}" class="btn btn-outline-primary rounded-pill px-4 fw-bold mt-3 mt-md-0" style="width:180px;">
+                                <i class="fas fa-arrow-left me-2"></i>Volver
+                            </a>
+                            <h1 class="h3 text-primary text-center w-100 mb-0">
+                                <i class="fas fa-calendar-plus mr-2"></i>Editar Horario
+                            </h1>
+                          
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -884,7 +887,8 @@
                 const interval = 45; // 45 minutes interval
 
                 let rowIndex = 0;
-                while (currentMinutes < endMinutes + interval) { // Adjusted loop condition
+                while (currentMinutes < endMinutes + interval) // Adjusted loop condition
+                {
                     const hoursStart = Math.floor(currentMinutes / 60);
                     const minutesStart = currentMinutes % 60;
                     const horaInicioFormato = `${String(hoursStart).padStart(2, '0')}:${String(minutesStart).padStart(2, '0')}`;

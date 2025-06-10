@@ -103,10 +103,10 @@
 
 <body class="hold-transition sidebar-mini">
     <div class="wrapper">
-        <nav class="main-header navbar navbar-expand navbar-white navbar-light fixed-top shadow-sm" ">
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light fixed-top shadow-sm" >
     <div class=" container-fluid">
             <!-- Left Side -->
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center jsustify-content-center">
                 <a class="nav-link text-dark" data-widget="pushmenu" href="#" role="button">
                     <i class="fas fa-bars"></i>
                 </a>
@@ -144,9 +144,17 @@
                                     <span>Configurar preguntas</span>
                                 </a>
                             </li>
+                             <li>
+                                <a class="dropdown-item d-flex align-items-center py-2"
+                                    href="https://drive.google.com/file/d/1ux9RrhtkInsUIs301dL6JihCU-gnQrCZ/view?usp=sharing" target="_blank">
+                                    <i class="fas fa-book me-3 opacity-75"></i>
+                                    <span class="text-truncate">Manual de Usuario</span>
+                        
+                                </a>
                             <li>
                                 <hr class="dropdown-divider my-2">
                             </li>
+                          
                             <li>
                                 <a class="dropdown-item d-flex align-items-center py-2"
                                     href="{{ route('logout') }}"

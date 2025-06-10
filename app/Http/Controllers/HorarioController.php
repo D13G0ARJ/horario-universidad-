@@ -405,10 +405,15 @@ class HorarioController extends Controller
             foreach ($bloques as $j => $bloqueB) {
                 if ($i === $j) continue;
                 if ($docenteA === $bloqueB['docente_id'] && $diaA == $bloqueB['dia_semana']) {
+                    // Permitir editar el mismo bloque (mismo id) aunque cambie de hora o duración
+                    if (isset($bloqueA['id'], $bloqueB['id']) && $bloqueA['id'] == $bloqueB['id']) continue;
+                    // Si ambos bloques tienen id y ambos están en $bloquesAExcluir y son el mismo, permitir (no comparar)
+                    if (isset($bloqueA['id'], $bloqueB['id']) && $bloqueA['id'] == $bloqueB['id'] && in_array($bloqueA['id'], $bloquesAExcluir)) continue;
+                    // Si ambos bloques tienen id y ambos están en $bloquesAExcluir (pero son distintos), comparar normalmente
+                    // Si uno de los bloques es el que se está editando (tiene id y está en $bloquesAExcluir), permitir la edición SOLO si los ids son iguales
+                    if (isset($bloqueA['id'], $bloqueB['id']) && ($bloqueA['id'] == $bloqueB['id']) && (in_array($bloqueA['id'], $bloquesAExcluir) || in_array($bloqueB['id'], $bloquesAExcluir))) continue;
                     $inicioB = $bloqueB['hora_inicio'];
                     $finB = Carbon::parse($inicioB)->addMinutes($bloqueB['bloques'] * 45)->format('H:i');
-                    // Si ambos bloques tienen id y son iguales, no comparar (es el mismo bloque)
-                    if (isset($bloqueA['id'], $bloqueB['id']) && $bloqueA['id'] == $bloqueB['id']) continue;
                     if ($inicioA < $finB && $finA > $inicioB) {
                         throw new \Exception("El docente tiene bloques solapados en la asignación: día $diaA entre $inicioA-$finA y $inicioB-$finB.");
                     }
@@ -429,9 +434,14 @@ class HorarioController extends Controller
                     $query->where('hora_inicio', '<', $horaFin)
                           ->where('hora_fin', '>', $horaInicio);
                 });
-            // Excluir los bloques que se están editando (por id)
-            if (!empty($bloquesAExcluir)) {
-                $query->whereNotIn('id', $bloquesAExcluir);
+            // Excluir los bloques que se están editando (por id) y el propio bloque si tiene id (sin duplicados)
+            $idsAExcluir = $bloquesAExcluir;
+            if (isset($bloque['id'])) {
+                $idsAExcluir[] = $bloque['id'];
+            }
+            $idsAExcluir = array_unique(array_filter($idsAExcluir)); // Elimina duplicados y valores vacíos
+            if (!empty($idsAExcluir)) {
+                $query->whereNotIn('id', $idsAExcluir);
             }
             if ($query->exists()) {
                 throw new \Exception("El docente ya tiene un bloque asignado que se solapa el día $diaSemana entre $horaInicio y $horaFin.");

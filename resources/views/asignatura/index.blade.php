@@ -102,7 +102,7 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <table id="tabla-asignaturas" class="table table-bordered table-hover">
+                    <table id="tabla-asignaturas" class="table table-bordered table-hover" style="display:none;">
                         <thead class="thead-dark">
                             <tr>
                                 <th style="text-align: center">N°</th>
@@ -117,10 +117,10 @@
                         
                         </tbody>
                     </table>
-                        <div id="mensaje-inicial" class="text-center py-5">
-                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                            <h4 class="text-muted">Utilice los filtros para visualizar las asignaturas</h4>
-                        </div>
+                    <div id="mensaje-inicial" class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Utilice los filtros para visualizar las asignaturas</h4>
+                    </div>
                 </div>
             </div>
         </div>

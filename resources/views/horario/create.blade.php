@@ -46,7 +46,7 @@
         .main-sidebar {
             height: 100vh;
             overflow-y: hidden;
-            /* Mantener oculto el scroll de la sidebar si no es relevante */
+            /* Mantener oculto el scroll sde la sidebar si no es relevante */
             position: fixed;
         }
 
@@ -271,19 +271,18 @@
 </head>
 
 <body>
-    <div class="container-fluid">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h1 class="h3 text-primary">
-                    <i class="fas fa-calendar-plus mr-2"></i>Crear Nuevo Horario
-                </h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.index') }}">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('horario.index') }}">Horarios</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Nuevo</li>
-                    </ol>
-                </nav>
+    <div class="container-fluid d-flex flex-column align-items-center justify-content-center" style="min-height: 120px; padding:10px;">
+        <div class="row mb-4 w-100 justify-content-center">
+            <div class="col-12 d-flex justify-content-center">
+                <div class="d-flex align-items-center justify-content-center gap-3 bg-white shadow rounded-4 px-4 py-4 border border-2 border-primary-subtle" style="width:100%;">
+                    <a href="{{ url()->previous() }}" class="btn btn-outline-primary rounded-pill px-4 fw-bold" style="width:180px;">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                    <h1 class="h3 text-primary mb-0 fw-bold d-flex align-items-center justify-content-center w-100" style="letter-spacing:0.5px;">
+                        <i class="fas fa-calendar-plus me-2" style="font-size:2rem;"></i>Crear Nuevo Horario
+                    </h1>
+                </div>
+                
             </div>
         </div>
 

@@ -56,7 +56,7 @@
             position: sticky;
             left: 0;
             z-index: 15;
-            min-width: 80px; /* Ancho para la columna de horas */
+            width: 225px; /* Ancho para la columna de horas */
         }
         .table-horario td:first-child { /* Fix for first cell (corner) */
             z-index: 25;
@@ -118,20 +118,27 @@
 
         /* Estilos para impresión */
         @media print {
-            body {
-                overflow: visible !important; /* Asegura que no haya scroll y todo se imprima */
-                margin: 0;
-                padding: 0;
+            body, html {
+                margin: 0 !important;
+                padding: 0 !important;
             }
-            .wrapper, .content-wrapper, .content {
+            .wrapper, .content-wrapper, .content, .container-fluid, .row, .col-12, .col-md-8, .col-md-4 {
                 width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
                 border: none !important;
             }
-            .main-header, .main-sidebar, .main-footer, .breadcrumb, .btn-info, hr {
-                display: none !important; /* Oculta elementos no deseados en la impresión */
+            .main-header, .main-sidebar, .main-footer, .breadcrumb, .btn-info, hr, .row.mb-4:first-child { /* Oculta la fila de volver/editar/imprimir */
+                display: none !important;
+            }
+            /* Oculta todo lo que está antes de Datos Generales del Horario */
+            body > .wrapper > .content-wrapper > section > .container-fluid > .row.mb-4:first-child {
+                display: none !important;
+            }
+            /* Asegura que la impresión comience desde Datos Generales del Horario */
+            .info-card {
+                page-break-before: always;
             }
             .card {
                 border: 1px solid #dee2e6 !important; /* Asegura bordes en las cards */
@@ -164,17 +171,24 @@
                 padding: 1px 2px;
                 margin: 0; /* Elimina márgenes extra */
                 border-radius: 0; /* Elimina bordes redondeados si es necesario */
+                background-color: #fff !important; /* Bloques blancos al imprimir */
+                color: #343a40 !important; /* Texto oscuro para contraste */
+                box-shadow: none !important;
+                border: 1px solid #dee2e6 !important;
+            }
+            /* Fuerza fondo blanco para todos los bloques de color al imprimir */
+            .color-0, .color-1, .color-2, .color-3, .color-4, .color-5, .color-6, .color-7, .color-8, .color-9, .color-10 {
+                background-color: #fff !important;
+                color: #343a40 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                border: 1px solid #dee2e6 !important;
             }
             .asignatura-nombre {
                 font-size: 0.7rem; /* Ajusta el tamaño de fuente del nombre de asignatura */
             }
             .asignatura-details {
                 font-size: 0.55rem; /* Ajusta el tamaño de fuente de los detalles */
-            }
-            /* Asegurar que los colores de fondo se impriman */
-            .color-0, .color-1, .color-2, .color-3, .color-4, .color-5, .color-6, .color-7, .color-8, .color-9, .color-10 {
-                -webkit-print-color-adjust: exact; /* Para Chrome/Safari */
-                print-color-adjust: exact; /* Para otros navegadores */
             }
         }
     </style>
@@ -184,22 +198,28 @@
         <div class="content-wrapper" style="margin-left: 0 !important;">
             <section class="content">
                 <div class="container-fluid">
-                    <div class="row mb-4">
-                        <div class="col-12 text-center">
-                            <h3 class="text-primary mt-4">
-                                <i class="fas fa-calendar-check mr-2"></i>Detalle de Horario
-                            </h3>
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb">
-                                    <li class="breadcrumb-item"><a href="{{ route('admin.index') }}">Inicio</a></li>
-                                    <li class="breadcrumb-item"><a href="{{ route('horario.index') }}">Horarios</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Detalle</li>
-                                </ol>
-                            </nav>
-                            <hr>
-                            <button type="button" class="btn btn-info btn-sm mt-2" onclick="window.print()">
-                                <i class="fas fa-print me-1"></i> Imprimir Horario
-                            </button>
+                    <div class="row mb-4" style="margin-top: 10px;">
+                        <div class="col-12">
+                            <div class="card shadow rounded-4 px-4 border border-2 border-primary-subtle">
+                                <div class="card-body p-4">
+                                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+                                        <a href="{{ route('horario.index') }}" class="btn btn-outline-primary rounded-pill px-4 fw-bold mt-3 mt-md-0" style="width:180px;">
+                                            <i class="fas fa-arrow-left me-2"></i>Volver
+                                        </a>
+                                        <h3 class="text-primary text-center flex-grow-1 mb-0">
+                                            <i class="fas fa-calendar-check mr-2"></i>Detalle de Horario
+                                        </h3>
+                                        <div class="d-flex flex-column align-items-center" style="min-width:200px;">
+                                            <a href="{{ route('horario.edit', $horario->id) }}" class="btn btn-warning rounded-pill px-4 fw-bold mb-2" style="width:180px;">
+                                                <i class="fas fa-edit me-2"></i>Editar
+                                            </a>
+                                            <button type="button" class="btn btn-info rounded-pill px-4 fw-bold" style="width:200px;" onclick="window.print()">
+                                                <i class="fas fa-print me-1"></i> Imprimir Horario
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
