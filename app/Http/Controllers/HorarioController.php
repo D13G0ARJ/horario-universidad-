@@ -291,6 +291,9 @@ class HorarioController extends Controller
             // Validar solapamiento de docentes antes de guardar
             $this->validarSolapamientoDocente($horariosBloques, $periodoId);
 
+            // NUEVA VALIDACIÓN: Validar la carga horaria total de las asignaturas
+            $this->validarCargaHorariaTotal($horariosBloques);
+
             DB::beginTransaction();
 
             Horario::where('seccion_id', $seccionId)
@@ -308,7 +311,8 @@ class HorarioController extends Controller
                     'dia_semana' => 'required|integer|between:1,6',
                     'hora_inicio' => 'required|date_format:H:i',
                     'hora_fin' => 'required|date_format:H:i',
-                    'tipo_horas' => 'required|in:teorica,practica,laboratorio,Clase',
+                    // MODIFICADO: Solo permitir los tipos de horas definidos en carga_horarias
+                    'tipo_horas' => 'required|in:teorica,practica,laboratorio', 
                     'bloques' => 'required|integer|min:1|max:6',
                     'aula_id' => 'nullable|exists:aulas,id', // 'nullable' si el aula es opcional
                     'observaciones' => 'nullable|string|max:500',
@@ -365,43 +369,45 @@ class HorarioController extends Controller
      * Valida la carga horaria máxima por tipo de horas
      * Este método necesitaría ser revisado si tienes una lógica compleja de acumulación.
      */
-    private function validarCargaHoraria($bloques)
+    private function validarCargaHorariaTotal($bloques)
     {
-        $cargasAsignadas = [];
-        
+        $asignaturasAcumuladas = []; // Almacenará {asignatura_id => {tipo_horas => total_bloques_asignados}}
+
         foreach ($bloques as $bloque) {
-            $key = $bloque['asignatura_id'] . '_' . $bloque['tipo_horas'];
-            if (!isset($cargasAsignadas[$key])) {
-                $cargasAsignadas[$key] = 0;
+            $asignaturaId = $bloque['asignatura_id'];
+            $tipoHoras = $bloque['tipo_horas'];
+            $bloquesAsignados = (int) $bloque['bloques'];
+
+            if (!isset($asignaturasAcumuladas[$asignaturaId])) {
+                $asignaturasAcumuladas[$asignaturaId] = [];
             }
-            $cargasAsignadas[$key] += $bloque['bloques'];
+            if (!isset($asignaturasAcumuladas[$asignaturaId][$tipoHoras])) {
+                $asignaturasAcumuladas[$asignaturaId][$tipoHoras] = 0;
+            }
+            $asignaturasAcumuladas[$asignaturaId][$tipoHoras] += $bloquesAsignados;
         }
 
-        foreach ($cargasAsignadas as $key => $totalAsignado) {
-            list($asignaturaId, $tipoHoras) = explode('_', $key);
-
-            $asignatura = Asignatura::with('cargaHoraria')
-                ->where('asignatura_id', $asignaturaId)
-                ->first();
-
+        foreach ($asignaturasAcumuladas as $asignaturaId => $tiposDeHoras) {
+            $asignatura = Asignatura::where('asignatura_id', $asignaturaId)->first();
             if (!$asignatura) {
-                throw new \Exception("Asignatura con ID {$asignaturaId} no encontrada para validación.");
+                // Esto debería ser capturado por la validación exists:asignaturas,asignatura_id antes
+                throw new \Exception("Asignatura con ID {$asignaturaId} no encontrada para validación de carga horaria.");
             }
 
-            $cargaMaxima = $asignatura->cargaHoraria
-                ->where('tipo', $tipoHoras)
-                ->sum('horas_academicas');
+            foreach ($tiposDeHoras as $tipoHoras => $totalBloquesAsignados) {
+                $cargaHorariaMaxima = CargaHoraria::where('asignatura_id', $asignaturaId)
+                                                    ->where('tipo', $tipoHoras)
+                                                    ->sum('horas_academicas');
 
-            $cargaMaximaBloques = $cargaMaxima;
-
-            if ($totalAsignado > $cargaMaximaBloques) {
-                throw new \Exception(
-                    "La asignatura '{$asignatura->name}' excede la carga horaria máxima de " .
-                    "{$cargaMaximaBloques} bloques para el tipo '{$tipoHoras}'. Se intentaron asignar {$totalAsignado} bloques."
-                );
+                if ($totalBloquesAsignados > $cargaHorariaMaxima) {
+                    throw ValidationException::withMessages([
+                        'bloques_horario' => ["La asignatura '{$asignatura->name}' ({$tipoHoras}) excede su carga horaria máxima. Asignado: {$totalBloquesAsignados} bloques. Máximo permitido: {$cargaHorariaMaxima} bloques."]
+                    ]);
+                }
             }
         }
     }
+
 
     /**
      * Valida que no haya solapamientos de horario para el mismo docente
@@ -726,6 +732,9 @@ class HorarioController extends Controller
 
             $this->validarSolapamientoDocente(array_merge($bloquesData, $bloquesNuevosData), $horarioPrincipal->periodo_id, $idsBloquesEditados);
 
+            // NUEVA VALIDACIÓN: Validar la carga horaria total de las asignaturas
+            $this->validarCargaHorariaTotal(array_merge($bloquesData, $bloquesNuevosData));
+
             $existingBlockIdsInRequest = collect($bloquesData)->pluck('id')->filter()->toArray();
 
             // Guardar los datos de la sección y el período del horario principal antes de la posible eliminación
@@ -757,7 +766,8 @@ class HorarioController extends Controller
                     'dia_semana' => 'required|integer|between:1,6',
                     'hora_inicio' => 'required|date_format:H:i',
                     'bloques' => 'required|integer|min:1|max:6',
-                    'tipo_horas' => 'required|in:teorica,practica,laboratorio,Clase',
+                    // MODIFICADO: Solo permitir los tipos de horas definidos en carga_horarias
+                    'tipo_horas' => 'required|in:teorica,practica,laboratorio', 
                     'aula_id' => 'nullable|exists:aulas,id',
                 ]);
 
@@ -789,7 +799,8 @@ class HorarioController extends Controller
                     'dia_semana' => 'required|integer|between:1,6',
                     'hora_inicio' => 'required|date_format:H:i',
                     'bloques' => 'required|integer|min:1|max:6',
-                    'tipo_horas' => 'required|in:teorica,practica,laboratorio,Clase',
+                    // MODIFICADO: Solo permitir los tipos de horas definidos en carga_horarias
+                    'tipo_horas' => 'required|in:teorica,practica,laboratorio', 
                     'aula_id' => 'nullable|exists:aulas,id',
                 ]);
 
