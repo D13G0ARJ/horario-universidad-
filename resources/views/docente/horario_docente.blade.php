@@ -8,11 +8,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    {{-- Asumiendo que 'adminlte.css' está disponible en la ruta 'public/dist/css/' --}}
+    {{-- Assuming 'adminlte.css' is available in the 'public/dist/css/' path --}}
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.css') }}">
     <style>
         html, body { height: 100%; margin: 0; padding: 0; overflow: auto; }
-        .content-wrapper { padding: 20px; } /* Añadir padding al content-wrapper */
+        .content-wrapper { padding: 20px; } /* Add padding to content-wrapper */
         .bloque-horario {
             position: absolute; top: 0; left: 0; width: calc(100% - 8px); z-index: 10;
             padding: 3px 5px; font-size: 0.7rem; color: white; overflow: hidden;
@@ -46,16 +46,16 @@
         }
         .horario-table {
             width: 100%;
-            table-layout: fixed; /* Asegura que las columnas tengan el mismo ancho */
-            border-collapse: separate; /* Permite border-spacing */
-            border-spacing: 0 5px; /* Espacio vertical entre filas */
+            table-layout: fixed; /* Ensures columns have the same width */
+            border-collapse: separate; /* Allows border-spacing */
+            border-spacing: 0 5px; /* Vertical spacing between rows */
         }
         .horario-table th, .horario-table td {
             border: 1px solid #dee2e6;
-            padding: 0; /* Eliminar padding por defecto para controlar el contenido */
+            padding: 0; /* Remove default padding to control content */
             vertical-align: top;
-            position: relative; /* Necesario para posicionar los bloques absolutos */
-            height: 45px; /* Altura base para un bloque de 45 minutos */
+            position: relative; /* Required for absolute positioning of blocks */
+            height: 45px; /* Base height for a 45-minute block */
         }
         .horario-table th {
             background-color: #f8f9fa;
@@ -68,26 +68,113 @@
             text-align: center;
             font-weight: 600;
             padding: 8px;
-            width: 120px; /* Ancho ajustado para el formato de rango de horas */
+            width: 120px; /* Adjusted width for hour range format */
         }
         .horario-container {
-            overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
+            overflow-x: auto; /* Allows horizontal scrolling on small screens */
         }
 
-        /* Clases de colores para los bloques de horario */
-        .bg-color-1 { background-color: #6a0572; } /* Morado oscuro */
-        .bg-color-2 { background-color: #007bff; } /* Azul Bootstrap */
-        .bg-color-3 { background-color: #28a745; } /* Verde Bootstrap */
-        .bg-color-4 { background-color: #ffc107; color: #343a40; } /* Amarillo Bootstrap */
-        .bg-color-5 { background-color: #dc3545; } /* Rojo Bootstrap */
-        .bg-color-6 { background-color: #6f42c1; } /* Púrpura */
-        .bg-color-7 { background-color: #fd7e14; } /* Naranja */
-        .bg-color-8 { background-color: #20c997; } /* Turquesa */
-        .bg-color-9 { background-color: #e83e8c; } /* Rosa */
-        .bg-color-10 { background-color: #17a2b8; } /* Cian */
-        .bg-color-11 { background-color: #343a40; } /* Gris oscuro */
-        .bg-color-12 { background-color: #007bff; } /* Azul (repetido para más opciones) */
-        /* Añade más colores si tienes muchas asignaturas */
+        /* Color classes for schedule blocks */
+        .bg-color-1 { background-color: #6a0572; } /* Dark Purple */
+        .bg-color-2 { background-color: #007bff; } /* Bootstrap Blue */
+        .bg-color-3 { background-color: #28a745; } /* Bootstrap Green */
+        .bg-color-4 { background-color: #ffc107; color: #343a40; } /* Bootstrap Yellow */
+        .bg-color-5 { background-color: #dc3545; } /* Bootstrap Red */
+        .bg-color-6 { background-color: #6f42c1; } /* Purple */
+        .bg-color-7 { background-color: #fd7e14; } /* Orange */
+        .bg-color-8 { background-color: #20c997; } /* Turquoise */
+        .bg-color-9 { background-color: #e83e8c; } /* Pink */
+        .bg-color-10 { background-color: #17a2b8; } /* Cyan */
+        .bg-color-11 { background-color: #343a40; } /* Dark Gray */
+        .bg-color-12 { background-color: #007bff; } /* Blue (repeated for more options) */
+        /* Add more colors if you have many subjects */
+
+        /* Print Styles */
+        @media print {
+            body, html {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .wrapper, .content-wrapper, .content, .container-fluid, .row, .col-12 {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .main-header, .main-sidebar, .main-footer, .breadcrumb, .alert, .btn { /* Hide navigation, alerts, and buttons */
+                display: none !important;
+            }
+            /* New section for printing teacher name and period */
+            .print-header-info {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .print-header-info h2 {
+                font-size: 1.5rem;
+                margin-bottom: 5px;
+            }
+            .print-header-info p {
+                font-size: 1rem;
+                margin-bottom: 0;
+            }
+            /* End new section */
+
+            .card {
+                border: 1px solid #dee2e6 !important; /* Ensure borders on cards */
+                box-shadow: none !important;
+                margin-bottom: 10px !important;
+            }
+            .card-header {
+                background-color: #e9ecef !important; /* Light background for card headers */
+                color: #343a40 !important;
+                border-bottom: 1px solid #dee2e6 !important;
+            }
+            .horario-container {
+                overflow-x: visible !important; /* Prevent horizontal scroll in print */
+            }
+            .horario-table {
+                width: 100%;
+                table-layout: fixed; /* Distribute column width uniformly */
+            }
+            .horario-table th, .horario-table td {
+                font-size: 0.65rem; /* Reduce font size to fit more */
+                padding: 1px 2px; /* Reduce cell padding */
+                height: auto; /* Allow height to adjust to content */
+                min-width: unset; /* Remove min-width for more flexibility */
+                border: 1px solid #dee2e6 !important; /* Ensures the lines are visible */
+            }
+            .horario-table td.hora-col {
+                min-width: 60px; /* Adjust hour column width for printing */
+            }
+            .bloque-horario {
+                font-size: 0.6rem; /* Further reduce font inside blocks */
+                padding: 1px 2px;
+                margin: 0; /* Remove extra margins */
+                border-radius: 0; /* Remove rounded borders if necessary */
+                background-color: #fff !important; /* White blocks when printing */
+                color: #343a40 !important; /* Dark text for contrast */
+                box-shadow: none !important;
+                border: 1px solid #dee2e6 !important;
+            }
+            /* Force white background for all color blocks when printing */
+            .bg-color-1, .bg-color-2, .bg-color-3, .bg-color-4, .bg-color-5,
+            .bg-color-6, .bg-color-7, .bg-color-8, .bg-color-9, .bg-color-10,
+            .bg-color-11, .bg-color-12 {
+                background-color: #fff !important;
+                color: #343a40 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                border: 1px solid #dee2e6 !important;
+            }
+            .asignatura-nombre {
+                font-size: 0.7rem; /* Adjust subject name font size */
+            }
+            .asignatura-details {
+                font-size: 0.55rem; /* Adjust details font size */
+            }
+        }
     </style>
 </head>
 <body class="hold-transition sidebar-mini">
@@ -106,6 +193,17 @@
                             </ol>
                         </div>
                     </div>
+                    {{-- Section for action buttons, including print --}}
+                    <div class="row mb-4">
+                        <div class="col-12 d-flex justify-content-between align-items-center">
+                            <a href="{{ route('docente.index') }}" class="btn btn-outline-primary rounded-pill px-4 fw-bold">
+                                <i class="fas fa-arrow-left me-2"></i>Volver a la Lista de Docentes
+                            </a>
+                            <button type="button" class="btn btn-info rounded-pill px-4 fw-bold" onclick="window.print()">
+                                <i class="fas fa-print me-1"></i> Imprimir Horario
+                            </button>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col-12">
                             <div class="alert alert-info" role="alert">
@@ -118,6 +216,12 @@
 
             <section class="content">
                 <div class="container-fluid">
+                    {{-- Print-only header for teacher name and period --}}
+                    <div class="print-header-info" style="display: none;">
+                        <h2>Horario del Docente: {{ $docente->name }}</h2>
+                        <p>Período: {{ $periodo->nombre }}</p>
+                    </div>
+
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Detalle del Horario</h3>
@@ -134,16 +238,16 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($horasDia as $horaRango) {{-- Iterar sobre el rango de horas --}}
+                                        @foreach($horasDia as $horaRango) {{-- Iterate over the hour range --}}
                                             <tr>
                                                 <td class="hora-col">{{ $horaRango }}</td>
                                                 @php
-                                                    // Extraer la hora de inicio del rango para usarla en el ID de la celda
+                                                    // Extract the start hour of the range to use in the cell ID
                                                     $horaInicioCelda = explode(' - ', $horaRango)[0];
                                                 @endphp
                                                 @foreach($diasSemana as $diaNum => $diaNombre)
                                                     <td id="celda-{{ $diaNum }}-{{ str_replace(':', '', $horaInicioCelda) }}">
-                                                        {{-- Los bloques de horario se insertarán aquí con JavaScript --}}
+                                                        {{-- Schedule blocks will be inserted here with JavaScript --}}
                                                     </td>
                                                 @endforeach
                                             </tr>
@@ -153,13 +257,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-12 text-center mt-3">
-                            <a href="{{ route('docente.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left mr-1"></i> Volver a la Lista de Docentes
-                            </a>
-                        </div>
-                    </div>
+                    {{-- The old "Volver" button at the bottom is now moved to the top. Removed here. --}}
                 </div>
             </section>
         </div>
@@ -170,33 +268,33 @@
     <script src="{{ asset('dist/js/adminlte.min.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const BASE_CELL_HEIGHT = 45; // Altura base de una celda en píxeles (45 minutos)
+            const BASE_CELL_HEIGHT = 45; // Base cell height in pixels (45 minutes)
 
-            // Colores predefinidos para las asignaturas
+            // Predefined colors for subjects
             const colorClasses = [
                 'bg-color-1', 'bg-color-2', 'bg-color-3', 'bg-color-4', 'bg-color-5',
                 'bg-color-6', 'bg-color-7', 'bg-color-8', 'bg-color-9', 'bg-color-10',
                 'bg-color-11', 'bg-color-12'
             ];
-            let colorMap = {}; // Para asignar un color consistente a cada asignatura
+            let colorMap = {}; // To assign a consistent color to each subject
 
-            const horarioData = @json($horarioData); // Datos del horario pasados desde el controlador
+            const horarioData = @json($horarioData); // Schedule data passed from the controller
 
             // Debugging: Log the received horarioData
-            console.log('Horario Data recibida:', horarioData);
+            console.log('Horario Data received:', horarioData);
 
-            // Función para convertir HH:MM a minutos desde la medianoche
+            // Function to convert HH:MM to minutes from midnight
             function timeToMinutes(timeStr) {
                 const [h, m] = timeStr.split(':').map(Number);
                 return h * 60 + m;
             }
 
-            // Función para encontrar el inicio del intervalo de celda que contiene la hora real
+            // Function to find the start of the cell interval that contains the actual time
             function findContainingIntervalStart(actualTimeStr, intervalTimes) {
                 const actualMinutes = timeToMinutes(actualTimeStr);
                 let containingTime = null;
 
-                // Extraer solo la hora de inicio de los rangos de intervalTimes para la comparación
+                // Extract only the start hour from the intervalTimes ranges for comparison
                 const intervalStartTimes = intervalTimes.map(range => range.split(' - ')[0]);
 
                 // Sort intervalStartTimes to ensure we find the latest possible starting interval
@@ -214,16 +312,16 @@
                 return containingTime;
             }
 
-            // Obtener todos los intervalos de tiempo válidos de las celdas de la tabla para comparación
-            // Ahora las celdas de hora-col contienen el rango, necesitamos solo el inicio para el ID
+            // Get all valid time intervals from the table cells for comparison
+            // Now the hora-col cells contain the range, we only need the start for the ID
             const validIntervals = Array.from(document.querySelectorAll('.horario-table td.hora-col'))
                                     .map(td => td.textContent.trim());
-            console.log('Rangos de celdas válidos en la tabla (Horas):', validIntervals);
+            console.log('Valid cell ranges in the table (Hours):', validIntervals);
 
 
             horarioData.forEach(function(horario) {
                 const diaSemana = horario.dia_semana;
-                const actualHoraInicioStr = horario.hora_inicio; // La hora de inicio real del horario
+                const actualHoraInicioStr = horario.hora_inicio; // The actual start time of the schedule
                 const bloques = horario.bloques;
                 const asignaturaId = horario.asignatura_id;
                 const asignaturaName = horario.asignatura_name;
@@ -231,7 +329,7 @@
                 const seccionCodigo = horario.seccion_codigo;
                 const aulaName = horario.aula_name;
 
-                // Asignar un color a la asignatura si no tiene uno ya
+                // Assign a color to the subject if it doesn't have one yet
                 if (!colorMap[asignaturaId]) {
                     const nextColorIndex = Object.keys(colorMap).length % colorClasses.length;
                     colorMap[asignaturaId] = colorClasses[nextColorIndex];
@@ -240,28 +338,28 @@
 
                 const horaFinStr = calcularHoraFin(actualHoraInicioStr, bloques);
 
-                // Encontrar la hora de inicio de la CELDA en la que debe ir este bloque
+                // Find the start hour of the CELL where this block should go
                 const baseCellTimeStr = findContainingIntervalStart(actualHoraInicioStr, validIntervals);
 
                 if (!baseCellTimeStr) {
-                    console.warn(`No se pudo encontrar un intervalo de celda base para la hora de inicio: ${actualHoraInicioStr}. Este horario no se dibujará.`);
-                    return; // Saltar este bloque si no se encuentra una celda base
+                    console.warn(`Could not find a base cell interval for the start time: ${actualHoraInicioStr}. This schedule will not be drawn.`);
+                    return; // Skip this block if no base cell is found
                 }
 
-                // Calcular el offset Top dentro de la celda
+                // Calculate the Top offset within the cell
                 const actualMinutes = timeToMinutes(actualHoraInicioStr);
                 const baseMinutes = timeToMinutes(baseCellTimeStr);
-                const offsetMinutes = actualMinutes - baseMinutes; // Minutos de desfase desde el inicio de la celda
-                const offsetTop = (offsetMinutes / 45) * BASE_CELL_HEIGHT; // Posición en píxeles
+                const offsetMinutes = actualMinutes - baseMinutes; // Offset minutes from the start of the cell
+                const offsetTop = (offsetMinutes / 45) * BASE_CELL_HEIGHT; // Position in pixels
 
-                // Determinar la ID de la celda de la tabla donde se insertará el bloque
+                // Determine the ID of the table cell where the block will be inserted
                 const cellId = `celda-${diaSemana}-${baseCellTimeStr.replace(':', '')}`;
-                console.log(`Intentando colocar bloque: Dia ${diaSemana}, Hora Inicio Real: ${actualHoraInicioStr}, Hora Celda Base: ${baseCellTimeStr}, ID Celda Buscada: ${cellId}, Offset Top: ${offsetTop}px`);
+                console.log(`Attempting to place block: Day ${diaSemana}, Actual Start Time: ${actualHoraInicioStr}, Base Cell Time: ${baseCellTimeStr}, Searched Cell ID: ${cellId}, Offset Top: ${offsetTop}px`);
 
                 const targetCell = document.getElementById(cellId);
 
                 if (targetCell) {
-                    console.log(`Celda encontrada para ${cellId}.`);
+                    console.log(`Cell found for ${cellId}.`);
                     crearBloqueVisual(
                         targetCell,
                         asignaturaId,
@@ -274,12 +372,12 @@
                         bloques
                     );
                 } else {
-                    console.warn(`Celda NO encontrada en el DOM para el ID: ${cellId}. Esto puede deberse a que la hora base calculada (${baseCellTimeStr}) no existe como ID de celda en la tabla HTML.`);
-                    console.warn(`Verifique si la hora de inicio en la base de datos (${actualHoraInicioStr}) y los intervalos de las celdas HTML (${validIntervals.join(', ')}) son consistentes.`);
+                    console.warn(`Cell NOT found in the DOM for ID: ${cellId}. This may be because the calculated base time (${baseCellTimeStr}) does not exist as a cell ID in the HTML table.`);
+                    console.warn(`Verify if the start time in the database (${actualHoraInicioStr}) and the HTML cell intervals (${validIntervals.join(', ')}) are consistent.`);
                 }
             });
 
-            // Función para calcular la hora de fin
+            // Function to calculate end time
             function calcularHoraFin(horaInicio, bloques) {
                 const [h, m] = horaInicio.split(':').map(Number);
                 let totalMinutosFin = (h * 60 + m) + (bloques * 45);
@@ -288,12 +386,12 @@
                 return `${String(horasFin).padStart(2, '0')}:${String(minutosFin).padStart(2, '0')}`;
             }
 
-            // Función para crear y añadir el bloque visual al horario
+            // Function to create and add the visual block to the schedule
             function crearBloqueVisual(celda, asignaturaId, asignaturaName, semestreNumero, seccionCodigo, aulaName, colorClass, offsetTop, bloques) {
                 const bloque = document.createElement('div');
                 bloque.classList.add('bloque-horario', colorClass);
                 bloque.style.height = `${bloques * BASE_CELL_HEIGHT}px`;
-                bloque.style.top = `${offsetTop}px`; // Aplicar el offset
+                bloque.style.top = `${offsetTop}px`; // Apply the offset
 
                 bloque.innerHTML = `
                     <div class="bloque-contenido">
