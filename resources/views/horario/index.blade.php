@@ -75,8 +75,7 @@
     </div>
 </div>
 
-<!-- Modals -->
-@include('modals.horarios.create')
+
 
 @push('scripts')
 <script>

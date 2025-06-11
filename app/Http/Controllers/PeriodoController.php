@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Periodo;
 use App\Models\Bitacora;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Auth; // Import Auth facade
 
 class PeriodoController extends Controller
 {
@@ -25,8 +25,9 @@ class PeriodoController extends Controller
 
         $periodo = Periodo::create($request->all());
 
+        // CORRECTED: Use 'cedula' instead of 'user_id' for Bitacora
         Bitacora::create([
-            'cedula' => Auth::user()->cedula,  // Usar cedula en lugar de user_id
+            'cedula' => Auth::user()->cedula,
             'accion' => 'Período Creado: ' . $periodo->nombre
         ]);
 
@@ -44,8 +45,9 @@ class PeriodoController extends Controller
         $periodo = Periodo::findOrFail($id);
         $periodo->update($request->all());
 
+        // CORRECTED: Use 'cedula' instead of 'user_id' for Bitacora
         Bitacora::create([
-            'cedula' => Auth::user()->cedula,  // Usar cedula aquí
+            'cedula' => Auth::user()->cedula,
             'accion' => 'Periodo Actualizado: ' . $periodo->nombre
         ]);
 
@@ -56,8 +58,9 @@ class PeriodoController extends Controller
     {
         $periodo = Periodo::findOrFail($id);
         
+        // CORRECTED: Use 'cedula' instead of 'user_id' for Bitacora
         Bitacora::create([
-            'cedula' => Auth::user()->cedula,  // Y aquí
+            'cedula' => Auth::user()->cedula,
             'accion' => 'Período eliminado: ' . $periodo->nombre
         ]);
 
