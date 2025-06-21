@@ -46,7 +46,7 @@
         .main-sidebar {
             height: 100vh;
             overflow-y: hidden;
-            /* Mantener oculto el scroll de la sidebar si no es relevante */
+            /* Mantener oculto el scroll sde la sidebar si no es relevante */
             position: fixed;
         }
 
@@ -271,19 +271,18 @@
 </head>
 
 <body>
-    <div class="container-fluid">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h1 class="h3 text-primary">
-                    <i class="fas fa-calendar-plus mr-2"></i>Crear Nuevo Horario
-                </h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.index') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('horario.index') }}">Horarios</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Nuevo</li>
-                    </ol>
-                </nav>
+    <div class="container-fluid d-flex flex-column align-items-center justify-content-center" style="min-height: 120px; padding:10px;">
+        <div class="row mb-4 w-100 justify-content-center">
+            <div class="col-12 d-flex justify-content-center">
+                <div class="d-flex align-items-center justify-content-center gap-3 bg-white shadow rounded-4 px-4 py-4 border border-2 border-primary-subtle" style="width:100%;">
+                    <a href="{{ url()->previous() }}" class="btn btn-outline-primary rounded-pill px-4 fw-bold" style="width:180px;">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                    <h1 class="h3 text-primary mb-0 fw-bold d-flex align-items-center justify-content-center w-100" style="letter-spacing:0.5px;">
+                        <i class="fas fa-calendar-plus me-2" style="font-size:2rem;"></i>Crear Nuevo Horario
+                    </h1>
+                </div>
+                
             </div>
         </div>
 
@@ -438,7 +437,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-info text-white">
                     <h5 class="modal-title" id="modalAsignaturaCompartidaLabel">Seleccionar Asignatura Compartida</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -497,7 +496,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-info" id="btnGuardarAsignaturaCompartida">Guardar</button>
                 </div>
             </div>
@@ -518,7 +517,9 @@
                         <input type="hidden" id="modalDocenteId">
                         <input type="hidden" id="modalDiaSemana">
                         <input type="hidden" id="modalHoraInicio">
-                        <input type="hidden" id="modalColorClass"> {{-- Nuevo campo oculto para colorClass --}}
+                        <input type="hidden" id="modalColorClass">
+                        {{-- Campo oculto para almacenar la carga horaria completa de la asignatura --}}
+                        <input type="hidden" id="modalCargaHorariaData">
 
                         <div class="mb-3">
                             <label for="modalAsignaturaNombre" class="form-label">Asignatura:</label>
@@ -534,22 +535,16 @@
                             <label for="modalTipoHoras" class="form-label">Tipo de Horas:</label>
                             <select class="form-select" id="modalTipoHoras">
                                 <option value="">Seleccione tipo</option>
-                                </select>
+                            </select>
                         </div>
 
                         <div class="mb-3">
                             <label for="modalBloques" class="form-label">Cantidad de Bloques (45 min c/u):</label>
                             <select class="form-select" id="modalBloques">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
+                                {{-- Opciones se cargarán dinámicamente --}}
                             </select>
                         </div>
 
-                        {{-- NUEVO CAMPO AULA --}}
                         <div class="mb-3">
                             <label for="modalAula" class="form-label">Aula:</label>
                             <select class="form-select" id="modalAula" required>
@@ -557,12 +552,6 @@
                                 {{-- Las opciones de aula se cargarán dinámicamente con JavaScript --}}
                             </select>
                         </div>
-
-                        {{-- ELIMINADO: Apartado de Observaciones --}}
-                        {{-- <div class="mb-3">
-                            <label for="modalObservaciones" class="form-label">Observaciones (Opcional):</label>
-                            <textarea class="form-control" id="modalObservaciones" rows="2"></textarea>
-                        </div> --}}
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -591,7 +580,6 @@
             const semestreSelect = document.getElementById('semestre_id');
             const carreraSelect = document.getElementById('carrera_id');
             const seccionSelect = document.getElementById('seccion_id');
-            // const coordinadorSelect = document.getElementById('coordinador_cedula'); // REMOVED: Get the new coordinator select
             const buscarBtn = document.getElementById('buscarHorarios');
             const listaAsignaturas = document.getElementById('listaAsignaturas');
             const horarioBody = document.getElementById('horarioBody');
@@ -628,16 +616,17 @@
             const modalTipoHoras = document.getElementById('modalTipoHoras');
             const modalBloques = document.getElementById('modalBloques'); // Now a select
             const modalAula = document.getElementById('modalAula'); // New aula select
-            // const modalObservaciones = document.getElementById('modalObservaciones'); // REMOVED: Observaciones field
             const saveBlockBtn = document.getElementById('saveBlockBtn');
             const modalColorClass = document.getElementById('modalColorClass'); // Get the new hidden input
+            // NUEVO: Campo oculto para almacenar la carga horaria completa de la asignatura en la modal
+            const modalCargaHorariaData = document.getElementById('modalCargaHorariaData');
 
 
             // Object to track assigned hours per subject and type
-            let assignedHoursPerSubject = {}; // Example: { "asignaturaId_Teórica": 2, "asignaturaId_Práctica": 1 }
+            let assignedHoursPerSubject = {}; // Example: { "asignaturaId_teorica": 2, "asignaturaId_practica": 1 }
 
             // Global variable to track occupied cells (rowIndex, colIndex)
-            let scheduleGrid = []; // scheduleGrid[rowIndex][dayIndex] = { blockElementRef } or null
+            let scheduleGrid = []; // scheduleGrid[rowIndex][colIndex] = { blockElementRef } or null
 
             // Array to store configured blocks for submission
             const bloquesParaGuardar = [];
@@ -741,9 +730,7 @@
                 const turnoId = turnoSelect.value;
                 const semestreId = semestreSelect.value;
                 const seccionId = seccionSelect.value;
-                // const coordinadorCedula = coordinadorSelect.value; // REMOVED: Get coordinator cedula
 
-                // REMOVED: Check for coordinadorCedula
                 console.log('Buscando horarios con:', { periodoId, carreraId, turnoId, semestreId, seccionId }); // Debugging log
 
                 if (!periodoId || !carreraId || !turnoId || !semestreId || !seccionId) {
@@ -760,8 +747,6 @@
 
                 listaAsignaturas.innerHTML =
                     `<div class="text-center py-4"><div class="spinner-border text-primary"></div><p>Cargando...</p></div>`;
-                // horarioBody.innerHTML = // This line is now handled by generarHorario()
-                //     `<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div><p>Preparando...</p></td></tr>`;
                 
                 // Reset shared assignment related elements
                 btnAsignaturaCompartida.disabled = true; 
@@ -814,7 +799,6 @@
                         listaAsignaturas.innerHTML =
                             `<div class="text-center py-4 text-muted"><i class="fas fa-exclamation-circle me-2"></i>No hay asignaturas.</div>`;
                     }
-                    // generarHorario(); // Moved up to clear and regenerate table earlier
                 } catch (error) {
                     console.error('Error en la búsqueda de asignaturas:', error); // More specific error log
                     Swal.fire('Error', `Ocurrió un error al cargar: ${error.message}`, 'error');
@@ -918,10 +902,8 @@
                 this.classList.remove('hover-cell');
 
                 const transferData = e.dataTransfer.getData('text/plain');
-                console.log('Data transferred:', transferData); // Log data transferred
 
                 if (!transferData) {
-                    console.error('No data transferred during drop event.');
                     Swal.fire('Error', 'No se pudo obtener la información de la asignatura arrastrada.', 'error');
                     return;
                 }
@@ -930,12 +912,9 @@
                 try {
                     data = JSON.parse(transferData);
                 } catch (error) {
-                    console.error('Error parsing JSON data from drag event:', error);
                     Swal.fire('Error', 'Error al procesar la información de la asignatura.', 'error');
                     return;
                 }
-
-                console.log('Parsed data (handleDrop):', data); // Log parsed data
 
                 const {
                     asignatura_id,
@@ -956,36 +935,43 @@
                     return;
                 }
 
-                // Prepare hour type options and validate general availability
-                let tipoOptionsHtml = '';
+                // Reset modal select options
+                modalTipoHoras.innerHTML = '<option value="">Seleccione tipo</option>';
+                modalBloques.innerHTML = ''; // Clear blocks options initially
+                modalBloques.disabled = true; // Disable until a type is selected
+
                 let tieneHorasDisponibles = false;
                 if (cargaHorariaData && cargaHorariaData.length > 0) {
                     cargaHorariaData.forEach(carga => {
                         const subjectTypeKey = `${asignatura_id}_${carga.tipo}`;
                         const horasYaAsignadas = assignedHoursPerSubject[subjectTypeKey] || 0;
-                        // Assuming horas_academicas is the number of 45min blocks
                         const horasMaximasParaTipo = parseInt(carga.horas_academicas);
                         const horasRestantesParaTipo = horasMaximasParaTipo - horasYaAsignadas;
 
-                        if (horasRestantesParaTipo > 0) {
-                            tipoOptionsHtml +=
-                                `<option value="${carga.tipo}">${carga.tipo} (${horasRestantesParaTipo} bloques rest.)</option>`;
-                            tieneHorasDisponibles = true;
+                        let optionText = `${carga.tipo} (${horasRestantesParaTipo} bloques rest.)`;
+                        let option = new Option(optionText, carga.tipo);
+                        if (horasRestantesParaTipo <= 0) {
+                            option.disabled = true;
+                            optionText = `${carga.tipo} (Límite alcanzado)`;
+                            option = new Option(optionText, carga.tipo); // Recreate with disabled text
+                            option.disabled = true;
                         } else {
-                            tipoOptionsHtml +=
-                                `<option value="${carga.tipo}" disabled>${carga.tipo} (Límite alcanzado)</option>`;
+                            tieneHorasDisponibles = true;
                         }
+                        modalTipoHoras.add(option);
                     });
-                } else { // If no hour load is defined, assume a generic type without limit (or you could prohibit it)
-                    tipoOptionsHtml = `<option value="Clase">Clase (carga no definida)</option>`;
-                    tieneHorasDisponibles = true; // Allow adding if no defined load
-                }
+                } 
 
                 if (!tieneHorasDisponibles && cargaHorariaData && cargaHorariaData.length > 0) {
                     Swal.fire('Límite Alcanzado',
                         `No hay horas disponibles para la asignatura '${asignaturaName}'. Ya ha asignado todos los bloques permitidos.`,
                         'info');
-                    return;
+                    return; // Prevent modal from opening
+                } else if (!cargaHorariaData || cargaHorariaData.length === 0) {
+                     Swal.fire('Advertencia',
+                        `La asignatura '${asignaturaName}' no tiene carga horaria definida. No se puede agregar.`,
+                        'warning');
+                    return; // Prevent modal from opening if no load is defined
                 }
 
                 // Populate modal fields before showing
@@ -994,12 +980,9 @@
                 modalDiaSemana.value = dia;
                 modalHoraInicio.value = horaInicio;
                 modalColorClass.value = colorClass; // Store colorClass in modal hidden input
+                // Almacenar la carga horaria completa en un campo oculto de la modal
+                modalCargaHorariaData.value = JSON.stringify(cargaHorariaData);
 
-                // Populate Tipo de Horas
-                modalTipoHoras.innerHTML = tipoOptionsHtml;
-
-                // Set default for Bloques (if any)
-                modalBloques.value = '1';
 
                 // Populate Docente
                 modalDocenteId.value = ''; // Reset
@@ -1011,9 +994,45 @@
 
                 // Load Aulas
                 await cargarAulas(); // Ensure aulas are loaded before showing modal
+                
+                // Trigger change event to populate modalBloques based on initial modalTipoHoras selection
+                modalTipoHoras.dispatchEvent(new Event('change'));
 
                 horarioBlockModal.show(); // This is the line that shows the modal
             }
+
+            // NUEVO: Event listener para modalTipoHoras para actualizar modalBloques
+            modalTipoHoras.addEventListener('change', function() {
+                const selectedTipo = this.value;
+                const asignaturaId = modalAsignaturaId.value;
+                const cargaHorariaCompleta = JSON.parse(modalCargaHorariaData.value || '[]');
+
+                modalBloques.innerHTML = ''; // Clear existing options
+                modalBloques.disabled = true;
+
+                if (!selectedTipo) return;
+
+                const cargaParaTipo = cargaHorariaCompleta.find(c => c.tipo === selectedTipo);
+
+                if (cargaParaTipo) {
+                    const horasMaximas = parseInt(cargaParaTipo.horas_academicas);
+                    const horasYaAsignadas = assignedHoursPerSubject[`${asignaturaId}_${selectedTipo}`] || 0;
+                    const horasRestantes = horasMaximas - horasYaAsignadas;
+
+                    if (horasRestantes > 0) {
+                        for (let i = 1; i <= horasRestantes && i <= 6; i++) { // Max 6 blocks as per validation
+                            modalBloques.add(new Option(i, i));
+                        }
+                        modalBloques.disabled = false;
+                    } else {
+                        modalBloques.innerHTML = '<option value="">No hay bloques disponibles</option>';
+                    }
+                } else {
+                    // This case should ideally not happen if cargaHorariaData is correctly populated and validated
+                    modalBloques.innerHTML = '<option value="">Carga horaria no definida para este tipo</option>';
+                }
+            });
+
 
             // 9. Create the visual block in the table
             function crearBloqueVisual(targetCell, asignaturaId, asignaturaName, dia, horaInicio, horaFin, bloques,
@@ -1128,7 +1147,8 @@
                 const indexToRemove = bloquesParaGuardar.findIndex(b =>
                     b.asignatura_id === asignaturaId &&
                     b.dia_semana === parseInt(dia) &&
-                    b.hora_inicio === horaInicio
+                    b.hora_inicio === horaInicio &&
+                    b.tipo_horas === tipoHoras // Add tipo_horas for more precise match
                     // Consider adding more unique identifiers if needed, e.g., aula_id
                 );
                 if (indexToRemove !== -1) {
@@ -1149,15 +1169,30 @@
                 const asignaturaId = modalAsignaturaId.value;
                 const asignaturaName = modalAsignaturaNombre.value;
                 const docenteId = modalDocenteId.value;
-                // const docenteName = modalDocenteNombre.value; // Not used for display in block
                 const diaSemana = modalDiaSemana.value;
                 const horaInicio = modalHoraInicio.value;
                 const tipoHoras = modalTipoHoras.value;
                 const bloques = parseInt(modalBloques.value);
                 const aulaId = modalAula.value;
-                const aulaName = modalAula.options[modalAula.selectedIndex].text; // Get aula name
-                // const observaciones = modalObservaciones.value; // REMOVED: Observaciones field
-                const colorClass = modalColorClass.value; // Get colorClass from hidden input
+                const aulaName = modalAula.options[modalAula.selectedIndex].text;
+                const colorClass = modalColorClass.value;
+                const cargaHorariaCompleta = JSON.parse(modalCargaHorariaData.value || '[]');
+
+                // --- VALIDACIÓN FRONTEND: Carga Horaria ---
+                const cargaParaTipo = cargaHorariaCompleta.find(c => c.tipo === tipoHoras);
+                if (!cargaParaTipo) {
+                     Swal.fire('Error', 'Tipo de horas no válido para esta asignatura.', 'error');
+                     return;
+                }
+                const horasMaximas = parseInt(cargaParaTipo.horas_academicas);
+                const horasYaAsignadas = assignedHoursPerSubject[`${asignaturaId}_${tipoHoras}`] || 0;
+                
+                if ((horasYaAsignadas + bloques) > horasMaximas) {
+                    Swal.fire('Límite Excedido', `No puedes agregar ${bloques} bloques de tipo '${tipoHoras}'. Solo quedan ${horasMaximas - horasYaAsignadas} disponibles de ${horasMaximas}.`, 'warning');
+                    return;
+                }
+                // --- FIN VALIDACIÓN FRONTEND: Carga Horaria ---
+
 
                 if (!asignaturaId || !docenteId || !diaSemana || !horaInicio || !tipoHoras || isNaN(bloques) || bloques < 1 || !aulaId) {
                     Swal.fire('Advertencia', 'Por favor, complete todos los campos requeridos (Asignatura, Docente, Tipo de Horas, Bloques y Aula).', 'warning');
@@ -1191,7 +1226,6 @@
                     tipo_horas: tipoHoras,
                     bloques: bloques,
                     aula_id: aulaId,
-                    // observaciones: observaciones // REMOVED: Observaciones field
                 });
 
                 // Add visual block to the schedule
@@ -1252,10 +1286,8 @@
                 const carreraId = carreraSelect.value;
                 const semestreId = semestreSelect.value;
                 const seccionId = seccionSelect.value;
-                // const coordinadorCedula = coordinadorSelect.value; // REMOVED: Get coordinator cedula
                 const asignaturaCompartidaId = asignaturaCompartidaIdHidden.value; // Get shared assignment ID
 
-                // REMOVED: Check for coordinadorCedula
                 if (!periodoId || !carreraId || !turnoId || !semestreId || !seccionId) {
                     Swal.fire('Advertencia', 'Por favor, complete todos los filtros antes de guardar el horario.',
                         'warning');
@@ -1268,7 +1300,6 @@
                     carrera_id: carreraId,
                     semestre_id: semestreId,
                     seccion_id: seccionId,
-                    // coordinador_cedula: coordinadorCedula, // REMOVED: Include coordinator cedula
                     bloques_horario: bloquesParaGuardar, // Send the collected blocks
                     asignatura_compartida_id: asignaturaCompartidaId // Include shared assignment ID
                 };

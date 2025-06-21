@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dashboard</title>
+    <title>Inicio</title>
 
     <!-- Fuentes -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=swap">
@@ -21,7 +21,7 @@
     <!-- DataTables CSS -->
      <!-- FullCalendar CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.dataTables.min.css">
 
@@ -103,10 +103,10 @@
 
 <body class="hold-transition sidebar-mini">
     <div class="wrapper">
-        <nav class="main-header navbar navbar-expand navbar-white navbar-light fixed-top shadow-sm" ">
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light fixed-top shadow-sm" >
     <div class=" container-fluid">
             <!-- Left Side -->
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center jsustify-content-center">
                 <a class="nav-link text-dark" data-widget="pushmenu" href="#" role="button">
                     <i class="fas fa-bars"></i>
                 </a>
@@ -144,9 +144,17 @@
                                     <span>Configurar preguntas</span>
                                 </a>
                             </li>
+                             <li>
+                                <a class="dropdown-item d-flex align-items-center py-2"
+                                    href="https://drive.google.com/file/d/1ux9RrhtkInsUIs301dL6JihCU-gnQrCZ/view?usp=sharing" target="_blank">
+                                    <i class="fas fa-book me-3 opacity-75"></i>
+                                    <span class="text-truncate">Manual de Usuario</span>
+                        
+                                </a>
                             <li>
                                 <hr class="dropdown-divider my-2">
                             </li>
+                          
                             <li>
                                 <a class="dropdown-item d-flex align-items-center py-2"
                                     href="{{ route('logout') }}"
@@ -203,7 +211,7 @@
                     <li class="nav-item">
                         <a href="{{ url('/') }}" class="nav-link">
                             <i class="nav-icon fas fa-home"></i>
-                            <p>Dashboard</p>
+                            <p>Inicio</p>
                         </a>
                     </li>
 
@@ -526,7 +534,6 @@
             });
         });
     </script>
-    ```
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2/dist/js/i18n/es.js"></script> {{-- Para traducción al español --}}

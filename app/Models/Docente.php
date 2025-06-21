@@ -43,6 +43,7 @@ class Docente extends Model
         'email',
         'telefono',
         'docente_id',
+        'status',
         'dedicacion_id'
     ];
 

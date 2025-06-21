@@ -19,6 +19,7 @@ class CreateDocentesTable extends Migration
             $table->string('name'); // Nombre del docente
             $table->string('email')->unique(); // Correo único
             $table->string('telefono'); // Teléfono
+            $table->enum('status', ['activo', 'inactivo'])->default('activo');
 
             // Relación con la tabla dedicaciones
             $table->unsignedBigInteger('dedicacion_id'); // Llave foránea hacia dedicaciones
