@@ -10,188 +10,205 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.css') }}">
     <style>
-        html, body { height: 100%; margin: 0; padding: 0; overflow: auto; }
-        .content-wrapper { padding: 20px; } /* Añadir padding al content-wrapper */
-        .bloque-horario {
-            position: absolute; top: 0; left: 0; width: calc(100% - 8px); z-index: 10;
-            padding: 3px 5px; font-size: 0.7rem; color: white; overflow: hidden;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; flex-direction: column;
-            justify-content: space-between; margin: 2px; border-radius: 4px;
-            cursor: pointer; /* Para indicar que es clickeable si hay futuras interacciones */
+    html, body { height: 100%; margin: 0; padding: 0; overflow: auto; }
+    .content-wrapper { padding: 20px; } /* Añadir padding al content-wrapper */
+    .bloque-horario {
+        position: absolute; top: 0; left: 0; width: calc(100% - 8px); z-index: 10;
+        padding: 3px 5px; font-size: 0.7rem; color: white; overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+        justify-content: space-between; margin: 2px; border-radius: 4px;
+        cursor: pointer; /* Para indicar que es clickeable si hay futuras interacciones */
+    }
+    .bloque-contenido {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .asignatura-nombre {
+        font-weight: bold;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
+    }
+    .asignatura-details {
+        font-size: 0.65rem;
+        line-height: 1.2;
+    }
+    .table-horario th, .table-horario td {
+        text-align: center;
+        vertical-align: middle;
+        position: relative; /* Para posicionar los bloques absolutos */
+        padding: 0; /* Eliminar padding para que el bloque ocupe todo el espacio */
+        height: 45px; /* Altura base para un bloque */
+        /* min-width: 100px; REMOVED */
+    }
+    .table-horario thead th {
+        background-color: #343a40;
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+    }
+    .table-horario tbody th { /* Horas */
+        background-color: #495057;
+        color: white;
+        position: sticky;
+        left: 0;
+        z-index: 15;
+        width: 225px; /* Ancho para la columna de horas */
+    }
+    .table-horario td:first-child { /* Fix for first cell (corner) */
+        z-index: 25;
+    }
+
+    /* Colores para bloques (ejemplos, puedes ajustarlos) */
+    .color-0 { background-color: #e67e22; } /* Naranja */
+    .color-1 { background-color: #28a745; } /* Verde éxito */
+    .color-2 { background-color: #007bff; } /* Azul primario */
+    .color-3 { background-color: #6f42c1; } /* Púrpura */
+    .color-4 { background-color: #dc3545; } /* Rojo peligro */
+    .color-5 { background-color: #17a2b8; } /* Cian información */
+    .color-6 { background-color: #fd7e14; } /* Naranja oscuro */
+    .color-7 { background-color: #20c997; } /* Teal */
+    .color-8 { background-color: #6610f2; } /* Indigo */
+    .color-9 { background-color: #e83e8c; } /* Rosa */
+    .color-10 { background-color: #6c757d; } /* Gris */
+
+    /* Estilos para la nueva sección de Datos Generales */
+    .info-card .card-body {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    .info-item {
+        font-size: 0.95rem;
+        padding: 5px;
+        border-radius: 5px;
+        background-color: #f8f9fa; /* Light background for each item */
+        border: 1px solid #e9ecef;
+    }
+    .info-item strong {
+        display: block;
+        margin-bottom: 2px;
+        color: #343a40;
+    }
+    .info-item span {
+        color: #6c757d;
+    }
+
+    /* Estilos para el apartado de Coordinador */
+    .coordinador-card .card-body {
+        padding: 10px 15px; /* Reduce padding */
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+    }
+    .coordinador-info {
+        font-size: 0.9rem; /* Smaller font size */
+        margin: 0; /* Remove default paragraph margin */
+    }
+    .coordinador-info strong {
+        color: #343a40;
+    }
+    .coordinador-info span {
+        color: #6c757d;
+    }
+
+    /* Estilos para impresión */
+    @media print {
+        body, html {
+            margin: 0 !important;
+            padding: 0 !important;
         }
-        .bloque-contenido {
+        .wrapper, .content-wrapper, .content, .container-fluid, .row, .col-12, .col-md-8, .col-md-4 {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        .main-header, .main-sidebar, .main-footer, .breadcrumb, .btn-info, hr, .row.mb-4:first-child { /* Oculta la fila de volver/editar/imprimir */
+            display: none !important;
+        }
+        /* Oculta todo lo que está antes de Datos Generales del Horario */
+        body > .wrapper > .content-wrapper > section > .container-fluid > .row.mb-4:first-child {
+            display: none !important;
+        }
+        /* Asegura que la impresión comience desde Datos Generales del Horario */
+        .info-card {
+            page-break-before: always;
+        }
+        .card {
+            border: 1px solid #dee2e6 !important; /* Asegura bordes en las cards */
+            box-shadow: none !important;
+            margin-bottom: 10px !important;
+        }
+        .card-header {
+            background-color: #e9ecef !important; /* Fondo claro para cabeceras de card */
+            color: #343a40 !important;
+            border-bottom: 1px solid #dee2e6 !important;
+        }
+        .table-responsive {
+            overflow-x: visible !important; /* Evita el scroll horizontal en impresión */
+        }
+        .table-horario {
             width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        .asignatura-nombre {
-            font-weight: bold;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 2px;
-        }
-        .asignatura-details {
-            font-size: 0.65rem;
-            line-height: 1.2;
+            table-layout: fixed; /* Distribuye el ancho de las columnas de manera uniforme */
         }
         .table-horario th, .table-horario td {
-            text-align: center;
-            vertical-align: middle;
-            position: relative; /* Para posicionar los bloques absolutos */
-            padding: 0; /* Eliminar padding para que el bloque ocupe todo el espacio */
-            height: 45px; /* Altura base para un bloque */
-            /* min-width: 100px; REMOVED */
+            font-size: 0.6rem; /* Reducido aún más el tamaño de fuente para que quepa más */
+            padding: 0px 1px; /* Reducido aún más el padding de las celdas */
+            height: auto; /* Permite que la altura se ajuste al contenido */
+            min-width: unset; /* Elimina min-width para mayor flexibilidad */
         }
-        .table-horario thead th {
-            background-color: #343a40;
-            color: white;
-            position: sticky;
-            top: 0;
-            z-index: 20;
+        .table-horario tbody th {
+            min-width: 50px; /* Ajusta el ancho de la columna de horas para impresión */
+            font-size: 0.6rem; /* Asegura que la hora también se reduzca */
         }
-        .table-horario tbody th { /* Horas */
-            background-color: #495057;
-            color: white;
-            position: sticky;
-            left: 0;
-            z-index: 15;
-            width: 225px; /* Ancho para la columna de horas */
+        .bloque-horario {
+            font-size: 0.55rem; /* Reduce aún más la fuente dentro de los bloques */
+            padding: 1px; /* Reduce el padding */
+            margin: 0; /* Elimina márgenes extra */
+            border-radius: 0; /* Elimina bordes redondeados si es necesario */
+            color: #343a40 !important; /* Texto oscuro para contraste */
+            box-shadow: none !important;
+            border: 1px solid #dee2e6 !important;
+            background-image: repeating-linear-gradient(
+                45deg,
+                #fff,
+                #fff 4px,
+                #ccc 4px,
+                #ccc 5px
+            ) !important;
+            -webkit-print-color-adjust: exact; /* For Webkit browsers */
+            print-color-adjust: exact; /* Standard property */
         }
-        .table-horario td:first-child { /* Fix for first cell (corner) */
-            z-index: 25;
+        /* Override specific color classes to ensure the hatched pattern */
+        .color-0, .color-1, .color-2, .color-3, .color-4, .color-5, .color-6, .color-7, .color-8, .color-9, .color-10 {
+            background-color: transparent !important; /* Set background to transparent to show pattern */
+            background-image: repeating-linear-gradient(
+                45deg,
+                #fff,
+                #fff 4px,
+                #ccc 4px,
+                #ccc 5px
+            ) !important;
+            color: #343a40 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            border: 1px solid #dee2e6 !important;
         }
-
-        /* Colores para bloques (ejemplos, puedes ajustarlos) */
-        .color-0 { background-color: #e67e22; } /* Naranja */
-        .color-1 { background-color: #28a745; } /* Verde éxito */
-        .color-2 { background-color: #007bff; } /* Azul primario */
-        .color-3 { background-color: #6f42c1; } /* Púrpura */
-        .color-4 { background-color: #dc3545; } /* Rojo peligro */
-        .color-5 { background-color: #17a2b8; } /* Cian información */
-        .color-6 { background-color: #fd7e14; } /* Naranja oscuro */
-        .color-7 { background-color: #20c997; } /* Teal */
-        .color-8 { background-color: #6610f2; } /* Indigo */
-        .color-9 { background-color: #e83e8c; } /* Rosa */
-        .color-10 { background-color: #6c757d; } /* Gris */
-
-        /* Estilos para la nueva sección de Datos Generales */
-        .info-card .card-body {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
+        .asignatura-nombre {
+            font-size: 0.65rem; /* Ajusta el tamaño de fuente del nombre de asignatura */
         }
-        .info-item {
-            font-size: 0.95rem;
-            padding: 5px;
-            border-radius: 5px;
-            background-color: #f8f9fa; /* Light background for each item */
-            border: 1px solid #e9ecef;
+        .asignatura-details {
+            font-size: 0.5rem; /* Ajusta el tamaño de fuente de los detalles aún más */
+            line-height: 1; /* Reduce el interlineado */
         }
-        .info-item strong {
-            display: block;
-            margin-bottom: 2px;
-            color: #343a40;
-        }
-        .info-item span {
-            color: #6c757d;
-        }
-
-        /* Estilos para el apartado de Coordinador */
-        .coordinador-card .card-body {
-            padding: 10px 15px; /* Reduce padding */
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap; /* Allow wrapping on small screens */
-        }
-        .coordinador-info {
-            font-size: 0.9rem; /* Smaller font size */
-            margin: 0; /* Remove default paragraph margin */
-        }
-        .coordinador-info strong {
-            color: #343a40;
-        }
-        .coordinador-info span {
-            color: #6c757d;
-        }
-
-        /* Estilos para impresión */
-        @media print {
-            body, html {
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            .wrapper, .content-wrapper, .content, .container-fluid, .row, .col-12, .col-md-8, .col-md-4 {
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                box-shadow: none !important;
-                border: none !important;
-            }
-            .main-header, .main-sidebar, .main-footer, .breadcrumb, .btn-info, hr, .row.mb-4:first-child { /* Oculta la fila de volver/editar/imprimir */
-                display: none !important;
-            }
-            /* Oculta todo lo que está antes de Datos Generales del Horario */
-            body > .wrapper > .content-wrapper > section > .container-fluid > .row.mb-4:first-child {
-                display: none !important;
-            }
-            /* Asegura que la impresión comience desde Datos Generales del Horario */
-            .info-card {
-                page-break-before: always;
-            }
-            .card {
-                border: 1px solid #dee2e6 !important; /* Asegura bordes en las cards */
-                box-shadow: none !important;
-                margin-bottom: 10px !important;
-            }
-            .card-header {
-                background-color: #e9ecef !important; /* Fondo claro para cabeceras de card */
-                color: #343a40 !important;
-                border-bottom: 1px solid #dee2e6 !important;
-            }
-            .table-responsive {
-                overflow-x: visible !important; /* Evita el scroll horizontal en impresión */
-            }
-            .table-horario {
-                width: 100%;
-                table-layout: fixed; /* Distribuye el ancho de las columnas de manera uniforme */
-            }
-            .table-horario th, .table-horario td {
-                font-size: 0.65rem; /* Reduce el tamaño de fuente para que quepa más */
-                padding: 1px 2px; /* Reduce el padding de las celdas */
-                height: auto; /* Permite que la altura se ajuste al contenido */
-                min-width: unset; /* Elimina min-width para mayor flexibilidad */
-            }
-            .table-horario tbody th {
-                min-width: 60px; /* Ajusta el ancho de la columna de horas para impresión */
-            }
-            .bloque-horario {
-                font-size: 0.6rem; /* Reduce aún más la fuente dentro de los bloques */
-                padding: 1px 2px;
-                margin: 0; /* Elimina márgenes extra */
-                border-radius: 0; /* Elimina bordes redondeados si es necesario */
-                background-color: #fff !important; /* Bloques blancos al imprimir */
-                color: #343a40 !important; /* Texto oscuro para contraste */
-                box-shadow: none !important;
-                border: 1px solid #dee2e6 !important;
-            }
-            /* Fuerza fondo blanco para todos los bloques de color al imprimir */
-            .color-0, .color-1, .color-2, .color-3, .color-4, .color-5, .color-6, .color-7, .color-8, .color-9, .color-10 {
-                background-color: #fff !important;
-                color: #343a40 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                border: 1px solid #dee2e6 !important;
-            }
-            .asignatura-nombre {
-                font-size: 0.7rem; /* Ajusta el tamaño de fuente del nombre de asignatura */
-            }
-            .asignatura-details {
-                font-size: 0.55rem; /* Ajusta el tamaño de fuente de los detalles */
-            }
-        }
-    </style>
+    }
+</style>
 </head>
 <body class="hold-transition sidebar-mini">
     <div class="wrapper">
