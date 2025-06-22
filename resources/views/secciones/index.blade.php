@@ -97,7 +97,7 @@
     $(document).ready(function() {
         // Configuración del DataTable
         const table = $("#tabla-secciones").DataTable({
-            pageLength: 10,
+            pageLength: 5,
             responsive: true,
             autoWidth: false,
             lengthChange: true,

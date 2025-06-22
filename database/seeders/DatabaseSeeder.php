@@ -17,10 +17,10 @@ class DatabaseSeeder extends Seeder
             AulasTableSeeder::class,
             CarreraSeeder::class,
             PeriodoSeeder::class,
-           // SeccionSeeder::class,
-           // AsignaturaSeeder::class,
+            SeccionSeeder::class,
             DedicacionesSeeder::class,
             DocenteSeeder::class,
+            AsignaturaSeeder::class,
            // asignaturadocenteSeeder::class,
            // asignaturaseccionSeeder::class,
         ]);

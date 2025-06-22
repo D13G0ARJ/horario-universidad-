@@ -410,7 +410,7 @@ class DocenteController extends Controller
                     'tipo_horas' => $horario->tipo_horas,
                     'bloques' => $horario->bloques,
                     'aula_id' => $horario->aula_id,
-                    'aula_name' => $horario->aula->name ?? 'Sin Aula',
+                    'aula_name' => $horario->aula->nombre ?? 'Sin Aula',
                     'carrera_name' => $horario->carrera->name ?? 'N/A',
                     'semestre_numero' => $horario->semestre->numero ?? 'N/A',
                     'turno_nombre' => $horario->turno->nombre ?? 'N/A',

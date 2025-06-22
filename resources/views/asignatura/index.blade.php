@@ -198,7 +198,7 @@
 $(document).ready(function() {
     // Configuración DataTables
     const table = $("#tabla-asignaturas").DataTable({
-        pageLength: 10,
+        pageLength: 5,
         responsive: true,
         autoWidth: false,
         language: {

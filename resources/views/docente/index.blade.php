@@ -175,7 +175,7 @@
                 }
             },
             "paging": true,
-            "pageLength": 10,
+            "pageLength": 5,
             "searching": true,
             "lengthChange": false, // Oculta el selector "Mostrar X entradas"
             "info": true, // Muestra la información de paginación

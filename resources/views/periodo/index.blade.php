@@ -271,7 +271,7 @@
 
         // Inicializar DataTables
         const table = $("#tabla-periodos").DataTable({
-            pageLength: 10,
+            pageLength: 5,
             language: {
                 emptyTable: "No hay períodos registrados",
                 info: "Mostrando _START_ a _END_ de _TOTAL_ períodos",
