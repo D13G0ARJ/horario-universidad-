@@ -146,7 +146,7 @@
                             </li>
                              <li>
                                 <a class="dropdown-item d-flex align-items-center py-2"
-                                    href="https://drive.google.com/file/d/1ux9RrhtkInsUIs301dL6JihCU-gnQrCZ/view?usp=sharing" target="_blank">
+                                    href="https://drive.google.com/file/d/1Wi2CMcX1BdQ7B--dpy1NJJgctJqGAra5/view?usp=sharing" target="_blank">
                                     <i class="fas fa-book me-3 opacity-75"></i>
                                     <span class="text-truncate">Manual de Usuario</span>
                         
